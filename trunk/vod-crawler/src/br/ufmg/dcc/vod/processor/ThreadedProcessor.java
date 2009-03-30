@@ -1,5 +1,7 @@
 package br.ufmg.dcc.vod.processor;
 
+import org.apache.log4j.Logger;
+
 import br.ufmg.dcc.vod.CrawlJob;
 import br.ufmg.dcc.vod.evaluator.Evaluator;
 import br.ufmg.dcc.vod.queue.QueueHandle;
@@ -7,7 +9,9 @@ import br.ufmg.dcc.vod.queue.QueueProcessor;
 import br.ufmg.dcc.vod.queue.QueueService;
 
 public class ThreadedProcessor<R, T> implements Processor<R, T> {
-
+	
+	private static final Logger LOG = Logger.getLogger(ThreadedProcessor.class);
+	
 	private final long sleepTimePerExecution;
 	private final int nThreads;
 	private final QueueHandle myHandle;
@@ -54,10 +58,12 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 		public void process(CrawlJob<R, T> t) {
 			
 			try {
+				LOG.info("STARTING Collecting url: url="+t.getID());
 				t.collect();
 				e.crawlJobConcluded(t);
+				LOG.info("DONE Collected url: url="+t.getID());
 			} catch (Exception e) {
-				e.printStackTrace();
+				LOG.error("ERROR Collecting: url="+t.getID(), e);
 			}
 			
 			try {

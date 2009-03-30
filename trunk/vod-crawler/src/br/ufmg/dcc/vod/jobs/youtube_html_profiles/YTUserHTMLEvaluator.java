@@ -17,12 +17,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.log4j.Logger;
+
 import br.ufmg.dcc.vod.CrawlJob;
 import br.ufmg.dcc.vod.evaluator.Evaluator;
 import br.ufmg.dcc.vod.processor.Processor;
 
 public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 
+	private static final Logger LOG = Logger.getLogger(YTUserHTMLEvaluator.class);
+	
 	private static final String VIEW = "&view=";
 	private static final String PROFILE_USER = "profile?user=";
 	private static final String GL_US_HL_EN = "&gl=US&hl=en";
@@ -62,6 +66,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	
 	@Override
 	public void dispatchIntialCrawl() {
+		LOG.info("Dispatching initial crawl: numberOfUser="+initialUsers.size() + " , numberOfVideos="+initialVideos.size());
 		try {
 			for (String s : initialVideos) {
 				dispatchVideo(s);
@@ -71,23 +76,26 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				dispatchUser(s);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("Error occurred:", e);
 		}
 	}
 	
 	@Override
 	public void crawlJobConcluded(CrawlJob<File, HTMLType> j) {
 		try {
+			LOG.info("Finished Crawl of: job="+j.getID());
+			
 			File result = j.getResult();
 			if (result != null && j.getType().hasFollowUp()) {
 				URL next;
 				try {
 					next = new URL(nextLink(result));
+					LOG.info("Dispatching following link: link="+next);
 					p.dispatch(new URLSaveCrawlJob(next, j.getResult().getParentFile(), j.getType()));
 				} catch (MalformedURLException e) {
-					e.printStackTrace();
+					LOG.error("Error occurred:", e);
 				} catch (IOException e) {
-					e.printStackTrace();
+					LOG.error("Error occurred:", e);
 				}
 			}
 			
@@ -119,12 +127,13 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				dispatchUser(u);	
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOG.error("Error occurred:", e);
 		}
 	}
 
 	private void dispatchUser(String u) throws MalformedURLException {
 		if (!crawledUsers.contains(u)) {
+			LOG.info("Dispatching user: user="+u);
 			crawledUsers.add(u);
 			for (HTMLType t : HTMLType.values()) {
 				if (t.hasFollowUp()) {
@@ -139,6 +148,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 
 	private void dispatchVideo(String v) throws MalformedURLException {
 		if (!crawledVideos.contains(v)) {
+			LOG.info("Dispatching video: video="+v);
 			crawledVideos.add(v);
 			String url = BASE_URL + "watch?v=" + v + GL_US_HL_EN;
 			videosFolder.mkdirs();

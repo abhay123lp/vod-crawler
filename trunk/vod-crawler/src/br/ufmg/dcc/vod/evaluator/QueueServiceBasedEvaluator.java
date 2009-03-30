@@ -6,7 +6,7 @@ import br.ufmg.dcc.vod.queue.QueueHandle;
 import br.ufmg.dcc.vod.queue.QueueProcessor;
 import br.ufmg.dcc.vod.queue.QueueService;
 
-public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T> {
+public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueProcessor<CrawlJob<R, T>> {
 
 	private final Evaluator<R, T> e;
 	private final QueueHandle myHandle;
@@ -34,19 +34,16 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T> {
 	}
 
 	public void start() {
-		service.startProcessor(myHandle, new Consumer());
+		service.startProcessor(myHandle, this);
 	}
 
-	private class Consumer implements QueueProcessor<CrawlJob<R, T>> {
+	@Override
+	public String getName() {
+		return "ThreadSafeEval";
+	}
 
-		@Override
-		public String getName() {
-			return "EvalConsumer";
-		}
-
-		@Override
-		public void process(CrawlJob<R, T> t) {
-			e.crawlJobConcluded(t);
-		}
+	@Override
+	public void process(CrawlJob<R, T> t) {
+		e.crawlJobConcluded(t);
 	}
 }
