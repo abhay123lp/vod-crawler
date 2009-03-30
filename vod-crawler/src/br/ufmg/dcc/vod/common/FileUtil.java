@@ -41,7 +41,6 @@ public class FileUtil {
 				try {
 					in.close();
 				} catch (IOException e) {
-					e.printStackTrace();
 				}
 	    	}
 	    	if (out != null) {
