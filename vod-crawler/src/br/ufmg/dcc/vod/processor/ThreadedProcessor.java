@@ -67,7 +67,7 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 			}
 			
 			try {
-				Thread.sleep(sleepTimePerExecution);
+				Thread.sleep(sleepTimePerExecution * 1000);
 			} catch (InterruptedException e) {
 			}
 		}
