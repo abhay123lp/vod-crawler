@@ -89,9 +89,13 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 			if (result != null && j.getType().hasFollowUp()) {
 				URL next;
 				try {
-					next = new URL(nextLink(result));
-					LOG.info("Dispatching following link: link="+next);
-					p.dispatch(new URLSaveCrawlJob(next, j.getResult().getParentFile(), j.getType()));
+					String nextLink = nextLink(result);
+					if (nextLink != null) {
+						nextLink = BASE_URL + nextLink + GL_US_HL_EN;
+						LOG.info("Dispatching following link: link="+nextLink);
+						next = new URL(nextLink);
+						p.dispatch(new URLSaveCrawlJob(next, j.getResult().getParentFile(), j.getType()));
+					}
 				} catch (MalformedURLException e) {
 					LOG.error("Error occurred:", e);
 				} catch (IOException e) {
@@ -148,9 +152,9 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 
 	private void dispatchVideo(String v) throws MalformedURLException {
 		if (!crawledVideos.contains(v)) {
-			LOG.info("Dispatching video: video="+v);
 			crawledVideos.add(v);
 			String url = BASE_URL + "watch?v=" + v + GL_US_HL_EN;
+			LOG.info("Dispatching video: video="+v + ", url="+url);
 			videosFolder.mkdirs();
 			p.dispatch(new URLSaveCrawlJob(new URL(url), videosFolder, HTMLType.SINGLE_VIDEO));
 		}
@@ -170,7 +174,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 		    	}
 		    }
 		} finally {
-			r.close();
+			if (r != null) r.close();
 		}
 		
 		return users;	
@@ -190,7 +194,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 		    	}
 		    }
 		} finally {
-			r.close();
+			if (r != null) r.close();
 		}
 		
 		return videos;
@@ -212,7 +216,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	    }
 	    finally
 	    {
-			in.close();
+			if (in != null) in.close();
 	    }
 	}
 }

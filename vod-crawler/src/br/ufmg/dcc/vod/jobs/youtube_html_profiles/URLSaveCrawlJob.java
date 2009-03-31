@@ -1,7 +1,6 @@
 package br.ufmg.dcc.vod.jobs.youtube_html_profiles;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLEncoder;
 
@@ -13,6 +12,7 @@ public class URLSaveCrawlJob implements CrawlJob<File, HTMLType> {
 	private final URL url;
 	private final File savePath;
 	private final HTMLType t;
+	private File resultPath;
 
 	public URLSaveCrawlJob(URL url, File savePath, HTMLType t) {
 		this.url = url;
@@ -22,21 +22,19 @@ public class URLSaveCrawlJob implements CrawlJob<File, HTMLType> {
 	
 	@Override
 	public void collect() throws Exception {
-		FileUtil.saveUrlGzip(url, new File(savePath + File.separator + getID()));
+		String encode = URLEncoder.encode(url.toString(), "UTF-8");
+		this.resultPath = new File(savePath + File.separator + encode);
+		FileUtil.saveUrlGzip(url, resultPath);
 	}
 
 	@Override
 	public String getID() {
-		try {
-			return URLEncoder.encode(url.toString(), "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			return null;
-		}
+		return url.toString();
 	}
 
 	@Override
 	public File getResult() {
-		return savePath;
+		return resultPath;
 	}
 
 	@Override
