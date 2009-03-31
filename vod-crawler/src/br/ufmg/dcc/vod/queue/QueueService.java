@@ -170,7 +170,7 @@ public class QueueService<T> {
 			}
 		}
 	}
-
+	
 	protected MonitoredSyncQueue<T> getMessageQueue(QueueHandle handle) {
 		return this.ids.get(handle);
 	}

@@ -26,7 +26,7 @@ public class ThreadedCrawler<R, T> {
 	}
 	
 	public void crawl() {
-		LOG.info("Starting ThreadedCrawler: nThreads="+nThreads + " , sleepTime="+sleep+"ms");
+		LOG.info("Starting ThreadedCrawler: nThreads="+nThreads + " , sleepTime="+sleep+"s");
 		
 		//Configuring
 		evaluator.setProcessor(processor);
