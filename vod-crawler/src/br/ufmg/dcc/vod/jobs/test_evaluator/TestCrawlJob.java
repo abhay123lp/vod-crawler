@@ -32,4 +32,13 @@ public class TestCrawlJob implements CrawlJob<int[], Integer> {
 	public Integer getType() {
 		return vertex;
 	}
+
+	@Override
+	public boolean success() {
+		return true;
+	}
+
+	@Override
+	public void markWithError() {
+	}
 }

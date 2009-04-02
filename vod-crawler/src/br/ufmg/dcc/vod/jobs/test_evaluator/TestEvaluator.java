@@ -40,4 +40,10 @@ public class TestEvaluator implements Evaluator<int[], Integer> {
 	public HashMap<Integer, int[]> getCrawled() {
 		return crawled;
 	}
+
+	@Override
+	public void shutDown() {
+		// TODO Auto-generated method stub
+		
+	}
 }
