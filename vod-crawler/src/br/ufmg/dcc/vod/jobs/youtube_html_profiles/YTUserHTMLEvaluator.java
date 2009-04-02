@@ -3,13 +3,12 @@ package br.ufmg.dcc.vod.jobs.youtube_html_profiles;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -17,9 +16,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.http.HttpVersion;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.params.ConnManagerParams;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpProtocolParams;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.CrawlJob;
+import br.ufmg.dcc.vod.common.Pair;
 import br.ufmg.dcc.vod.evaluator.Evaluator;
 import br.ufmg.dcc.vod.processor.Processor;
 
@@ -35,6 +45,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	private static final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\".*)");
 	private static final Pattern VIDEO_PATTERN = Pattern.compile("(\\s+<div class=\"video-main-content\" id=\"video-main-content-)(.*?)(\".*)");
 	private static final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
+	private static final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
 	
 	private final HashSet<String> crawledUsers;
 	private final HashSet<String> crawledVideos;
@@ -45,6 +56,13 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	
 	private final List<String> initialUsers;
 	private final List<String> initialVideos;
+
+	private int dispatchUrls = 0;
+	private int finishedUrls = 0;
+	private int errorUrls = 0;
+	private int finishedVideos = 0;
+
+	private DefaultHttpClient httpClient;
 
 	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers) {
 		this(videosFolder, usersFolder, initialUsers, new LinkedList<String>(), new HashSet<String>(), new HashSet<String>());
@@ -57,6 +75,17 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 		this.initialVideos = initialVideos;
 		this.crawledUsers = crawledUsers;
 		this.crawledVideos = crawledVideos;
+		
+		BasicHttpParams params = new BasicHttpParams();
+		HttpProtocolParams.setUserAgent(params, "Social Networks research crawler, author: Flavio Figueiredo http://www.dcc.ufmg.br/~flaviov, contact flaviovdf@gmail.com (resume at http://flaviovdf.googlepages.com/flaviov.d.defigueiredo-resume)");
+		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+		ConnManagerParams.setMaxTotalConnections(params, 1000);
+
+        SchemeRegistry schemeRegistry = new SchemeRegistry();
+        schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+        
+        ClientConnectionManager cm = new ThreadSafeClientConnManager(params, schemeRegistry);
+        this.httpClient = new DefaultHttpClient(cm, params);
 	}
 	
 	@Override
@@ -83,55 +112,64 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	@Override
 	public void crawlJobConcluded(CrawlJob<File, HTMLType> j) {
 		try {
+			System.out.println("--");
+			System.out.println("Stats: " + new Date());
+			System.out.println("- in users");
+			System.out.println("Discovered Users = " + crawledUsers.size());
+			System.out.println("Amount of Urls = " + crawledUsers.size());
+			System.out.println("- in videos (each video is one url only)");
+			System.out.println("Discovered Videos = " + crawledVideos.size() + " ( " + ((double)finishedVideos/crawledVideos.size()) + ")");
+			System.out.println("- in total urls");
+			System.out.println("Discovered  URL = " + dispatchUrls);
+			System.out.println("URLs collected = " + finishedUrls + " (" + ((double)finishedUrls/dispatchUrls) + ")");
+			System.out.println("URLs with error = " + errorUrls + " (" + ((double)errorUrls/dispatchUrls) + ")");
+			System.out.println("--");
+			System.out.println();
+			
 			LOG.info("Finished Crawl of: job="+j.getID());
-			
 			File result = j.getResult();
-			if (result != null && j.getType().hasFollowUp()) {
-				URL next;
-				try {
-					String nextLink = nextLink(result);
-					if (nextLink != null) {
-						nextLink = BASE_URL + nextLink + GL_US_HL_EN;
-						LOG.info("Dispatching following link: link="+nextLink);
-						next = new URL(nextLink);
-						p.dispatch(new URLSaveCrawlJob(next, j.getResult().getParentFile(), j.getType()));
-					}
-				} catch (MalformedURLException e) {
-					LOG.error("Error occurred:", e);
-				} catch (IOException e) {
-					LOG.error("Error occurred:", e);
+			if (j.success() && result != null) {
+				Pattern pat = null;
+				if (j.getType() == HTMLType.FAVORITES || j.getType() == HTMLType.VIDEOS) {
+					pat = VIDEO_PATTERN;
+				} else if (j.getType() == HTMLType.SUBSCRIBERS || j.getType() == HTMLType.SUBSCRIPTIONS) {
+					pat = RELATION_PATTERN;
+				} if (j.getType() == HTMLType.SINGLE_VIDEO) {
+					finishedVideos++;
 				}
-			}
+				
+				Pair<String, Set<String>> followUp = findFollowUp(result, pat);
+				if (followUp.first != null && j.getType().hasFollowUp()) {
+					String nextLink = BASE_URL + followUp.first + GL_US_HL_EN;
+					LOG.info("Dispatching following link: link="+nextLink);
+					URL next = new URL(nextLink);
+					dispatch(new URLSaveCrawlJob(next, j.getResult().getParentFile(), j.getType(), httpClient));
+				}
 			
-			Set<String> relations = new LinkedHashSet<String>();
-			Set<String> videos = new LinkedHashSet<String>();
-			
-			switch (j.getType()) {
-			case SUBSCRIBERS:
-				relations.addAll(readRelations(j.getResult()));
-				break;
-			case SUBSCRIPTIONS:
-				relations.addAll(readRelations(j.getResult()));
-				break;
-			case FAVORITES:
-				videos.addAll(readVideos(j.getResult()));
-				break;
-			case VIDEOS:
-				videos.addAll(readRelations(j.getResult()));
-				break;
+				//Adding videos for collection
+				if (pat == VIDEO_PATTERN) {
+					for (String v : followUp.second) {
+						dispatchVideo(v);
+					}
+				}
+	
+				//Adding new users
+				if (pat == RELATION_PATTERN) {
+					for (String u : followUp.second) {
+						dispatchUser(u);	
+					}
+				}
+				
+				finishedUrls++;
+			} else {
+				errorUrls++;
 			}
-			
-			//Adding videos for collection
-			for (String v : videos) {
-				dispatchVideo(v);
-			}
-
-			//Adding new users
-			for (String u : relations) {
-				dispatchUser(u);	
-			}
+		} catch (ErrorPageException ep) {
+			errorUrls++;
+			LOG.error("URL url=" + j.getID() + " has been blocked");
 		} catch (Exception e) {
-			LOG.error("Error occurred:", e);
+			errorUrls++;
+			LOG.error("Exception occurred:", e);
 		}
 	}
 
@@ -144,7 +182,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 					String url = BASE_URL + PROFILE_USER + u + VIEW + t.getFeatureName() + GL_US_HL_EN;
 					File folder = new File(usersFolder + File.separator + u + File.separator + t.getFeatureName());
 					folder.mkdirs();
-					p.dispatch(new URLSaveCrawlJob(new URL(url), folder, t));
+					dispatch(new URLSaveCrawlJob(new URL(url), folder, t, httpClient));
 				}
 			}
 		}
@@ -156,51 +194,59 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 			String url = BASE_URL + "watch?v=" + v + GL_US_HL_EN;
 			LOG.info("Dispatching video: video="+v + ", url="+url);
 			videosFolder.mkdirs();
-			p.dispatch(new URLSaveCrawlJob(new URL(url), videosFolder, HTMLType.SINGLE_VIDEO));
+			dispatch(new URLSaveCrawlJob(new URL(url), videosFolder, HTMLType.SINGLE_VIDEO, httpClient));
 		}
-	}
-
-	private Set<String> readRelations(File file) throws IOException {
-		Set<String> users = new LinkedHashSet<String>();
-		
-		String inputLine;
-		BufferedReader r = null;
-		try {
-			r = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file))));
-		    while ((inputLine = r.readLine()) != null) {
-		    	Matcher matcher = RELATION_PATTERN.matcher(inputLine);
-		    	if (matcher.matches()) {
-		    		users.add(matcher.group(2));
-		    	}
-		    }
-		} finally {
-			if (r != null) r.close();
-		}
-		
-		return users;	
-	}
-
-	private Set<String> readVideos(File f) throws FileNotFoundException, IOException {
-		Set<String> videos = new HashSet<String>();
-		
-		BufferedReader r = null;
-		try {
-			r = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(f))));
-			String inputLine;
-		    while ((inputLine = r.readLine()) != null) {
-		    	Matcher matcher = VIDEO_PATTERN.matcher(inputLine);
-		    	if (matcher.matches()) {
-		    		videos.add(matcher.group(2));
-		    	}
-		    }
-		} finally {
-			if (r != null) r.close();
-		}
-		
-		return videos;
 	}
 	
-	private String nextLink(File filePath) throws IOException {
+	private void dispatch(URLSaveCrawlJob j) {
+		this.dispatchUrls++;
+		p.dispatch(j);
+	}
+
+//	private Set<String> readRelations(File file) throws IOException {
+//		Set<String> users = new LinkedHashSet<String>();
+//		
+//		String inputLine;
+//		BufferedReader r = null;
+//		try {
+//			r = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file))));
+//		    while ((inputLine = r.readLine()) != null) {
+//		    	Matcher matcher = RELATION_PATTERN.matcher(inputLine);
+//		    	if (matcher.matches()) {
+//		    		users.add(matcher.group(2));
+//		    	}
+//		    }
+//		} finally {
+//			if (r != null) r.close();
+//		}
+//		
+//		return users;	
+//	}
+//
+//	private Set<String> readVideos(File f) throws FileNotFoundException, IOException {
+//		Set<String> videos = new HashSet<String>();
+//		
+//		BufferedReader r = null;
+//		try {
+//			r = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(f))));
+//			String inputLine;
+//		    while ((inputLine = r.readLine()) != null) {
+//		    	Matcher matcher = VIDEO_PATTERN.matcher(inputLine);
+//		    	if (matcher.matches()) {
+//		    		videos.add(matcher.group(2));
+//		    	}
+//		    }
+//		} finally {
+//			if (r != null) r.close();
+//		}
+//		
+//		return videos;
+//	}
+	
+	private Pair<String, Set<String>> findFollowUp(File filePath, Pattern toCrawlPattern) throws ErrorPageException, IOException {
+		Set<String> returnValue = new HashSet<String>();
+		String nextLink = null;
+		
 	    BufferedReader in = null;
 	    try 
 	    {
@@ -209,14 +255,32 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 		    while ((inputLine = in.readLine()) != null) {
 		    	Matcher matcher = NEXT_PATTERN.matcher(inputLine);
 		    	if (matcher.matches()) {
-		    		return matcher.group(2);
+		    		nextLink = matcher.group(2);
+		    	}
+		    	
+		    	if (toCrawlPattern != null) {
+			    	matcher = toCrawlPattern.matcher(inputLine);
+			    	if (matcher.matches()) {
+			    		returnValue.add(matcher.group(2));
+			    	}
+		    	}
+		    	
+		    	matcher = ERROR_PATTERN.matcher(inputLine);
+		    	if (matcher.matches()) {
+		    		throw new ErrorPageException();
 		    	}
 		    }
-		    return null;
 	    }
 	    finally
 	    {
 			if (in != null) in.close();
 	    }
+	    
+	    return new Pair<String, Set<String>>(nextLink, returnValue);
+	}
+
+	@Override
+	public void shutDown() {
+		this.httpClient.getConnectionManager().shutdown();
 	}
 }
