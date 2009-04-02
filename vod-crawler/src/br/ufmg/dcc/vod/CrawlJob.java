@@ -15,5 +15,9 @@ public interface CrawlJob<R, T> {
 	public T getType();
 	
 	public String getID();
+	
+	public void markWithError();
+	
+	public boolean success();
 
 }

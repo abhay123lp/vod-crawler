@@ -41,5 +41,6 @@ public class ThreadedCrawler<R, T> {
 		int wi = 10;
 		LOG.info("Waiting until crawl ends: waitInterval="+wi+"s");
 		this.service.waitUntilWorkIsDoneAndStop(wi);
+		this.evaluator.shutDown();
 	}
 }
