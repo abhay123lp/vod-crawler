@@ -14,7 +14,7 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 	
 	public QueueServiceBasedEvaluator(Evaluator<R, T> e, QueueService<CrawlJob<R, T>> service) {
 		this.e = e;
-		this.myHandle = service.createMessageQueue();
+		this.myHandle = service.createMessageQueue("Evaluator");
 		this.service = service;
 	}
 	
@@ -45,5 +45,10 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 	@Override
 	public void process(CrawlJob<R, T> t) {
 		e.crawlJobConcluded(t);
+	}
+
+	@Override
+	public void shutDown() {
+		e.shutDown();
 	}
 }
