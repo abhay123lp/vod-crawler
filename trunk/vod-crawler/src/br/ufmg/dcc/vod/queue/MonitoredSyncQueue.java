@@ -37,6 +37,12 @@ class MonitoredSyncQueue<T> {
 	private final AtomicInteger timeStamp = new AtomicInteger(0);
 	private final ReentrantLock monitorLock = new ReentrantLock();
 
+	private final String label;
+
+	public MonitoredSyncQueue(String label) {
+		this.label = label;
+	}
+
 	public void put(T t) {
 		try {
 			monitorLock.lock();
@@ -73,5 +79,10 @@ class MonitoredSyncQueue<T> {
 		} finally {
 			this.monitorLock.unlock();
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return label;
 	}
 }
