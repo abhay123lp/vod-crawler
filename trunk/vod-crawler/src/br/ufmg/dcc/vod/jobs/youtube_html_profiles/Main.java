@@ -3,6 +3,18 @@ package br.ufmg.dcc.vod.jobs.youtube_html_profiles;
 import java.io.File;
 import java.util.List;
 
+import org.apache.http.HttpVersion;
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.params.ConnManagerParams;
+import org.apache.http.conn.scheme.PlainSocketFactory;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpProtocolParams;
+
 import br.ufmg.dcc.vod.ThreadedCrawler;
 import br.ufmg.dcc.vod.common.FileUtil;
 import br.ufmg.dcc.vod.common.LoggerInitiator;
@@ -31,12 +43,22 @@ public class Main {
 		File seedFile = new File(args[4]);
 
 		List<String> seeds = FileUtil.readFileToList(seedFile);
-		YTUserHTMLEvaluator e = new YTUserHTMLEvaluator(videoFolder, userFolder, seeds);
+		
+		//HTTPClient
+		BasicHttpParams params = new BasicHttpParams();
+		HttpProtocolParams.setUserAgent(params, "Social Networks research crawler, author: Flavio Figueiredo http://www.dcc.ufmg.br/~flaviov, contact flaviov@dcc.ufmg.br (resume at http://flaviovdf.googlepages.com/flaviov.d.defigueiredo-resume)");
+		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+		ConnManagerParams.setMaxTotalConnections(params, 1000);
+        SchemeRegistry schemeRegistry = new SchemeRegistry();
+        schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+        ClientConnectionManager cm = new ThreadSafeClientConnManager(params, schemeRegistry);
+        
+        HttpClient httpClient = new DefaultHttpClient(cm, params);
+		YTUserHTMLEvaluator e = new YTUserHTMLEvaluator(videoFolder, userFolder, seeds, httpClient);
 		
 		LoggerInitiator.initiateLog();
 		
 		ThreadedCrawler<File, HTMLType> tc = new ThreadedCrawler<File, HTMLType>(nThreads, sleep, e);
 		tc.crawl();
 	}
-	
 }

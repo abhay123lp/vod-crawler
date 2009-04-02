@@ -16,16 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.http.HttpVersion;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.params.ConnManagerParams;
-import org.apache.http.conn.scheme.PlainSocketFactory;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.HttpProtocolParams;
+import org.apache.http.client.HttpClient;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.CrawlJob;
@@ -56,36 +47,25 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	
 	private final List<String> initialUsers;
 	private final List<String> initialVideos;
+	private final HttpClient httpClient;
 
 	private int dispatchUrls = 0;
 	private int finishedUrls = 0;
 	private int errorUrls = 0;
 	private int finishedVideos = 0;
 
-	private DefaultHttpClient httpClient;
-
-	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers) {
-		this(videosFolder, usersFolder, initialUsers, new LinkedList<String>(), new HashSet<String>(), new HashSet<String>());
+	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, HttpClient client) {
+		this(videosFolder, usersFolder, initialUsers, new LinkedList<String>(), new HashSet<String>(), new HashSet<String>(), client);
 	}
 
-	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, List<String> initialVideos, HashSet<String> crawledVideos, HashSet<String> crawledUsers) {
+	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, List<String> initialVideos, HashSet<String> crawledVideos, HashSet<String> crawledUsers, HttpClient client) {
 		this.videosFolder = videosFolder;
 		this.usersFolder = usersFolder;
 		this.initialUsers = initialUsers;
 		this.initialVideos = initialVideos;
 		this.crawledUsers = crawledUsers;
 		this.crawledVideos = crawledVideos;
-		
-		BasicHttpParams params = new BasicHttpParams();
-		HttpProtocolParams.setUserAgent(params, "Social Networks research crawler, author: Flavio Figueiredo http://www.dcc.ufmg.br/~flaviov, contact flaviovdf@gmail.com (resume at http://flaviovdf.googlepages.com/flaviov.d.defigueiredo-resume)");
-		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-		ConnManagerParams.setMaxTotalConnections(params, 1000);
-
-        SchemeRegistry schemeRegistry = new SchemeRegistry();
-        schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
-        
-        ClientConnectionManager cm = new ThreadSafeClientConnManager(params, schemeRegistry);
-        this.httpClient = new DefaultHttpClient(cm, params);
+		this.httpClient = client;
 	}
 	
 	@Override
