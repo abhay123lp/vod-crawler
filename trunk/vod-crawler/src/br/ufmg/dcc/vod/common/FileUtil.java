@@ -6,10 +6,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -39,14 +38,12 @@ public class FileUtil {
 		return queue;
 	}
 	
-	public static void saveUrlGzip(URL video, File filePath) throws IOException {
+	public static void saveUrlGzip(InputStream inputStream, File filePath) throws IOException {
 	    BufferedReader in = null;
 	    PrintStream out = null;
 	    try 
 	    {
-	    	URLConnection yc = video.openConnection();
-	    	
-		    in = new BufferedReader(new InputStreamReader(yc.getInputStream()));
+		    in = new BufferedReader(new InputStreamReader(inputStream));
 			out = new PrintStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(filePath))));
 		    
 		    String inputLine;
