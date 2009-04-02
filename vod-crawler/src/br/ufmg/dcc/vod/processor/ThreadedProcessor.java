@@ -21,7 +21,7 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService<CrawlJob<R, T>> service) {
 		this.nThreads = nThreads;
 		this.sleepTimePerExecution = sleepTimePerExecution;
-		this.myHandle = service.createMessageQueue();
+		this.myHandle = service.createMessageQueue("Workers");
 		this.service = service;
 	}
 	
@@ -60,10 +60,12 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 			try {
 				LOG.info("STARTING Collecting url: url="+t.getID());
 				t.collect();
-				e.crawlJobConcluded(t);
 				LOG.info("DONE Collected url: url="+t.getID());
 			} catch (Exception e) {
+				t.markWithError();
 				LOG.error("ERROR Collecting: url="+t.getID(), e);
+			} finally {
+				e.crawlJobConcluded(t);
 			}
 			
 			try {
