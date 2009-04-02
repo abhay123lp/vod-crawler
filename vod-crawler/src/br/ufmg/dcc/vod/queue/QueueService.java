@@ -1,5 +1,6 @@
 package br.ufmg.dcc.vod.queue;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -29,10 +30,21 @@ public class QueueService<T> {
 	 * @return The queue
 	 */
 	public QueueHandle createMessageQueue() {
+		return createMessageQueue("");
+	}
+
+
+	/**
+	 * Creates a new message queue with a label
+	 *
+	 * @param label Label
+	 * @return The queue
+	 */
+	public QueueHandle createMessageQueue(String label) {
 		try {
 			lock.lock();
 			QueueHandle h = new QueueHandle(i++);
-			this.ids.put(h, new MonitoredSyncQueue<T>());
+			this.ids.put(h, new MonitoredSyncQueue<T>(label));
 			return h;
 		} finally {
 			lock.unlock();
@@ -95,6 +107,14 @@ public class QueueService<T> {
 		do {
 			try {
 				lock.lock();
+				
+				//Debug info
+				System.err.println(new Date());
+				for (MonitoredSyncQueue<?> m : ids.values()) {
+					System.err.println("Queue " + m + " size " + m.size());
+					
+				}
+				
 				someoneIsWorking = false;
 				
 				//Acquiring time stamps
