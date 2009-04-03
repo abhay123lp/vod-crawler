@@ -24,6 +24,31 @@ import br.ufmg.dcc.vod.common.Pair;
 import br.ufmg.dcc.vod.evaluator.Evaluator;
 import br.ufmg.dcc.vod.processor.Processor;
 
+/*
+ * - Profile
+ * http://www.youtube.com/profile?user=USER
+ * 
+ * - Friends
+ * http://www.youtube.com/profile?user=USER&view=friends
+ * 
+ * - Subscribers
+ * http://www.youtube.com/profile?user=USER&view=subscribers
+ * 
+ * - Subscriptions
+ * http://www.youtube.com/profile?user=USER&view=subscriptions
+ * 
+ * - Videos
+ * http://www.youtube.com/profile?user=USER&view=videos
+ * 
+ * - Groups
+ * http://www.youtube.com/profile?user=USER&view=groups
+ * 
+ * - Favorites
+ * http://www.youtube.com/profile?user=USER&view=favorites
+ * 
+ * Procurar por next em cada página!!!!!
+ * <a href="/profile?user=USER&amp;view=QUE_BUSCO&amp;start=##">Next</a>
+ */
 public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 
 	private static final Logger LOG = Logger.getLogger(YTUserHTMLEvaluator.class);
@@ -33,7 +58,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	private static final String GL_US_HL_EN = "&gl=US&hl=en";
 	private static final String BASE_URL = "http://www.youtube.com/";
 	
-	private static final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\".*)");
+	private static final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\">Next.*)");
 	private static final Pattern VIDEO_PATTERN = Pattern.compile("(\\s+<div class=\"video-main-content\" id=\"video-main-content-)(.*?)(\".*)");
 	private static final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
 	private static final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
@@ -259,8 +284,4 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	    return new Pair<String, Set<String>>(nextLink, returnValue);
 	}
 
-	@Override
-	public void shutDown() {
-		this.httpClient.getConnectionManager().shutdown();
-	}
 }

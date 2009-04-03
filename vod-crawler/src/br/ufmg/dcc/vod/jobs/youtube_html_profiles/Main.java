@@ -20,7 +20,7 @@ import br.ufmg.dcc.vod.common.FileUtil;
 import br.ufmg.dcc.vod.common.LoggerInitiator;
 
 public class Main {
-
+	
 	public static void main(String[] args) throws Exception {
 		if (args == null || args.length < 5) {
 			System.err.println("usage: <nthreads> <sleep in secs> <user save folder> <videos save folder> <seed file>");
@@ -48,17 +48,20 @@ public class Main {
 		BasicHttpParams params = new BasicHttpParams();
 		HttpProtocolParams.setUserAgent(params, "Social Networks research crawler, author: Flavio Figueiredo http://www.dcc.ufmg.br/~flaviov, contact flaviov@dcc.ufmg.br (resume at http://flaviovdf.googlepages.com/flaviov.d.defigueiredo-resume)");
 		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-		ConnManagerParams.setMaxTotalConnections(params, 1000);
+		ConnManagerParams.setMaxTotalConnections(params, nThreads);
         SchemeRegistry schemeRegistry = new SchemeRegistry();
         schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
         ClientConnectionManager cm = new ThreadSafeClientConnManager(params, schemeRegistry);
         
         HttpClient httpClient = new DefaultHttpClient(cm, params);
+        
+        //Evaluator
 		YTUserHTMLEvaluator e = new YTUserHTMLEvaluator(videoFolder, userFolder, seeds, httpClient);
-		
+
+		//Start!
 		LoggerInitiator.initiateLog();
-		
 		ThreadedCrawler<File, HTMLType> tc = new ThreadedCrawler<File, HTMLType>(nThreads, sleep, e);
 		tc.crawl();
+		httpClient.getConnectionManager().shutdown();
 	}
 }
