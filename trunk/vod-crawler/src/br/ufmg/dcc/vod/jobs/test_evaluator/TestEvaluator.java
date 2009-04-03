@@ -41,9 +41,4 @@ public class TestEvaluator implements Evaluator<int[], Integer> {
 		return crawled;
 	}
 
-	@Override
-	public void shutDown() {
-		// TODO Auto-generated method stub
-		
-	}
 }

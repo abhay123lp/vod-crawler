@@ -44,7 +44,7 @@ public class QueueService<T> {
 		try {
 			lock.lock();
 			QueueHandle h = new QueueHandle(i++);
-			this.ids.put(h, new MonitoredSyncQueue<T>(label));
+			this.ids.put(h, new MonitoredSyncQueue<T>(label, new SimpleEventQueue<T>()));
 			return h;
 		} finally {
 			lock.unlock();

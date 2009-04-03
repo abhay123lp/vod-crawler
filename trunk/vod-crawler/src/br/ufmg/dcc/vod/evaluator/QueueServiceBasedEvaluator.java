@@ -47,8 +47,4 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 		e.crawlJobConcluded(t);
 	}
 
-	@Override
-	public void shutDown() {
-		e.shutDown();
-	}
 }

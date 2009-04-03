@@ -1,9 +1,5 @@
 package br.ufmg.dcc.vod.queue;
 
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
-
 import br.ufmg.dcc.vod.common.Pair;
 
 /**
@@ -28,57 +24,43 @@ import br.ufmg.dcc.vod.common.Pair;
  */
 class MonitoredSyncQueue<T> {
 
-	private final LinkedBlockingQueue<T> queue = new LinkedBlockingQueue<T>();
-
-	/*
-	 * Monitors state
-	 */
-	private final AtomicInteger workHandle = new AtomicInteger(0);
-	private final AtomicInteger timeStamp = new AtomicInteger(0);
-	private final ReentrantLock monitorLock = new ReentrantLock();
-
+	private int workHandle = 0;
+	private int timeStamp = 0;
+	
 	private final String label;
+	private final EventQueue<T> e;
 
-	public MonitoredSyncQueue(String label) {
+
+	public MonitoredSyncQueue(String label, EventQueue<T> e) {
 		this.label = label;
+		this.e = e;
 	}
 
-	public void put(T t) {
-		try {
-			monitorLock.lock();
-			this.workHandle.incrementAndGet();
-			this.timeStamp.incrementAndGet();
-		} finally {
-			monitorLock.unlock();
+	public synchronized void put(T t) {
+		this.workHandle++;
+		this.timeStamp++;
+		e.put(t);
+		notify();
+	}
+
+	public synchronized T claim() throws InterruptedException  {
+		if (e.size() == 0) {
+			wait();
 		}
-		this.queue.add(t);
+		
+		return e.take();
 	}
 
-	public T claim() throws InterruptedException {
-		return this.queue.take();
+	public synchronized void done(T claimed) {
+		this.workHandle--;
 	}
 
-	public void done(T claimed) {
-		try {
-			monitorLock.lock();
-			this.workHandle.decrementAndGet();
-		}
-		finally {
-			monitorLock.unlock();
-		}
+	public synchronized int size() {
+		return e.size();
 	}
 
-	public int size() {
-		return queue.size();
-	}
-
-	public Pair<Integer, Integer> synchronizationData() {
-		this.monitorLock.lock();
-		try {
-			return new Pair<Integer, Integer>(this.workHandle.get(), this.timeStamp.get());
-		} finally {
-			this.monitorLock.unlock();
-		}
+	public synchronized Pair<Integer, Integer> synchronizationData() {
+		return new Pair<Integer, Integer>(workHandle, timeStamp);
 	}
 	
 	@Override
