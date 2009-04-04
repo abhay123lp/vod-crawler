@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-Ant build file for the Vod-crawler
+Ant build file for the vod-crawler
 -->
 
 <project basedir="." default="build" name="vod-crawler">
@@ -18,7 +18,13 @@ Ant build file for the Vod-crawler
 	<target name="build" depends="clean">
 		<mkdir dir="${classes.dir}" />
 		<mkdir dir="${jar.dir}" />
-		<javac classpath="${java.classpath}" srcdir="${src.dir}" destdir="${classes.dir}" target="${build.target}" optimize="on" debug="on" debuglevel="lines,vars,source">
+		
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" target="${build.target}" optimize="on" debug="on" debuglevel="lines,vars,source">
+		    <classpath>
+		    	<fileset dir="${lib.dir}">
+		        	<include name="**/*.jar"/>
+		    	</fileset>
+		    </classpath>
 			<include name="**" />
 		</javac>
 		
