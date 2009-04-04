@@ -78,6 +78,8 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	private int finishedUrls = 0;
 	private int errorUrls = 0;
 	private int finishedVideos = 0;
+	private int userUrls = 0;
+	private int finishedUserUrls = 0;
 
 	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, HttpClient client) {
 		this(videosFolder, usersFolder, initialUsers, new LinkedList<String>(), new HashSet<String>(), new HashSet<String>(), client);
@@ -126,18 +128,19 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	@Override
 	public void crawlJobConcluded(CrawlJob<File, HTMLType> j) {
 		try {
-			System.out.println("--");
+			System.out.println("---");
 			System.out.println("Stats: " + new Date());
-			System.out.println("- in users");
+			System.out.println("-- in users");
 			System.out.println("Discovered Users = " + crawledUsers.size());
-			System.out.println("Amount of Urls = " + crawledUsers.size());
-			System.out.println("- in videos (each video is one url only)");
+			System.out.println("In urls = " + userUrls);
+			System.out.println("Collected urls = " + finishedUserUrls + " ( " + ((double)finishedUserUrls/userUrls) + ")");
+			System.out.println("-- in videos (each video is one url only)");
 			System.out.println("Discovered Videos = " + crawledVideos.size() + " ( " + ((double)finishedVideos/crawledVideos.size()) + ")");
-			System.out.println("- in total urls");
+			System.out.println("-- in total urls");
 			System.out.println("Discovered  URL = " + dispatchUrls);
 			System.out.println("URLs collected = " + finishedUrls + " (" + ((double)finishedUrls/dispatchUrls) + ")");
 			System.out.println("URLs with error = " + errorUrls + " (" + ((double)errorUrls/dispatchUrls) + ")");
-			System.out.println("--");
+			System.out.println("---");
 			System.out.println();
 			
 			LOG.info("Finished Crawl of: job="+j.getID());
@@ -174,6 +177,9 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 					}
 				}
 				
+				if (j.getType() != HTMLType.SINGLE_VIDEO) {
+					finishedUserUrls++;
+				}
 				finishedUrls++;
 			} else {
 				errorUrls++;
@@ -213,6 +219,10 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	}
 	
 	private void dispatch(URLSaveCrawlJob j) {
+		if (j.getType() != HTMLType.SINGLE_VIDEO) {
+			this.userUrls++;
+		}
+		
 		this.dispatchUrls++;
 		p.dispatch(j);
 	}
@@ -252,5 +262,4 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	    
 	    return new Pair<String, Set<String>>(nextLink, returnValue);
 	}
-
 }
