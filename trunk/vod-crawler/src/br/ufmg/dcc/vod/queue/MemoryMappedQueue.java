@@ -8,7 +8,6 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
-import java.util.Arrays;
 
 
 /**
@@ -25,6 +24,9 @@ import java.util.Arrays;
  * 
  * This class receives an {@link Serializer} which is responsible
  * for interpreting byte arrays to objects.
+ * 
+ * No thread safe, the {@link QueueService} class guarantees that only one
+ * thread will access the queue.
  * 
  * @param <T> Type of objects to store.
  */
@@ -75,7 +77,7 @@ public class MemoryMappedQueue<T> {
         return (byte) i;
     }
     
-	public synchronized void put(T t) {
+	public void put(T t) {
 		if (this.size == Integer.MAX_VALUE) {
 			throw new NullPointerException("Queue full");
 		}		
@@ -103,7 +105,7 @@ public class MemoryMappedQueue<T> {
 		map.putInt(size);
 	}
 
-	public synchronized T take() {
+	public T take() {
 		if (this.size == 0) {
 			throw new NullPointerException("Queue empty");
 		}
@@ -128,30 +130,30 @@ public class MemoryMappedQueue<T> {
 		return mqs.interpret(data);
 	}
 
-	public synchronized void sync() {
+	public void sync() {
 		this.map.force();
 	}
 
-	public synchronized void shutdownAndSync() throws IOException {
+	public void shutdownAndSync() throws IOException {
 		sync();
 		this.channel.close();
 	}
 
-	public synchronized boolean shutdownAndDelete() throws IOException {
+	public boolean shutdownAndDelete() throws IOException {
 		this.channel.close();
 		this.f.deleteOnExit();
 		return this.f.delete();
 	}
 
-	public synchronized int getStart() {
+	public int getStart() {
 		return start;
 	}
 	
-	public synchronized int getEnd() {
+	public int getEnd() {
 		return end;
 	}
 	
-	public synchronized int size() {
+	public int size() {
 		return size;
 	}
 }
