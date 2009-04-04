@@ -1,5 +1,10 @@
 package br.ufmg.dcc.vod.queue;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import br.ufmg.dcc.vod.common.Pair;
 
 /**
@@ -24,43 +29,77 @@ import br.ufmg.dcc.vod.common.Pair;
  */
 class MonitoredSyncQueue<T> {
 
-	private int workHandle = 0;
-	private int timeStamp = 0;
+	//Stamps
+	private final AtomicInteger workHandle = new AtomicInteger(0);
+	private final AtomicInteger timeStamp = new AtomicInteger(0);
+	private final ReentrantReadWriteLock stampLock;
+	
+	//Get lock
+	private final ReentrantLock getLock;
+	private final Condition getCondition;
 	
 	private final String label;
 	private final EventQueue<T> e;
-
+	
 
 	public MonitoredSyncQueue(String label, EventQueue<T> e) {
 		this.label = label;
 		this.e = e;
+		this.stampLock = new ReentrantReadWriteLock();
+		this.getLock = new ReentrantLock();
+		this.getCondition = getLock.newCondition();
 	}
 
-	public synchronized void put(T t) {
-		this.workHandle++;
-		this.timeStamp++;
-		e.put(t);
-		notify();
-	}
-
-	public synchronized T claim() throws InterruptedException  {
-		if (e.size() == 0) {
-			wait();
+	public void put(T t) {
+		try {
+			stampLock.writeLock().lock();
+			this.workHandle.incrementAndGet();
+			this.timeStamp.incrementAndGet();
+		} finally {
+			stampLock.writeLock().unlock();
 		}
-		
-		return e.take();
+
+		try {
+			getLock.lock();
+			e.put(t);
+			getCondition.signal();
+		} finally {
+			getLock.unlock();
+		}
 	}
 
-	public synchronized void done(T claimed) {
-		this.workHandle--;
+	public T claim() throws InterruptedException {
+		try {
+			getLock.lock();
+			while (e.size() == 0)
+				getCondition.await();
+			
+			return e.take();
+		} finally {
+			getLock.unlock();
+		}
 	}
 
-	public synchronized int size() {
+	public void done(T claimed) {
+		try {
+			stampLock.writeLock().lock();
+			this.workHandle.decrementAndGet();
+		} finally {
+			stampLock.writeLock().unlock();
+		}
+	}
+
+	public int size() {
 		return e.size();
 	}
 
-	public synchronized Pair<Integer, Integer> synchronizationData() {
-		return new Pair<Integer, Integer>(workHandle, timeStamp);
+	public Pair<Integer, Integer> synchronizationData() {
+		try {
+			stampLock.readLock().lock();
+			return new Pair<Integer, Integer>(workHandle.get(), timeStamp.get());
+		} finally {
+			stampLock.readLock().unlock();
+		}
 	}
 	
 	@Override
