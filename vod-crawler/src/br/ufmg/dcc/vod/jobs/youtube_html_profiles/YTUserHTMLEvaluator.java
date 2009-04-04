@@ -63,8 +63,8 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	private static final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
 	private static final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
 	
-	private final HashSet<String> crawledUsers;
-	private final HashSet<String> crawledVideos;
+	private final HashSet<Integer> crawledUsers;
+	private final HashSet<Integer> crawledVideos;
 	private final File videosFolder;
 	private final File usersFolder;
 	
@@ -88,8 +88,17 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 		this.usersFolder = usersFolder;
 		this.initialUsers = initialUsers;
 		this.initialVideos = initialVideos;
-		this.crawledUsers = crawledUsers;
-		this.crawledVideos = crawledVideos;
+		this.crawledUsers = new HashSet<Integer>();
+		
+		for (String u : crawledUsers) {
+			this.crawledUsers.add(u.hashCode());
+		}
+		
+		this.crawledVideos = new HashSet<Integer>();
+		for (String v : crawledVideos) {
+			this.crawledUsers.add(v.hashCode());
+		}
+		
 		this.httpClient = client;
 	}
 	
@@ -143,7 +152,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 					finishedVideos++;
 				}
 				
-				Pair<String, Set<String>> followUp = findFollowUp(result, pat);
+				Pair<String, Set<String>> followUp = findFollowUp(result, pat, j.getType().getFeatureName());
 				if (followUp.first != null && j.getType().hasFollowUp()) {
 					String nextLink = BASE_URL + followUp.first + GL_US_HL_EN;
 					LOG.info("Dispatching following link: link="+nextLink);
@@ -179,9 +188,9 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	}
 
 	private void dispatchUser(String u) throws MalformedURLException {
-		if (!crawledUsers.contains(u)) {
+		if (!crawledUsers.contains(u.hashCode())) {
 			LOG.info("Dispatching user: user="+u);
-			crawledUsers.add(u);
+			crawledUsers.add(u.hashCode());
 			for (HTMLType t : HTMLType.values()) {
 				if (t.hasFollowUp()) {
 					String url = BASE_URL + PROFILE_USER + u + VIEW + t.getFeatureName() + GL_US_HL_EN;
@@ -194,8 +203,8 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	}
 
 	private void dispatchVideo(String v) throws MalformedURLException {
-		if (!crawledVideos.contains(v)) {
-			crawledVideos.add(v);
+		if (!crawledVideos.contains(v.hashCode())) {
+			crawledVideos.add(v.hashCode());
 			String url = BASE_URL + "watch?v=" + v + GL_US_HL_EN;
 			LOG.info("Dispatching video: video="+v + ", url="+url);
 			videosFolder.mkdirs();
@@ -208,47 +217,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 		p.dispatch(j);
 	}
 
-//	private Set<String> readRelations(File file) throws IOException {
-//		Set<String> users = new LinkedHashSet<String>();
-//		
-//		String inputLine;
-//		BufferedReader r = null;
-//		try {
-//			r = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file))));
-//		    while ((inputLine = r.readLine()) != null) {
-//		    	Matcher matcher = RELATION_PATTERN.matcher(inputLine);
-//		    	if (matcher.matches()) {
-//		    		users.add(matcher.group(2));
-//		    	}
-//		    }
-//		} finally {
-//			if (r != null) r.close();
-//		}
-//		
-//		return users;	
-//	}
-//
-//	private Set<String> readVideos(File f) throws FileNotFoundException, IOException {
-//		Set<String> videos = new HashSet<String>();
-//		
-//		BufferedReader r = null;
-//		try {
-//			r = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(f))));
-//			String inputLine;
-//		    while ((inputLine = r.readLine()) != null) {
-//		    	Matcher matcher = VIDEO_PATTERN.matcher(inputLine);
-//		    	if (matcher.matches()) {
-//		    		videos.add(matcher.group(2));
-//		    	}
-//		    }
-//		} finally {
-//			if (r != null) r.close();
-//		}
-//		
-//		return videos;
-//	}
-	
-	private Pair<String, Set<String>> findFollowUp(File filePath, Pattern toCrawlPattern) throws ErrorPageException, IOException {
+	private Pair<String, Set<String>> findFollowUp(File filePath, Pattern toCrawlPattern, String fName) throws ErrorPageException, IOException {
 		Set<String> returnValue = new HashSet<String>();
 		String nextLink = null;
 		
@@ -259,7 +228,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 			String inputLine;
 		    while ((inputLine = in.readLine()) != null) {
 		    	Matcher matcher = NEXT_PATTERN.matcher(inputLine);
-		    	if (matcher.matches()) {
+		    	if (matcher.matches() && inputLine.contains(fName)) {
 		    		nextLink = matcher.group(2);
 		    	}
 		    	

@@ -17,7 +17,7 @@ public class ThreadedCrawlerTest {
 		RandomizedSyncGraph g = new RandomizedSyncGraph(100);
 		
 		TestEvaluator te = new TestEvaluator(g);
-		ThreadedCrawler<int[], Integer> tc = new ThreadedCrawler<int[], Integer>(1, 1, te);
+		ThreadedCrawler<int[], Integer> tc = new ThreadedCrawler<int[], Integer>(1, 0, te);
 		
 		tc.crawl();
 		
@@ -31,7 +31,7 @@ public class ThreadedCrawlerTest {
 		RandomizedSyncGraph g = new RandomizedSyncGraph(100);
 		
 		TestEvaluator te = new TestEvaluator(g);
-		ThreadedCrawler<int[], Integer> tc = new ThreadedCrawler<int[], Integer>(2, 1, te);
+		ThreadedCrawler<int[], Integer> tc = new ThreadedCrawler<int[], Integer>(2, 0, te);
 		
 		tc.crawl();
 		
@@ -44,7 +44,7 @@ public class ThreadedCrawlerTest {
 		RandomizedSyncGraph g = new RandomizedSyncGraph(100);
 		
 		TestEvaluator te = new TestEvaluator(g);
-		ThreadedCrawler<int[], Integer> tc = new ThreadedCrawler<int[], Integer>(100, 1, te);
+		ThreadedCrawler<int[], Integer> tc = new ThreadedCrawler<int[], Integer>(100, 0, te);
 		
 		tc.crawl();
 		

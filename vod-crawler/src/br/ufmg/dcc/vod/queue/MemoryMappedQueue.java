@@ -30,7 +30,7 @@ import java.nio.channels.FileChannel.MapMode;
  * 
  * @param <T> Type of objects to store.
  */
-public class MemoryMappedQueue<T> {
+class MemoryMappedQueue<T> implements EventQueue<T> {
 
 	private static final int INT_SIZE = Integer.SIZE / 8;
 	private static final int MAX_ENTRY_SIZE = 255;
@@ -77,6 +77,7 @@ public class MemoryMappedQueue<T> {
         return (byte) i;
     }
     
+    @Override
 	public void put(T t) {
 		if (this.size == Integer.MAX_VALUE) {
 			throw new NullPointerException("Queue full");
@@ -105,6 +106,7 @@ public class MemoryMappedQueue<T> {
 		map.putInt(size);
 	}
 
+    @Override
 	public T take() {
 		if (this.size == 0) {
 			throw new NullPointerException("Queue empty");
@@ -153,6 +155,7 @@ public class MemoryMappedQueue<T> {
 		return end;
 	}
 	
+	@Override
 	public int size() {
 		return size;
 	}
