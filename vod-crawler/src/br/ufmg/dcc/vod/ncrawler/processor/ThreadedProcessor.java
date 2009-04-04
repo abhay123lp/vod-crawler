@@ -1,5 +1,9 @@
 package br.ufmg.dcc.vod.ncrawler.processor;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
@@ -7,6 +11,7 @@ import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
+import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 
 public class ThreadedProcessor<R, T> implements Processor<R, T> {
 	
@@ -17,7 +22,19 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 	private final QueueHandle myHandle;
 	private final QueueService<CrawlJob<R, T>> service;
 	private Evaluator<R, T> e;
+
+	//Uses disk queue
+	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService<CrawlJob<R, T>> service,
+			Serializer<CrawlJob<R, T>> serializer, File queueFile, int queueSize) 
+			throws FileNotFoundException, IOException {
+		
+		this.nThreads = nThreads;
+		this.sleepTimePerExecution = sleepTimePerExecution;
+		this.myHandle = service.createPersistentMessageQueue("Workers", queueFile, serializer, queueSize);
+		this.service = service;
+	}
 	
+	//Uses memory queue
 	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService<CrawlJob<R, T>> service) {
 		this.nThreads = nThreads;
 		this.sleepTimePerExecution = sleepTimePerExecution;
