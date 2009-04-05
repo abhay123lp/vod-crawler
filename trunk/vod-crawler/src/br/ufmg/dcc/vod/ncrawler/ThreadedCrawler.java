@@ -30,7 +30,8 @@ public class ThreadedCrawler<R, T> {
 		this.processor = new ThreadedProcessor<R, T>(nThreads, sleep, service);
 	}
 
-	public ThreadedCrawler(int nThreads, long sleep, Evaluator<R, T> evaluator, File queueFile, Serializer<CrawlJob<R, T>> s, int fileSize) throws FileNotFoundException, IOException {
+	@SuppressWarnings("unchecked")
+	public ThreadedCrawler(int nThreads, long sleep, Evaluator<R, T> evaluator, File queueFile, Serializer s, int fileSize) throws FileNotFoundException, IOException {
 		this.nThreads = nThreads;
 		this.sleep = sleep;
 		this.service = new QueueService<CrawlJob<R, T>>();
