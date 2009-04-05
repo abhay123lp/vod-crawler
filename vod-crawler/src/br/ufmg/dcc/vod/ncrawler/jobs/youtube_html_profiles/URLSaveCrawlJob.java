@@ -70,4 +70,11 @@ public class URLSaveCrawlJob implements CrawlJob<File, HTMLType> {
 		return success;
 	}
 	
+	public File getSavePath() {
+		return savePath;
+	}
+	
+	public URL getUrl() {
+		return url;
+	}
 }

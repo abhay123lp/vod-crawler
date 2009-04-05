@@ -132,6 +132,8 @@ public class QueueService<T> {
 			}
 		
 			this.ids.get(h).put(t);
+		} catch (Exception e) {
+			e.printStackTrace();
 		} finally {
 			lock.unlock();
 		}
