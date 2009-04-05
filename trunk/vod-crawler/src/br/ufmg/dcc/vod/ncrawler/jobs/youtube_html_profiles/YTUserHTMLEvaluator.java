@@ -58,7 +58,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	private static final String GL_US_HL_EN = "&gl=US&hl=en";
 	private static final String BASE_URL = "http://www.youtube.com/";
 	
-	private static final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\">Next.*)");
+	private static final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\"\\s*>\\s*Next.*)");
 	private static final Pattern VIDEO_PATTERN = Pattern.compile("(\\s+<div class=\"video-main-content\" id=\"video-main-content-)(.*?)(\".*)");
 	private static final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
 	private static final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
@@ -133,9 +133,10 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 			System.out.println("-- in users");
 			System.out.println("Discovered Users = " + crawledUsers.size());
 			System.out.println("In urls = " + userUrls);
-			System.out.println("Collected urls = " + finishedUserUrls + " ( " + ((double)finishedUserUrls/userUrls) + ")");
+			System.out.println("Collected urls = " + finishedUserUrls + " (" + ((double)finishedUserUrls/userUrls) + ")");
 			System.out.println("-- in videos (each video is one url only)");
-			System.out.println("Discovered Videos = " + crawledVideos.size() + " ( " + ((double)finishedVideos/crawledVideos.size()) + ")");
+			System.out.println("Discovered Videos = " + crawledVideos.size());
+			System.out.println("Collected Videos = " + finishedVideos + " (" + ((double)finishedVideos/crawledVideos.size()) + ")");
 			System.out.println("-- in total urls");
 			System.out.println("Discovered  URL = " + dispatchUrls);
 			System.out.println("URLs collected = " + finishedUrls + " (" + ((double)finishedUrls/dispatchUrls) + ")");
@@ -151,9 +152,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 					pat = VIDEO_PATTERN;
 				} else if (j.getType() == HTMLType.SUBSCRIBERS || j.getType() == HTMLType.SUBSCRIPTIONS) {
 					pat = RELATION_PATTERN;
-				} if (j.getType() == HTMLType.SINGLE_VIDEO) {
-					finishedVideos++;
-				}
+				} 
 				
 				Pair<String, Set<String>> followUp = findFollowUp(result, pat, j.getType().getFeatureName());
 				if (followUp.first != null && j.getType().hasFollowUp()) {
@@ -179,6 +178,8 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				
 				if (j.getType() != HTMLType.SINGLE_VIDEO) {
 					finishedUserUrls++;
+				} else if (j.getType() == HTMLType.SINGLE_VIDEO) {
+					finishedVideos++;
 				}
 				finishedUrls++;
 			} else {
