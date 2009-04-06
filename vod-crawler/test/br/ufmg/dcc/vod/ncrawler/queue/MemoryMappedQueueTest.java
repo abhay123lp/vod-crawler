@@ -10,7 +10,7 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import br.ufmg.dcc.vod.ncrawler.queue.MemoryMappedQueue;
+import br.ufmg.dcc.vod.ncrawler.queue.MemoryMappedFIFOQueue;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 
 
@@ -22,7 +22,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedQueue<String> q = new MemoryMappedQueue<String>(f, ss, 1024 * 1024);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 1024 * 1024);
 		
 		assertEquals(0, q.size());
 		q.put("a");
@@ -39,7 +39,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedQueue<String> q = new MemoryMappedQueue<String>(f, ss, 1024 * 1024);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 1024 * 1024);
 		
 		
 		assertEquals(12, q.getStart());
@@ -90,7 +90,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedQueue<String> q = new MemoryMappedQueue<String>(f, ss, 1024 * 1024);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 1024 * 1024);
 
 		try {
 			q.take();
@@ -117,7 +117,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedQueue<String> q = new MemoryMappedQueue<String>(f, ss, 1024 * 1024);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 1024 * 1024);
 		
 		
 		assertEquals(12, q.getStart());
@@ -173,7 +173,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedQueue<String> q = new MemoryMappedQueue<String>(f, ss, 1024 * 1024);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 1024 * 1024);
 		
 		q.put("avcl");
 		q.shutdownAndSync();
@@ -212,7 +212,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedQueue<String> q = new MemoryMappedQueue<String>(f, ss, 1024 * 1024);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 1024 * 1024);
 		
 		q.put("a");
 		
@@ -251,7 +251,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedQueue<String> q = new MemoryMappedQueue<String>(f, ss, 1024 * 1024);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 1024 * 1024);
 		
 		q.put("a");
 		q.put("v");
@@ -302,7 +302,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedQueue<String> q = new MemoryMappedQueue<String>(f, ss, 1024 * 1024);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 1024 * 1024);
 		
 		q.put("a");
 		q.put("v");
@@ -356,7 +356,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedQueue<String> q = new MemoryMappedQueue<String>(f, ss, 1024 * 1024);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 1024 * 1024);
 		
 		q.put("a");
 		q.put("v");

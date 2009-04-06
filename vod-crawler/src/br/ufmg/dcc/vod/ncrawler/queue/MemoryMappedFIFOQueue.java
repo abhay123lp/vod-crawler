@@ -30,7 +30,7 @@ import java.nio.channels.FileChannel.MapMode;
  * 
  * @param <T> Type of objects to store.
  */
-class MemoryMappedQueue<T> implements EventQueue<T> {
+class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 
 	private static final int INT_SIZE = Integer.SIZE / 8;
 	private static final int MAX_ENTRY_SIZE = 255;
@@ -49,7 +49,7 @@ class MemoryMappedQueue<T> implements EventQueue<T> {
 	private int endPos;
 
 
-	public MemoryMappedQueue(File f, Serializer<T> mqs, int sizeInBytes) throws FileNotFoundException, IOException {
+	public MemoryMappedFIFOQueue(File f, Serializer<T> mqs, int sizeInBytes) throws FileNotFoundException, IOException {
 		this.f = f;
 		this.mqs = mqs;
 		this.channel = new RandomAccessFile(f, "rw").getChannel();
