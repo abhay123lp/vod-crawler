@@ -160,7 +160,6 @@ public class QueueService<T> {
 				System.err.println(new Date());
 				for (MonitoredSyncQueue<?> m : ids.values()) {
 					System.err.println("Queue " + m + " size " + m.size());
-					
 				}
 				
 				someoneIsWorking = false;
