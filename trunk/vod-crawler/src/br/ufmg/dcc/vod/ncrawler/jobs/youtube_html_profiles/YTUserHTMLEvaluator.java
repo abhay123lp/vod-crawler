@@ -161,8 +161,8 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				Pair<String, Set<String>> followUp = findFollowUp(result, pat, j.getType().getFeatureName());
 				
 				//Has something to follow, can follow, and is not equal to the last link (Youtube specific)
+				String nextLink = BASE_URL + followUp.first + GL_US_HL_EN;
 				if (followUp.first != null && j.getType().hasFollowUp() && !followUp.first.equals(j.getID())) {
-					String nextLink = BASE_URL + followUp.first + GL_US_HL_EN;
 					LOG.info("Dispatching following link: link="+nextLink);
 					URL next = new URL(nextLink);
 					dispatch(new URLSaveCrawlJob(next, j.getResult().getParentFile(), j.getType(), httpClient));
@@ -171,14 +171,14 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				//Adding videos for collection
 				if (pat == VIDEO_PATTERN) {
 					for (String v : followUp.second) {
-						dispatchVideo(v);
+//						dispatchVideo(v);
 					}
 				}
 	
 				//Adding new users
 				if (pat == RELATION_PATTERN) {
 					for (String u : followUp.second) {
-						dispatchUser(u);	
+//						dispatchUser(u);	
 					}
 				}
 				
