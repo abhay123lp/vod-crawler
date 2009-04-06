@@ -130,24 +130,6 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	@Override
 	public void crawlJobConcluded(CrawlJob<File, HTMLType> j) {
 		try {
-			System.out.println("---");
-			System.out.println("Stats: " + new Date());
-			System.out.println("-- in users");
-			System.out.println("Discovered Users = " + crawledUsers.size());
-			System.out.println("In URLs = " + userUrls);
-			System.out.println("Collected user URLs = " + finishedUserUrls + " (" + ((double)finishedUserUrls/userUrls) + ")");
-			System.out.println("User URLs with error = " + errorUserUrls + " (" + ((double)errorUserUrls/userUrls) + ")");
-			System.out.println("-- in videos (each video is one url only)");
-			System.out.println("Discovered Videos = " + crawledVideos.size());
-			System.out.println("Collected Videos = " + finishedVideos + " (" + ((double)finishedVideos/crawledVideos.size()) + ")");
-			System.out.println("Videos with error = " + errorVideos + " (" + ((double)errorVideos/crawledVideos.size()) + ")");
-			System.out.println("-- in total urls");
-			System.out.println("Discovered  URL = " + dispatchUrls);
-			System.out.println("URLs collected = " + finishedUrls + " (" + ((double)finishedUrls/dispatchUrls) + ")");
-			System.out.println("URLs with error = " + errorUrls + " (" + ((double)errorUrls/dispatchUrls) + ")");
-			System.out.println("---");
-			System.out.println();
-			
 			LOG.info("Finished Crawl of: job="+j.getID());
 			File result = j.getResult();
 			if (j.success() && result != null) {
@@ -171,14 +153,14 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				//Adding videos for collection
 				if (pat == VIDEO_PATTERN) {
 					for (String v : followUp.second) {
-//						dispatchVideo(v);
+						dispatchVideo(v);
 					}
 				}
 	
 				//Adding new users
 				if (pat == RELATION_PATTERN) {
 					for (String u : followUp.second) {
-//						dispatchUser(u);	
+						dispatchUser(u);	
 					}
 				}
 				
@@ -217,6 +199,24 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				errorVideos++;
 			}
 		}
+		
+		System.out.println("---");
+		System.out.println("Stats: " + new Date());
+		System.out.println("-- in users");
+		System.out.println("Discovered Users = " + crawledUsers.size());
+		System.out.println("In URLs = " + userUrls);
+		System.out.println("Collected user URLs = " + finishedUserUrls + " (" + ((double)finishedUserUrls/userUrls) + ")");
+		System.out.println("User URLs with error = " + errorUserUrls + " (" + ((double)errorUserUrls/userUrls) + ")");
+		System.out.println("-- in videos (each video is one url only)");
+		System.out.println("Discovered Videos = " + crawledVideos.size());
+		System.out.println("Collected Videos = " + finishedVideos + " (" + ((double)finishedVideos/crawledVideos.size()) + ")");
+		System.out.println("Videos with error = " + errorVideos + " (" + ((double)errorVideos/crawledVideos.size()) + ")");
+		System.out.println("-- in total urls");
+		System.out.println("Discovered  URL = " + dispatchUrls);
+		System.out.println("URLs collected = " + finishedUrls + " (" + ((double)finishedUrls/dispatchUrls) + ")");
+		System.out.println("URLs with error = " + errorUrls + " (" + ((double)errorUrls/dispatchUrls) + ")");
+		System.out.println("---");
+		System.out.println();
 	}
 
 	private void dispatchUser(String u) throws MalformedURLException {
