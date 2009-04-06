@@ -89,7 +89,7 @@ public class QueueService<T> {
 		try {
 			lock.lock();
 			QueueHandle h = new QueueHandle(i++);
-			MemoryMappedQueue<T> memoryMappedQueue = new MemoryMappedQueue<T>(f, serializer, bytes);
+			MemoryMappedFIFOQueue<T> memoryMappedQueue = new MemoryMappedFIFOQueue<T>(f, serializer, bytes);
 			this.ids.put(h, new MonitoredSyncQueue<T>(label, memoryMappedQueue));
 			return h;
 		} finally {

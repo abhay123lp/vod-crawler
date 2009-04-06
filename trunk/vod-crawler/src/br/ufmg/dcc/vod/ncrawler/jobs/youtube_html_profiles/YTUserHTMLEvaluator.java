@@ -80,6 +80,8 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 	private int finishedVideos = 0;
 	private int userUrls = 0;
 	private int finishedUserUrls = 0;
+	private int errorUserUrls = 0;
+	private int errorVideos = 0;
 
 	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, HttpClient client) {
 		this(videosFolder, usersFolder, initialUsers, new LinkedList<String>(), new HashSet<String>(), new HashSet<String>(), client);
@@ -132,11 +134,13 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 			System.out.println("Stats: " + new Date());
 			System.out.println("-- in users");
 			System.out.println("Discovered Users = " + crawledUsers.size());
-			System.out.println("In urls = " + userUrls);
-			System.out.println("Collected urls = " + finishedUserUrls + " (" + ((double)finishedUserUrls/userUrls) + ")");
+			System.out.println("In URLs = " + userUrls);
+			System.out.println("Collected user URLs = " + finishedUserUrls + " (" + ((double)finishedUserUrls/userUrls) + ")");
+			System.out.println("User URLs with error = " + errorUserUrls + " (" + ((double)errorUserUrls/userUrls) + ")");
 			System.out.println("-- in videos (each video is one url only)");
 			System.out.println("Discovered Videos = " + crawledVideos.size());
 			System.out.println("Collected Videos = " + finishedVideos + " (" + ((double)finishedVideos/crawledVideos.size()) + ")");
+			System.out.println("Videos with error = " + errorVideos + " (" + ((double)errorVideos/crawledVideos.size()) + ")");
 			System.out.println("-- in total urls");
 			System.out.println("Discovered  URL = " + dispatchUrls);
 			System.out.println("URLs collected = " + finishedUrls + " (" + ((double)finishedUrls/dispatchUrls) + ")");
@@ -155,6 +159,8 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				} 
 				
 				Pair<String, Set<String>> followUp = findFollowUp(result, pat, j.getType().getFeatureName());
+				
+				//Has something to follow, can follow, and is not equal to the last link (Youtube specific)
 				if (followUp.first != null && j.getType().hasFollowUp() && !followUp.first.equals(j.getID())) {
 					String nextLink = BASE_URL + followUp.first + GL_US_HL_EN;
 					LOG.info("Dispatching following link: link="+nextLink);
@@ -165,14 +171,14 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				//Adding videos for collection
 				if (pat == VIDEO_PATTERN) {
 					for (String v : followUp.second) {
-//						dispatchVideo(v);
+						dispatchVideo(v);
 					}
 				}
 	
 				//Adding new users
 				if (pat == RELATION_PATTERN) {
 					for (String u : followUp.second) {
-//						dispatchUser(u);	
+						dispatchUser(u);	
 					}
 				}
 				
@@ -183,14 +189,33 @@ public class YTUserHTMLEvaluator implements Evaluator<File, HTMLType> {
 				}
 				finishedUrls++;
 			} else {
+				LOG.error("URL url=" + j.getID() + " was not collected due to error!");
 				errorUrls++;
+				
+				if (j.getType() != HTMLType.SINGLE_VIDEO) {
+					errorUserUrls++;
+				} else  {
+					errorVideos++;
+				}
 			}
 		} catch (ErrorPageException ep) {
 			errorUrls++;
 			LOG.error("URL url=" + j.getID() + " has been blocked");
+			
+			if (j.getType() != HTMLType.SINGLE_VIDEO) {
+				errorUserUrls++;
+			} else  {
+				errorVideos++;
+			}
 		} catch (Exception e) {
 			errorUrls++;
 			LOG.error("Exception occurred:", e);
+			
+			if (j.getType() != HTMLType.SINGLE_VIDEO) {
+				errorUserUrls++;
+			} else {
+				errorVideos++;
+			}
 		}
 	}
 
