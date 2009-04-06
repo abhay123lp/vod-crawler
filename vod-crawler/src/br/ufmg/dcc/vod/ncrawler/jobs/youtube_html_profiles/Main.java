@@ -46,7 +46,7 @@ public class Main {
 		
 		//HTTPClient
 		BasicHttpParams params = new BasicHttpParams();
-		HttpProtocolParams.setUserAgent(params, "Social Networks research crawler, author: Flavio Figueiredo http://www.dcc.ufmg.br/~flaviov, contact flaviov@dcc.ufmg.br (resume at http://flaviovdf.googlepages.com/flaviov.d.defigueiredo-resume)");
+		HttpProtocolParams.setUserAgent(params, "Social Networks research crawler, author: Flavio Figueiredo - hp: http://www.dcc.ufmg.br/~flaviov - email: flaviov@dcc.ufmg.br - resume at: http://flaviovdf.googlepages.com/flaviov.d.defigueiredo-resume");
 		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
 		params.setParameter("Accept-Language", "en-us");
 		
