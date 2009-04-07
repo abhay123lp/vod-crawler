@@ -2,12 +2,12 @@ package br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.http.HttpVersion;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.params.ConnManagerParams;
-import org.apache.http.conn.params.ConnPerRoute;
 import org.apache.http.conn.params.ConnPerRouteBean;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
@@ -20,6 +20,7 @@ import org.apache.http.params.HttpProtocolParams;
 import br.ufmg.dcc.vod.ncrawler.ThreadedCrawler;
 import br.ufmg.dcc.vod.ncrawler.common.FileUtil;
 import br.ufmg.dcc.vod.ncrawler.common.LoggerInitiator;
+import br.ufmg.dcc.vod.ncrawler.common.Pair;
 
 public class Main {
 	
@@ -65,7 +66,7 @@ public class Main {
 
 		//Start!
 		LoggerInitiator.initiateLog();
-		ThreadedCrawler<File, HTMLType> tc = new ThreadedCrawler<File, HTMLType>(nThreads, sleep, e, new File(args[5]), new URLSaveCrawlSerializer(httpClient), Integer.MAX_VALUE);
+		ThreadedCrawler<Pair<String, Set<String>>, HTMLType> tc = new ThreadedCrawler<Pair<String, Set<String>>, HTMLType>(nThreads, sleep, e, new File(args[5]), new URLSaveCrawlSerializer(httpClient), Integer.MAX_VALUE);
 		tc.crawl();
 		httpClient.getConnectionManager().shutdown();
 	}
