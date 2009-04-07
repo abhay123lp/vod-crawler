@@ -220,4 +220,9 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>,
 		this.dispatchUrls++;
 		p.dispatch(j);
 	}
+
+	@Override
+	public boolean isDone() {
+		return finishedUrls + errorUrls >= dispatchUrls;
+	}
 }

@@ -50,7 +50,11 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 
 	@Override
 	public void dispatch(CrawlJob<R, T> c) {
-		service.sendObjectToQueue(myHandle, c);
+		try {
+			service.sendObjectToQueue(myHandle, c);
+		} catch (InterruptedException e) {
+			LOG.error(e);
+		}
 	}
 
 	@Override

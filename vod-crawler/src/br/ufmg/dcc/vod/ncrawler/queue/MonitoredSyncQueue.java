@@ -37,20 +37,27 @@ class MonitoredSyncQueue<T> {
 	//Get lock
 	private final ReentrantLock getLock;
 	private final Condition getCondition;
+	private final Condition putCondition;
 	
 	private final String label;
 	private final EventQueue<T> e;
-	
+	private final int maxSize;
 
 	public MonitoredSyncQueue(String label, EventQueue<T> e) {
+		this(label, e, Integer.MAX_VALUE);
+	}
+
+	public MonitoredSyncQueue(String label, EventQueue<T> e, int maxSize) {
 		this.label = label;
 		this.e = e;
+		this.maxSize = maxSize;
 		this.stampLock = new ReentrantReadWriteLock();
 		this.getLock = new ReentrantLock();
 		this.getCondition = getLock.newCondition();
+		this.putCondition = getLock.newCondition();
 	}
 
-	public void put(T t) {
+	public void put(T t) throws InterruptedException {
 		try {
 			stampLock.writeLock().lock();
 			this.workHandle.incrementAndGet();
@@ -58,12 +65,15 @@ class MonitoredSyncQueue<T> {
 		} finally {
 			stampLock.writeLock().unlock();
 		}
-
+		
 		try {
 			getLock.lock();
+			while (e.size() == maxSize)
+				putCondition.await();
+			
 			e.put(t);
-			getCondition.signal();
 		} finally {
+			getCondition.signal();
 			getLock.unlock();
 		}
 	}
@@ -76,6 +86,7 @@ class MonitoredSyncQueue<T> {
 			
 			return e.take();
 		} finally {
+			putCondition.signal();
 			getLock.unlock();
 		}
 	}
