@@ -14,7 +14,7 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 	
 	private final Evaluator<R, T> e;
 	private final QueueHandle myHandle;
-	protected final QueueService<CrawlJob<R, T>> service;
+	private final QueueService<CrawlJob<R, T>> service;
 	
 	public QueueServiceBasedEvaluator(Evaluator<R, T> e, QueueService<CrawlJob<R, T>> service) {
 		this.e = e;
