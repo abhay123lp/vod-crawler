@@ -135,4 +135,9 @@ public class URLSaveCrawlJob implements CrawlJob<Pair<String, Set<String>>, HTML
 	public URL getUrl() {
 		return url;
 	}
+	
+	@Override
+	public String toString() {
+		return getID();
+	}
 }

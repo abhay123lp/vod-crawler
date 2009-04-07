@@ -18,4 +18,6 @@ public interface Evaluator<R, T> {
 
 	public void crawlJobConcluded(CrawlJob<R, T> j);
 	
+	public boolean isDone();
+	
 }

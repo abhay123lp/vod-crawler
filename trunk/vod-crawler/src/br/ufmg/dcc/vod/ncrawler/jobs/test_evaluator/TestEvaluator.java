@@ -41,4 +41,9 @@ public class TestEvaluator implements Evaluator<int[], Integer> {
 		return crawled;
 	}
 
+	@Override
+	public boolean isDone() {
+		return this.crawled.size() == g.getNumVertex();
+	}
+
 }

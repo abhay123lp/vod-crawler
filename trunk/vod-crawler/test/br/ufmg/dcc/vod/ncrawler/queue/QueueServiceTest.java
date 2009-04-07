@@ -5,16 +5,10 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import junit.framework.TestCase;
+
 import org.junit.After;
 import org.junit.Before;
-
-import br.ufmg.dcc.vod.ncrawler.queue.MonitoredSyncQueue;
-import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;
-import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;
-import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
-import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
-
-import junit.framework.TestCase;
 
 public class QueueServiceTest extends TestCase {
 
@@ -526,6 +520,52 @@ public class QueueServiceTest extends TestCase {
 		assertEquals(30000, q3.synchronizationData().second.intValue());
 	}
 	
+	
+	//OneHas LIMITS!!
+	
+	public void testWaitUntilWorkIsDoneExchangedQueueObjects2TimesBounceNDL() throws Exception {
+		SI si = new SI();
+		QueueService<Integer> qs = new QueueService<Integer>();
+		
+		QueueHandle handle1 = qs.createPersistentMessageQueue(f1, si, 1024 * 1024);
+		MonitoredSyncQueue<Integer> q1 = qs.getMessageQueue(handle1);
+		QueueHandle handle2 = qs.createLimitedBlockMessageQueue(2);
+		MonitoredSyncQueue<Integer> q2 = qs.getMessageQueue(handle2);
+		QueueHandle handle3 = qs.createMessageQueue();
+		MonitoredSyncQueue<Integer> q3 = qs.getMessageQueue(handle3);
+		
+		for (int i = 0 ; i < 10000; i++) {
+			qs.sendObjectToQueue(handle1, i);
+		}
+		assertEquals(10000, q1.size());
+		assertEquals(0, q2.size());
+		assertEquals(0, q3.size());
+
+		assertEquals(10000, q1.synchronizationData().first.intValue());
+		assertEquals(10000, q1.synchronizationData().second.intValue());
+		assertEquals(0, q2.synchronizationData().first.intValue());
+		assertEquals(0, q2.synchronizationData().second.intValue());		
+		assertEquals(0, q3.synchronizationData().first.intValue());
+		assertEquals(0, q3.synchronizationData().second.intValue());
+		
+		qs.startProcessor(handle1, new NextUpConsumer(qs, handle2));
+		qs.startProcessor(handle2, new NextUpConsumer(qs, handle3));
+		qs.startProcessor(handle3, new NextUpConsumer(qs, handle1, 20000));
+		
+		qs.waitUntilWorkIsDoneAndStop(1);
+
+		assertEquals(0, q1.size());
+		assertEquals(0, q2.size());
+		assertEquals(0, q3.size());
+
+		assertEquals(0, q1.synchronizationData().first.intValue());
+		assertEquals(30000, q1.synchronizationData().second.intValue());
+		assertEquals(0, q2.synchronizationData().first.intValue());
+		assertEquals(30000, q2.synchronizationData().second.intValue());		
+		assertEquals(0, q3.synchronizationData().first.intValue());
+		assertEquals(30000, q3.synchronizationData().second.intValue());
+	}
+	
 	private static class NextUpConsumer implements QueueProcessor<Integer> {
 
 		private final QueueHandle next;
@@ -558,10 +598,18 @@ public class QueueServiceTest extends TestCase {
 			if (last) {
 				if (bouncersSent != 0) {
 					bouncersSent--;
-					service.sendObjectToQueue(next, t);
+					try {
+						service.sendObjectToQueue(next, t);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			} else {
-				service.sendObjectToQueue(next, t);
+				try {
+					service.sendObjectToQueue(next, t);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}			
 		}
 	}

@@ -25,8 +25,8 @@ import br.ufmg.dcc.vod.ncrawler.common.Pair;
 public class Main {
 	
 	public static void main(String[] args) throws Exception {
-		if (args == null || args.length < 6) {
-			System.err.println("usage: <nthreads> <sleep in secs> <user save folder> <videos save folder> <seed file> <queue file>");
+		if (args == null || args.length < 5) {
+			System.err.println("usage: <nthreads> <sleep in secs> <user save folder> <videos save folder> <seed file>");
 			System.exit(1);
 		}
 		
@@ -66,7 +66,7 @@ public class Main {
 
 		//Start!
 		LoggerInitiator.initiateLog();
-		ThreadedCrawler<Pair<String, Set<String>>, HTMLType> tc = new ThreadedCrawler<Pair<String, Set<String>>, HTMLType>(nThreads, sleep, e, new File(args[5]), new URLSaveCrawlSerializer(httpClient), Integer.MAX_VALUE);
+		ThreadedCrawler<Pair<String, Set<String>>, HTMLType> tc = new ThreadedCrawler<Pair<String, Set<String>>, HTMLType>(nThreads, sleep, e);
 		tc.crawl();
 		httpClient.getConnectionManager().shutdown();
 	}

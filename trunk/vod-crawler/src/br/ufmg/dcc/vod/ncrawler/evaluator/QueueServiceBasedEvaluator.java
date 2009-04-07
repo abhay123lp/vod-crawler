@@ -1,5 +1,7 @@
 package br.ufmg.dcc.vod.ncrawler.evaluator;
 
+import org.apache.log4j.Logger;
+
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.processor.Processor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;
@@ -8,6 +10,8 @@ import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
 
 public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueProcessor<CrawlJob<R, T>> {
 
+	private static final Logger LOG = Logger.getLogger(QueueServiceBasedEvaluator.class);
+	
 	private final Evaluator<R, T> e;
 	private final QueueHandle myHandle;
 	protected final QueueService<CrawlJob<R, T>> service;
@@ -30,7 +34,11 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 
 	@Override
 	public void crawlJobConcluded(CrawlJob<R, T> j) {
-		service.sendObjectToQueue(myHandle, j);
+		try {
+			service.sendObjectToQueue(myHandle, j);
+		} catch (InterruptedException e) {
+			LOG.error(e);
+		}
 	}
 
 	public void start() {
@@ -47,4 +55,8 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 		e.crawlJobConcluded(t);
 	}
 
+	@Override
+	public boolean isDone() {
+		return e.isDone();
+	}
 }

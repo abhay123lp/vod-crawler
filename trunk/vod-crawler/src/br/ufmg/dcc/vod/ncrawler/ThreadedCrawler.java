@@ -55,6 +55,16 @@ public class ThreadedCrawler<R, T> {
 		int wi = 10;
 		LOG.info("Waiting until crawl ends: waitInterval="+wi+"s");
 		this.service.waitUntilWorkIsDoneAndStop(wi);
+		
+		while(!evaluator.isDone()) {
+			System.out.println("This shoud not occur!!!");
+			try {
+				Thread.sleep(wi * 1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
 		LOG.info("Crawl done!");
 	}
 }

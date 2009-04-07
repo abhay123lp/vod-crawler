@@ -3,12 +3,12 @@ package br.ufmg.dcc.vod.ncrawler.queue;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Date;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
 
@@ -21,11 +21,9 @@ import br.ufmg.dcc.vod.ncrawler.common.Pair;
  */
 public class QueueService<T> {
 
-	private final Map<QueueHandle, MonitoredSyncQueue<T>> ids = new HashMap<QueueHandle, MonitoredSyncQueue<T>>();
+	private final Map<QueueHandle, MonitoredSyncQueue<T>> ids = Collections.synchronizedMap(new HashMap<QueueHandle, MonitoredSyncQueue<T>>());
 	private final ExecutorService executor = Executors.newCachedThreadPool();
-	private final ReentrantLock lock = new ReentrantLock();
-	
-	private int i = 0;
+	private final AtomicInteger i = new AtomicInteger(0);
 
 	/**
 	 * Creates a new message queue
@@ -44,14 +42,9 @@ public class QueueService<T> {
 	 * @return A queue handle
 	 */
 	public QueueHandle createMessageQueue(String label) {
-		try {
-			lock.lock();
-			QueueHandle h = new QueueHandle(i++);
-			this.ids.put(h, new MonitoredSyncQueue<T>(label, new SimpleEventQueue<T>()));
-			return h;
-		} finally {
-			lock.unlock();
-		}
+		QueueHandle h = new QueueHandle(i.incrementAndGet());
+		this.ids.put(h, new MonitoredSyncQueue<T>(label, new SimpleEventQueue<T>()));
+		return h;
 	}
 	
 	/**
@@ -86,15 +79,36 @@ public class QueueService<T> {
 	 * @throws FileNotFoundException  In case the file does not exist
 	 */
 	public QueueHandle createPersistentMessageQueue(String label, File f, Serializer<T> serializer, int bytes) throws FileNotFoundException, IOException {
-		try {
-			lock.lock();
-			QueueHandle h = new QueueHandle(i++);
-			MemoryMappedFIFOQueue<T> memoryMappedQueue = new MemoryMappedFIFOQueue<T>(f, serializer, bytes);
-			this.ids.put(h, new MonitoredSyncQueue<T>(label, memoryMappedQueue));
-			return h;
-		} finally {
-			lock.unlock();
-		}
+		QueueHandle h = new QueueHandle(i.incrementAndGet());
+		MemoryMappedFIFOQueue<T> memoryMappedQueue = new MemoryMappedFIFOQueue<T>(f, serializer, bytes);
+		this.ids.put(h, new MonitoredSyncQueue<T>(label, memoryMappedQueue));
+		return h;
+	}
+	
+	/**
+	 * Creates a new message queue which can hold a limited number of objects
+	 * 
+	 * @param max Maximum number of elements 
+	 * 
+	 * @return A queue handle
+	 */
+	public QueueHandle createLimitedBlockMessageQueue(int max) {
+		return createLimitedBlockMessageQueue("", max);
+	}
+
+
+	/**
+	 * Creates a new message queue which can hold a limited number of objects
+	 *
+	 * @param label Label
+	 * @param max Maximum number of elements
+	 * 
+	 * @return A queue handle
+	 */
+	public QueueHandle createLimitedBlockMessageQueue(String label, int max) {
+		QueueHandle h = new QueueHandle(i.incrementAndGet());
+		this.ids.put(h, new MonitoredSyncQueue<T>(label, new SimpleEventQueue<T>(), max));
+		return h;
 	}
 	
 	/**
@@ -105,16 +119,11 @@ public class QueueService<T> {
 	 * @param p QueueProcessor object which will process
 	 */
 	public void startProcessor(QueueHandle h, QueueProcessor<T> p) {
-		try {
-			lock.lock();
-			if (!this.ids.containsKey(h)) {
-				throw new QueueServiceException("Unknown handle");
-			}
-		
-			executor.execute(new WorkerRunnable(this.ids.get(h), p));
-		} finally {
-			lock.unlock();
+		if (!this.ids.containsKey(h)) {
+			throw new QueueServiceException("Unknown handle");
 		}
+	
+		executor.execute(new WorkerRunnable(this.ids.get(h), p));
 	}
 
 	/**
@@ -122,21 +131,15 @@ public class QueueService<T> {
 	 * 
 	 * @param h The handle of the queue
 	 * @param t The object to insert
+	 * 
+	 * @throws InterruptedException 
 	 */
-	public void sendObjectToQueue(QueueHandle h, T t) {
-		try {
-			lock.lock();
-			
-			if (!this.ids.containsKey(h)) {
-				throw new QueueServiceException("Unknown handle");
-			}
-		
-			this.ids.get(h).put(t);
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			lock.unlock();
+	public void sendObjectToQueue(QueueHandle h, T t) throws InterruptedException {
+		if (!this.ids.containsKey(h)) {
+			throw new QueueServiceException("Unknown handle");
 		}
+	
+		this.ids.get(h).put(t);
 	}
 	
 	/**
@@ -150,18 +153,10 @@ public class QueueService<T> {
 	 * 
 	 * @param secondsBetweenChecks - Seconds between verifications
 	 */
-	public void waitUntilWorkIsDoneAndStop(int secondsBetweenChecks) {
+	public void waitUntilWorkIsDone(int secondsBetweenChecks) {
 		boolean someoneIsWorking = false;
 		do {
-			try {
-				lock.lock();
-				
-				//Debug info
-				System.err.println(new Date());
-				for (MonitoredSyncQueue<?> m : ids.values()) {
-					System.err.println("Queue " + m + " size " + m.size());
-				}
-				
+			synchronized (ids) {
 				someoneIsWorking = false;
 				
 				//Acquiring time stamps
@@ -190,21 +185,20 @@ public class QueueService<T> {
 						i++;
 					}
 				}
-				
-				//Shutting Down!!!!
-				if (!someoneIsWorking) {
-					executor.shutdownNow();
-				}
-			} finally {
-				lock.unlock();
-				if (someoneIsWorking) {
-					try {
-						Thread.sleep(secondsBetweenChecks * 1000);
-					} catch (InterruptedException e) {
-					}
+			}
+			
+			if (someoneIsWorking) {
+				try {
+					Thread.sleep(secondsBetweenChecks * 1000);
+				} catch (InterruptedException e) {
 				}
 			}
 		} while (someoneIsWorking);
+	}
+	
+	public void waitUntilWorkIsDoneAndStop(int secondsBetweenChecks) {
+		waitUntilWorkIsDone(secondsBetweenChecks);
+		this.executor.shutdownNow();
 	}
 	
 	/**

@@ -26,7 +26,7 @@ public class URLSaveCrawlSerializer implements Serializer<URLSaveCrawlJob> {
 		byte[] res = new byte[url.length + savePath.length + type.length + 3];
 		
 		//unsafe if not!!!!
-		if (url.length > Byte.MAX_VALUE || savePath.length > Byte.MAX_VALUE || type.length > Byte.MAX_VALUE) {
+		if ((url.length + savePath.length + type.length) > 2 * Byte.MAX_VALUE + 1) {
 			throw new RuntimeException();
 		}
 		
