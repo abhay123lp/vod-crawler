@@ -53,8 +53,10 @@ public class Main {
 		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
 		params.setParameter("Accept-Language", "en-us");
 		
+		//Totals
 		ConnManagerParams.setMaxConnectionsPerRoute(params, new ConnPerRouteBean(nThreads));
 		ConnManagerParams.setMaxTotalConnections(params, nThreads);
+		
         SchemeRegistry schemeRegistry = new SchemeRegistry();
         schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
         ClientConnectionManager cm = new ThreadSafeClientConnManager(params, schemeRegistry);
