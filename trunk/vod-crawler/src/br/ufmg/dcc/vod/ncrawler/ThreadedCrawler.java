@@ -26,7 +26,7 @@ public class ThreadedCrawler<R, T> {
 		this.nThreads = nThreads;
 		this.sleep = sleep;
 		this.service = new QueueService<CrawlJob<R, T>>();
-		this.evaluator = new QueueServiceBasedEvaluator<R, T>(evaluator, service);
+		this.evaluator = new QueueServiceBasedEvaluator<R, T>(nThreads, evaluator, service);
 		this.processor = new ThreadedProcessor<R, T>(nThreads, sleep, service);
 	}
 
@@ -35,7 +35,7 @@ public class ThreadedCrawler<R, T> {
 		this.nThreads = nThreads;
 		this.sleep = sleep;
 		this.service = new QueueService<CrawlJob<R, T>>();
-		this.evaluator = new QueueServiceBasedEvaluator<R, T>(evaluator, service);
+		this.evaluator = new QueueServiceBasedEvaluator<R, T>(nThreads, evaluator, service);
 		this.processor = new ThreadedProcessor<R, T>(nThreads, sleep, service, s, queueFile, fileSize);
 	}
 	

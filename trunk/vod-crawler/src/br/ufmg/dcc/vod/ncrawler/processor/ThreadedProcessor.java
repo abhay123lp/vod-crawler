@@ -38,7 +38,7 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService<CrawlJob<R, T>> service) {
 		this.nThreads = nThreads;
 		this.sleepTimePerExecution = sleepTimePerExecution;
-		this.myHandle = service.createLimitedBlockMessageQueue("Workers", nThreads * 2);
+		this.myHandle = service.createMessageQueue("Workers");
 		this.service = service;
 	}
 	
