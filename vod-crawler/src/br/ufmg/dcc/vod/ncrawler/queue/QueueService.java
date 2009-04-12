@@ -159,10 +159,14 @@ public class QueueService<T> {
 			synchronized (ids) {
 				someoneIsWorking = false;
 				
+				System.err.println("debug");
+				
 				//Acquiring time stamps
 				int[] stamps = new int[ids.size()];
 				int i = 0;
 				for (MonitoredSyncQueue<?> m : ids.values()) {
+					System.err.println(m + " => " + m.size());
+					
 					Pair<Integer, Integer> sizeAndTimeStamp = m.synchronizationData();
 					if (sizeAndTimeStamp.first != 0) {
 						someoneIsWorking = true;
