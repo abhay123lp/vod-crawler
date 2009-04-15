@@ -25,7 +25,7 @@ import br.ufmg.dcc.vod.ncrawler.common.Pair;
 public class Main {
 	
 	public static void main(String[] args) throws Exception {
-		if (args == null || args.length < 7) {
+		if (args == null || args.length < 6) {
 			System.err.println("usage: <nthreads> <sleep in secs> <user save folder> <videos save folder> <seed file> <work queue folder>");
 			System.exit(1);
 		}
