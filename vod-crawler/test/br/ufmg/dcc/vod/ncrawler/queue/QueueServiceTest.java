@@ -2,6 +2,7 @@ package br.ufmg.dcc.vod.ncrawler.queue;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -17,22 +18,50 @@ public class QueueServiceTest extends TestCase {
 	private File f3;
 
 	@Before
-	public void setUp() throws Exception {
-		f1 = File.createTempFile("temp", "test");
+	public void setUp() {
+		String tmpDir = System.getProperty("java.io.tmpdir");
+		do  {
+			f1 = new File(tmpDir + File.separator + new Random().nextInt());
+		} while (f1.exists());
+
+		do  {
+			f3 = new File(tmpDir + File.separator + new Random().nextInt());
+		} while (f1.exists());
+		
+		do  {
+			f2 = new File(tmpDir + File.separator + new Random().nextInt());
+		} while (f1.exists());
+		
+		
+		f1.mkdirs();
+		f2.mkdirs();
+		f3.mkdirs();
+	}
+
+	@After
+	public void tearDown() {
+		for (File f : f1.listFiles()) {
+			f.delete();
+			f.deleteOnExit();
+		}
+		f1.delete();
 		f1.deleteOnExit();
 		
-		f2 = File.createTempFile("temp", "test");
-		f2.deleteOnExit();
-		
-		f3 = File.createTempFile("temp", "test");
-		f3.deleteOnExit();
-	}
-	
-	@After
-	public void tearDown() throws Exception {
-		f1.delete();
+		for (File f : f2.listFiles()) {
+			f.delete();
+			f.deleteOnExit();
+		}
 		f2.delete();
+		f2.deleteOnExit();
+
+		
+		for (File f : f3.listFiles()) {
+			f.delete();
+			f.deleteOnExit();
+		}
 		f3.delete();
+		f3.deleteOnExit();
+
 	}
 	
 	/*

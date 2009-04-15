@@ -25,8 +25,8 @@ import br.ufmg.dcc.vod.ncrawler.common.Pair;
 public class Main {
 	
 	public static void main(String[] args) throws Exception {
-		if (args == null || args.length < 5) {
-			System.err.println("usage: <nthreads> <sleep in secs> <user save folder> <videos save folder> <seed file>");
+		if (args == null || args.length < 7) {
+			System.err.println("usage: <nthreads> <sleep in secs> <user save folder> <videos save folder> <seed file> <work queue folder>");
 			System.exit(1);
 		}
 		
@@ -45,6 +45,11 @@ public class Main {
 		
 		File seedFile = new File(args[4]);
 
+		File workQueueFolder = new File(args[5]);
+		if (workQueueFolder.exists() && (!workQueueFolder.isDirectory() || workQueueFolder.list().length != 0)) {
+			throw new Exception("work queue folder exists and is not empty");
+		}
+		
 		List<String> seeds = FileUtil.readFileToList(seedFile);
 		
 		//HTTPClient
@@ -68,7 +73,7 @@ public class Main {
 
 		//Start!
 		LoggerInitiator.initiateLog();
-		ThreadedCrawler<Pair<String, Set<String>>, HTMLType> tc = new ThreadedCrawler<Pair<String, Set<String>>, HTMLType>(nThreads, sleep, e);
+		ThreadedCrawler<Pair<String, Set<String>>, HTMLType> tc = new ThreadedCrawler<Pair<String, Set<String>>, HTMLType>(nThreads, sleep, e, workQueueFolder, new URLSaveCrawlSerializer(httpClient), 512 * 1024 * 1024);
 		tc.crawl();
 		httpClient.getConnectionManager().shutdown();
 	}

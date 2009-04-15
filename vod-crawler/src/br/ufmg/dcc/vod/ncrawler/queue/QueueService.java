@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -48,10 +49,10 @@ public class QueueService<T> {
 	}
 	
 	/**
-	 * Creates a new message queue that is stored on disk
+	 * Creates a new message queue that is stored on multiple files on a disk
 	 *
 	 * @param label Label
-	 * @param f File to use
+	 * @param f Folder to use
 	 * @param serializer To serialize object
 	 * @param bytes amount of bytes to allocate on file
 	 * 
@@ -66,10 +67,10 @@ public class QueueService<T> {
 
 
 	/**
-	 * Creates a new message queue that is stored on disk with a label
+	 * Creates a new message queue that is stored on multiple files on disk
 	 *
 	 * @param label Label
-	 * @param f File to use
+	 * @param f Folder to use
 	 * @param serializer To serialize object
 	 * @param bytes amount of bytes to allocate on file
 	 * 
@@ -80,8 +81,7 @@ public class QueueService<T> {
 	 */
 	public QueueHandle createPersistentMessageQueue(String label, File f, Serializer<T> serializer, int bytes) throws FileNotFoundException, IOException {
 		QueueHandle h = new QueueHandle(i.incrementAndGet());
-		MemoryMappedFIFOQueue<T> memoryMappedQueue = new MemoryMappedFIFOQueue<T>(f, serializer, bytes);
-		memoryMappedQueue.createAndOpen();
+		MultiFileMMapFifoQueue<T> memoryMappedQueue = new MultiFileMMapFifoQueue<T>(f, serializer, bytes);
 		this.ids.put(h, new MonitoredSyncQueue<T>(label, memoryMappedQueue));
 		return h;
 	}
@@ -160,14 +160,15 @@ public class QueueService<T> {
 			synchronized (ids) {
 				someoneIsWorking = false;
 				
-				System.err.println("debug");
+				System.err.println("-- debug " + new Date());
+				for (MonitoredSyncQueue<?> m : ids.values()) {
+					System.err.println(m + " => " + m.size());
+				}
 				
 				//Acquiring time stamps
 				int[] stamps = new int[ids.size()];
 				int i = 0;
 				for (MonitoredSyncQueue<?> m : ids.values()) {
-					System.err.println(m + " => " + m.size());
-					
 					Pair<Integer, Integer> sizeAndTimeStamp = m.synchronizationData();
 					if (sizeAndTimeStamp.first != 0) {
 						someoneIsWorking = true;
