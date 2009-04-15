@@ -5,6 +5,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * In order to surpass memory map limits, this class creates multiples {@link MemoryMappedFIFOQueue} inside
+ * a folder. Given that reading and writing is sequential, only a maximum of two file are open at time, 
+ * one for writing and one for reading.
+ *  
+ * @param <T> Type of objects to be inserted
+ */
 class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 
 	private List<MemoryMappedFIFOQueue<T>> queues;
