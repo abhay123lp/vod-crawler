@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
+import br.ufmg.dcc.vod.ncrawler.common.SimpleBloomFilter;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.processor.Processor;
 
@@ -44,6 +45,8 @@ import br.ufmg.dcc.vod.ncrawler.processor.Processor;
  */
 public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>, HTMLType> {
 
+	private static final int TEN_MILLION = 10000000;
+
 	private static final Logger LOG = Logger.getLogger(YTUserHTMLEvaluator.class);
 	
 	private static final String VIEW = "&view=";
@@ -51,8 +54,8 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>,
 	private static final String GL_US_HL_EN = "&gl=US&hl=en";
 	private static final String BASE_URL = "http://www.youtube.com/";
 	
-	private final HashSet<Integer> crawledUsers;
-	private final HashSet<Integer> crawledVideos;
+	private final Set<Integer> crawledUsers;
+	private final Set<Integer> crawledVideos;
 	private final File videosFolder;
 	private final File usersFolder;
 	
@@ -80,15 +83,15 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>,
 		this.usersFolder = usersFolder;
 		this.initialUsers = initialUsers;
 		this.initialVideos = initialVideos;
-		this.crawledUsers = new HashSet<Integer>();
+		this.crawledUsers = new SimpleBloomFilter<Integer>(5 * TEN_MILLION * 16, 5 * TEN_MILLION);
 		
 		for (String u : crawledUsers) {
 			this.crawledUsers.add(u.hashCode());
 		}
 		
-		this.crawledVideos = new HashSet<Integer>();
+		this.crawledVideos = new SimpleBloomFilter<Integer>(5 * TEN_MILLION * 16, 5 * TEN_MILLION);
 		for (String v : crawledVideos) {
-			this.crawledUsers.add(v.hashCode());
+			this.crawledVideos.add(v.hashCode());
 		}
 		
 		this.httpClient = client;
@@ -113,6 +116,9 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>,
 		} catch (Exception e) {
 			LOG.error("Error occurred:", e);
 		}
+		
+		initialUsers.clear();
+		initialVideos.clear();
 	}
 	
 	@Override
