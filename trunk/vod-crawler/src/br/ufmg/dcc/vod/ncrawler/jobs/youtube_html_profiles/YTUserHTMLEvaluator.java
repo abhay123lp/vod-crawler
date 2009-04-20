@@ -54,8 +54,8 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>,
 	private static final String GL_US_HL_EN = "&gl=US&hl=en";
 	private static final String BASE_URL = "http://www.youtube.com/";
 	
-	private final Set<Integer> crawledUsers;
-	private final Set<Integer> crawledVideos;
+	private final Set<String> crawledUsers;
+	private final Set<String> crawledVideos;
 	private final File videosFolder;
 	private final File usersFolder;
 	
@@ -83,15 +83,15 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>,
 		this.usersFolder = usersFolder;
 		this.initialUsers = initialUsers;
 		this.initialVideos = initialVideos;
-		this.crawledUsers = new SimpleBloomFilter<Integer>(5 * TEN_MILLION * 16, 5 * TEN_MILLION);
+		this.crawledUsers = new SimpleBloomFilter<String>(5 * TEN_MILLION * 16, 5 * TEN_MILLION);
 		
 		for (String u : crawledUsers) {
-			this.crawledUsers.add(u.hashCode());
+			this.crawledUsers.add(u);
 		}
 		
-		this.crawledVideos = new SimpleBloomFilter<Integer>(5 * TEN_MILLION * 16, 5 * TEN_MILLION);
+		this.crawledVideos = new SimpleBloomFilter<String>(5 * TEN_MILLION * 16, 5 * TEN_MILLION);
 		for (String v : crawledVideos) {
-			this.crawledVideos.add(v.hashCode());
+			this.crawledVideos.add(v);
 		}
 		
 		this.httpClient = client;
@@ -194,9 +194,9 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>,
 	}
 
 	private void dispatchUser(String u) throws MalformedURLException {
-		if (!crawledUsers.contains(u.hashCode())) {
+		if (!crawledUsers.contains(u)) {
 			LOG.info("Dispatching user: user="+u);
-			crawledUsers.add(u.hashCode());
+			crawledUsers.add(u);
 			for (HTMLType t : HTMLType.values()) {
 				if (t.hasFollowUp()) {
 					String url = BASE_URL + PROFILE_USER + u + VIEW + t.getFeatureName() + GL_US_HL_EN;
@@ -209,8 +209,8 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>,
 	}
 
 	private void dispatchVideo(String v) throws MalformedURLException {
-		if (!crawledVideos.contains(v.hashCode())) {
-			crawledVideos.add(v.hashCode());
+		if (!crawledVideos.contains(v)) {
+			crawledVideos.add(v);
 			String url = BASE_URL + "watch?v=" + v + GL_US_HL_EN;
 			LOG.info("Dispatching video: video="+v + ", url="+url);
 			videosFolder.mkdirs();
