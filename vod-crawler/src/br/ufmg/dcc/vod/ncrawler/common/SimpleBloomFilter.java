@@ -27,7 +27,7 @@ public class SimpleBloomFilter<E> implements Set<E> {
 	
 	private int k;
 	private BitSet bitSet;
-	private int bitArraySize, expectedElements;
+	private int bitArraySize, expectedElements, amountOfInserted;
 
 	/**
 	 * Construct a SimpleBloomFilter. You must specify the number of bits in the
@@ -49,6 +49,7 @@ public class SimpleBloomFilter<E> implements Set<E> {
 		this.k = (int) Math.ceil((bitArraySize / expectedElements)
 				* Math.log(2.0));
 		bitSet = new BitSet(bitArraySize);
+		this.amountOfInserted++;
 	}
 
 	/**
@@ -73,6 +74,7 @@ public class SimpleBloomFilter<E> implements Set<E> {
 		for (int x = 0; x < k; x++) {
 			bitSet.set(r.nextInt(bitArraySize), true);
 		}
+		amountOfInserted++;
 		return false;
 	}
 
@@ -117,6 +119,10 @@ public class SimpleBloomFilter<E> implements Set<E> {
 		return true;
 	}
 
+	public int size() {
+		return this.amountOfInserted;
+	}
+
 	/**
 	 * Not implemented
 	 */
@@ -149,13 +155,6 @@ public class SimpleBloomFilter<E> implements Set<E> {
 	 * Not implemented
 	 */
 	public boolean retainAll(Collection<?> c) {
-		throw new UnsupportedOperationException();
-	}
-
-	/**
-	 * Not implemented
-	 */
-	public int size() {
 		throw new UnsupportedOperationException();
 	}
 
