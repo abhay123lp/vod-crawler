@@ -174,6 +174,10 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, Set<String>>,
 			}
 		}
 		
+		printStats();
+	}
+
+	private void printStats() {
 		System.out.println("---");
 		System.out.println("Stats: " + new Date());
 		System.out.println("-- in users");

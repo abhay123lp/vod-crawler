@@ -56,9 +56,11 @@ public class Main {
 		BasicHttpParams params = new BasicHttpParams();
 		HttpProtocolParams.setUserAgent(params, "Social Networks research crawler, author: Flavio Figueiredo - hp: http://www.dcc.ufmg.br/~flaviov - email: flaviov@dcc.ufmg.br - resume at: http://flaviovdf.googlepages.com/flaviov.d.defigueiredo-resume");
 		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+		
 		params.setParameter("Accept-Language", "en-us");
 		
 		//Totals
+		ConnManagerParams.setTimeout(params, 10 * 1000 * 60);
 		ConnManagerParams.setMaxConnectionsPerRoute(params, new ConnPerRouteBean(nThreads));
 		ConnManagerParams.setMaxTotalConnections(params, nThreads);
 		

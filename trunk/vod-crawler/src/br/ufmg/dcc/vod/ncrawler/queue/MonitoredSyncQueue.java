@@ -35,7 +35,7 @@ class MonitoredSyncQueue<T> {
 	private final ReentrantReadWriteLock stampLock;
 	
 	//Get lock
-	private final ReentrantLock getLock;
+	private final ReentrantLock lock;
 	private final Condition getCondition;
 	private final Condition putCondition;
 	
@@ -52,9 +52,9 @@ class MonitoredSyncQueue<T> {
 		this.e = e;
 		this.maxSize = maxSize;
 		this.stampLock = new ReentrantReadWriteLock();
-		this.getLock = new ReentrantLock();
-		this.getCondition = getLock.newCondition();
-		this.putCondition = getLock.newCondition();
+		this.lock = new ReentrantLock();
+		this.getCondition = lock.newCondition();
+		this.putCondition = lock.newCondition();
 	}
 
 	public void put(T t) throws InterruptedException {
@@ -67,27 +67,34 @@ class MonitoredSyncQueue<T> {
 		}
 		
 		try {
-			getLock.lock();
+			lock.lockInterruptibly();
 			while (e.size() == maxSize)
 				putCondition.await();
 			
 			e.put(t);
-		} finally {
 			getCondition.signal();
-			getLock.unlock();
+		} catch (InterruptedException e) {
+			putCondition.signal(); //wake someone else for waiting
+			throw e;
+		} finally {
+			lock.unlock();
 		}
 	}
 
 	public T claim() throws InterruptedException {
 		try {
-			getLock.lock();
+			lock.lockInterruptibly();
 			while (e.size() == 0)
 				getCondition.await();
 			
-			return e.take();
-		} finally {
+			T take = e.take();
 			putCondition.signal();
-			getLock.unlock();
+			return take;
+		} catch (InterruptedException e) {
+			getCondition.signal(); //wake someone else for waiting
+			throw e;
+		} finally {
+			lock.unlock();
 		}
 	}
 

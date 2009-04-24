@@ -15,19 +15,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
 
 public class URLSaveCrawlJob implements CrawlJob<Pair<String, Set<String>>, HTMLType> {
 
-	private static final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\"\\s*>\\s*Next.*)");
-	private static final Pattern VIDEO_PATTERN = Pattern.compile("(\\s+<div class=\"video-main-content\" id=\"video-main-content-)(.*?)(\".*)");
-	private static final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
-	private static final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
+	private final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\"\\s*>\\s*Next.*)");
+	private final Pattern VIDEO_PATTERN = Pattern.compile("(\\s+<div class=\"video-main-content\" id=\"video-main-content-)(.*?)(\".*)");
+	private final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
+	private final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
 	
 	private final URL url;
 	private final File savePath;
@@ -60,38 +62,46 @@ public class URLSaveCrawlJob implements CrawlJob<Pair<String, Set<String>>, HTML
 			this.resultPath = new File(savePath + File.separator + encode);
 			
 			HttpGet request = new HttpGet(url.toString());
-			HttpResponse execute = httpClient.execute(request);
-			content = execute.getEntity().getContent();
 			
-		    in = new BufferedReader(new InputStreamReader(content));
-			out = new PrintStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(resultPath))));
+			//We create a client because we believe there is a deadlock bug
+			HttpResponse execute = new DefaultHttpClient(httpClient.getConnectionManager(), httpClient.getParams()).execute(request);
 			
-			String inputLine;
-		    while ((inputLine = in.readLine()) != null) {
-		    	Matcher matcher = NEXT_PATTERN.matcher(inputLine);
-		    	if (matcher.matches() && inputLine.contains(t.getFeatureName())) {
-		    		nextLink = matcher.group(2);
-		    	}
-		    	
-				Pattern pat = null;
-				if (t == HTMLType.FAVORITES || t == HTMLType.VIDEOS) {
-					pat = VIDEO_PATTERN;
-				} else if (t == HTMLType.SUBSCRIBERS || t == HTMLType.SUBSCRIPTIONS || t == HTMLType.FRIENDS) {
-					pat = RELATION_PATTERN;
-				} 
-		    	
-		    	if (pat != null) {
-			    	matcher = pat.matcher(inputLine);
-			    	if (matcher.matches()) {
-			    		returnValue.add(matcher.group(2));
+			HttpEntity entity = execute.getEntity();
+			if (entity != null) {
+				content = entity.getContent();
+				
+			    in = new BufferedReader(new InputStreamReader(content));
+				out = new PrintStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(resultPath))));
+				
+				String inputLine;
+			    while ((inputLine = in.readLine()) != null) {
+			    	Matcher matcher = NEXT_PATTERN.matcher(inputLine);
+			    	if (matcher.matches() && inputLine.contains(t.getFeatureName())) {
+			    		nextLink = matcher.group(2);
 			    	}
-		    	}
-		    	
-		    	matcher = ERROR_PATTERN.matcher(inputLine);
-		    	if (matcher.matches()) {
-		    		throw new ErrorPageException();
-		    	}
-		    }
+			    	
+					Pattern pat = null;
+					if (t == HTMLType.FAVORITES || t == HTMLType.VIDEOS) {
+						pat = VIDEO_PATTERN;
+					} else if (t == HTMLType.SUBSCRIBERS || t == HTMLType.SUBSCRIPTIONS || t == HTMLType.FRIENDS) {
+						pat = RELATION_PATTERN;
+					} 
+			    	
+			    	if (pat != null) {
+				    	matcher = pat.matcher(inputLine);
+				    	if (matcher.matches()) {
+				    		returnValue.add(matcher.group(2));
+				    	}
+			    	}
+			    	
+			    	matcher = ERROR_PATTERN.matcher(inputLine);
+			    	if (matcher.matches()) {
+			    		throw new ErrorPageException();
+			    	}
+			    }
+			    
+			    entity.consumeContent();
+			}
 	    }
 	    finally
 	    {
