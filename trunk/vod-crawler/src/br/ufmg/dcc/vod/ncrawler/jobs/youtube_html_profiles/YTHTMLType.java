@@ -88,4 +88,9 @@ public class YTHTMLType implements HTMLType {
 			return null;
 		}
 	}
+	
+	@Override
+	public String toString() {
+		return getFeatureName();
+	}
 }

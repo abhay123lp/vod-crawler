@@ -48,6 +48,9 @@ public class Main {
 			throw new Exception("work queue folder exists and is not empty");
 		}
 		
+		File pQueue = new File(workQueueFolder.getAbsolutePath() + File.separator + "processor");
+		File eQueue = new File(workQueueFolder.getAbsolutePath() + File.separator + "eval");
+		
 		List<String> seeds = FileUtil.readFileToList(seedFile);
 		
 		//HTTPClient
@@ -73,7 +76,7 @@ public class Main {
 
 		//Start!
 		LoggerInitiator.initiateLog();
-		ThreadedCrawler<File, YTHTMLType> tc = new ThreadedCrawler<File, YTHTMLType>(nThreads, sleep, e, workQueueFolder, new URLSaveCrawlSerializer(httpClient), 512 * 1024 * 1024);
+		ThreadedCrawler<File, YTHTMLType> tc = new ThreadedCrawler<File, YTHTMLType>(nThreads, sleep, e, pQueue, eQueue, new URLSaveCrawlSerializer(httpClient), 512 * 1024 * 1024);
 		tc.crawl();
 		httpClient.getConnectionManager().shutdown();
 	}

@@ -29,6 +29,5 @@ public class CrawlResultSerializer extends AbstractArraySerializer<CrawlResult<F
 		boolean success = bs[3][0] == 1;
 		
 		return new CrawlResult<File, YTHTMLType>(id, r, e, success);
-		
 	}
 }

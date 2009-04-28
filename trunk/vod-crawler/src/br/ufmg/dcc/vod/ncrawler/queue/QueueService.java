@@ -22,7 +22,7 @@ import br.ufmg.dcc.vod.ncrawler.common.Pair;
  */
 public class QueueService {
 
-	private final Map<QueueHandle, MonitoredSyncQueue<Object>> ids = Collections.synchronizedMap(new HashMap<QueueHandle, MonitoredSyncQueue<Object>>());
+	private final Map<QueueHandle, MonitoredSyncQueue<?>> ids = Collections.synchronizedMap(new HashMap<QueueHandle, MonitoredSyncQueue<?>>());
 	private final ExecutorService executor = Executors.newCachedThreadPool();
 	private final AtomicInteger i = new AtomicInteger(0);
 
@@ -42,9 +42,9 @@ public class QueueService {
 	 * @param label Label
 	 * @return A queue handle
 	 */
-	public QueueHandle createMessageQueue(String label) {
+	public <T> QueueHandle createMessageQueue(String label) {
 		QueueHandle h = new QueueHandle(i.incrementAndGet());
-		this.ids.put(h, new MonitoredSyncQueue<Object>(label, new SimpleEventQueue<Object>()));
+		this.ids.put(h, new MonitoredSyncQueue<T>(label, new SimpleEventQueue<T>()));
 		return h;
 	}
 	
@@ -80,11 +80,10 @@ public class QueueService {
 	 * @throws IOException In case and io error occurs 
 	 * @throws FileNotFoundException  In case the file does not exist
 	 */
-	@SuppressWarnings("unchecked")
-	public QueueHandle createPersistentMessageQueue(String label, File f, Serializer serializer, int bytes) throws FileNotFoundException, IOException {
+	public <T> QueueHandle createPersistentMessageQueue(String label, File f, Serializer<T> serializer, int bytes) throws FileNotFoundException, IOException {
 		QueueHandle h = new QueueHandle(i.incrementAndGet());
-		MultiFileMMapFifoQueue<Object> memoryMappedQueue = new MultiFileMMapFifoQueue<Object>(f, serializer, bytes);
-		this.ids.put(h, new MonitoredSyncQueue<Object>(label, memoryMappedQueue));
+		MultiFileMMapFifoQueue<T> memoryMappedQueue = new MultiFileMMapFifoQueue<T>(f, serializer, bytes);
+		this.ids.put(h, new MonitoredSyncQueue<T>(label, memoryMappedQueue));
 		return h;
 	}
 	
@@ -110,7 +109,7 @@ public class QueueService {
 	 */
 	public <T> QueueHandle createLimitedBlockMessageQueue(String label, int max) {
 		QueueHandle h = new QueueHandle(i.incrementAndGet());
-		this.ids.put(h, new MonitoredSyncQueue<Object>(label, new SimpleEventQueue<Object>(), max));
+		this.ids.put(h, new MonitoredSyncQueue<T>(label, new SimpleEventQueue<T>(), max));
 		return h;
 	}
 	
@@ -121,12 +120,14 @@ public class QueueService {
 	 * @param h Handle identifying the queue
 	 * @param p QueueProcessor object which will process
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> void startProcessor(QueueHandle h, QueueProcessor<T> p) {
 		if (!this.ids.containsKey(h)) {
 			throw new QueueServiceException("Unknown handle");
 		}
 	
-		executor.execute(new WorkerRunnable(this.ids.get(h), p));
+		WorkerRunnable<T> runnable = new WorkerRunnable<T>((MonitoredSyncQueue<T>) this.ids.get(h), p);
+		executor.execute(runnable);
 	}
 
 	/**
@@ -137,12 +138,13 @@ public class QueueService {
 	 * 
 	 * @throws InterruptedException 
 	 */
+	@SuppressWarnings("unchecked")
 	public <T> void sendObjectToQueue(QueueHandle h, T t) throws InterruptedException {
 		if (!this.ids.containsKey(h)) {
 			throw new QueueServiceException("Unknown handle");
 		}
 	
-		this.ids.get(h).put(t);
+		((MonitoredSyncQueue<T>) this.ids.get(h)).put(t);
 	}
 	
 	/**
@@ -209,16 +211,19 @@ public class QueueService {
 		this.executor.shutdownNow();
 	}
 	
+	public void shutdown() {
+		
+	}
+	
 	/**
 	 * A worker runnable guarantees that the done method of the queue is called. 
 	 */
-	@SuppressWarnings("unchecked")
-	private class WorkerRunnable extends Thread {
+	private class WorkerRunnable<T> extends Thread {
 		
-		private final MonitoredSyncQueue q;
-		private final QueueProcessor p;
+		private final MonitoredSyncQueue<T> q;
+		private final QueueProcessor<T> p;
 		
-		public WorkerRunnable(MonitoredSyncQueue q, QueueProcessor p) {
+		public WorkerRunnable(MonitoredSyncQueue<T> q, QueueProcessor<T> p) {
 			super("WorkerRunnable: " + p.getName());
 			this.q = q;
 			this.p = p;
@@ -228,7 +233,7 @@ public class QueueService {
 		public void run() {
 			while (true) {
 				boolean interrupted = false;
-				Object take = null;
+				T take = null;
 				try {
 					take = q.claim();
 					p.process(take);

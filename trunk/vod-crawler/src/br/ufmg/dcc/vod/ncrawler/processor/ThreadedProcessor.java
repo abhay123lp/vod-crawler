@@ -24,26 +24,23 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 	private final QueueService service;
 	private Evaluator<R, T> e;
 
-	//Uses disk queue
-	@SuppressWarnings("unchecked")
-	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service,
-			Serializer serializer, File queueFile, int queueSize) 
+	public <S> ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service,
+			Serializer<S> serializer, File queueFile, int queueSize) 
 			throws FileNotFoundException, IOException {
 		
 		this.nThreads = nThreads;
 		this.sleepTimePerExecution = sleepTimePerExecution;
-		this.myHandle = service.createPersistentMessageQueue("Workers", queueFile, serializer, queueSize);
 		this.service = service;
+		this.myHandle = service.createPersistentMessageQueue("Workers", queueFile, serializer, queueSize);
 	}
 	
-	//Uses memory queue
 	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service) {
 		this.nThreads = nThreads;
 		this.sleepTimePerExecution = sleepTimePerExecution;
-		this.myHandle = service.createMessageQueue("Workers");
 		this.service = service;
+		this.myHandle = service.createMessageQueue("Workers");
 	}
-	
+
 	public void start() {
 		for (int i = 0; i < nThreads; i++) {
 			service.startProcessor(myHandle, new CrawlProcessor(i));

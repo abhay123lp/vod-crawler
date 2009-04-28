@@ -21,7 +21,8 @@ public abstract class AbstractArraySerializer<T> implements Serializer<T> {
 		
 		byte[] res = new byte[size];
 		int pos = numArrays;
-		for (int i = numArrays; i < numArrays; i++) {
+		for (int i = 0; i < numArrays; i++) {
+			res[i] = (byte) bs[i].length;
 			System.arraycopy(bs[i], 0, res, pos, bs[i].length);
 			pos += bs[i].length;
 		}
@@ -39,8 +40,8 @@ public abstract class AbstractArraySerializer<T> implements Serializer<T> {
 		}
 		
 		int pos = numArrays;
-		for (int i = numArrays; i < numArrays + numArrays; i++) {
-			System.arraycopy(checkpoint, 0, bs[i], pos, bs[i].length);
+		for (int i = 0; i < numArrays; i++) {
+			System.arraycopy(checkpoint, pos, bs[i], 0, bs[i].length);
 			pos += bs[i].length;
 		}
 		
