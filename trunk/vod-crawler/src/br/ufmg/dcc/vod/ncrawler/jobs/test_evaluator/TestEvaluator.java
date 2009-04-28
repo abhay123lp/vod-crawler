@@ -2,7 +2,7 @@ package br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator;
 
 import java.util.HashMap;
 
-import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import br.ufmg.dcc.vod.ncrawler.CrawlResult;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.processor.Processor;
 
@@ -18,7 +18,7 @@ public class TestEvaluator implements Evaluator<int[], Integer> {
 	}
 	
 	@Override
-	public void crawlJobConcluded(CrawlJob<int[], Integer> j) {
+	public void crawlJobConcluded(CrawlResult<int[], Integer> j) {
 		this.crawled.put(j.getType(), j.getResult());
 		for (int i : j.getResult()) {
 			if (!crawled.containsKey(i)) {

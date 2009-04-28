@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
-import br.ufmg.dcc.vod.ncrawler.ThreadedCrawler;
 import br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator.RandomizedSyncGraph;
 import br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator.TestEvaluator;
 

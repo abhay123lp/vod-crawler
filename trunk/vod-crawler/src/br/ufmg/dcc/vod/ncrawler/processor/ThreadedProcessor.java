@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import br.ufmg.dcc.vod.ncrawler.CrawlResult;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;
@@ -20,12 +21,13 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 	private final long sleepTimePerExecution;
 	private final int nThreads;
 	private final QueueHandle myHandle;
-	private final QueueService<CrawlJob<R, T>> service;
+	private final QueueService service;
 	private Evaluator<R, T> e;
 
 	//Uses disk queue
-	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService<CrawlJob<R, T>> service,
-			Serializer<CrawlJob<R, T>> serializer, File queueFile, int queueSize) 
+	@SuppressWarnings("unchecked")
+	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service,
+			Serializer serializer, File queueFile, int queueSize) 
 			throws FileNotFoundException, IOException {
 		
 		this.nThreads = nThreads;
@@ -35,7 +37,7 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 	}
 	
 	//Uses memory queue
-	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService<CrawlJob<R, T>> service) {
+	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service) {
 		this.nThreads = nThreads;
 		this.sleepTimePerExecution = sleepTimePerExecution;
 		this.myHandle = service.createMessageQueue("Workers");
@@ -77,17 +79,19 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 
 		@Override
 		public void process(CrawlJob<R, T> t) {
+			R r = null;
 			
 			try {
-				LOG.info("STARTING Collecting url: url="+t.getID());
+				LOG.info("STARTING Collecting url: url="+t);
 				t.collect();
-				LOG.info("DONE Collected url: url="+t.getID());
+				r = t.getResult();
+				LOG.info("DONE Collected url: url="+t);
 			} catch (Exception e) {
-				t.markWithError();
-				LOG.error("ERROR Collecting: url="+t.getID(), e);
-			} finally {
-				e.crawlJobConcluded(t);
+				LOG.error("ERROR Collecting: url="+t, e);
 			}
+			
+			//R will be null if error occurred!
+			e.crawlJobConcluded(new CrawlResult<R, T>(t.getID(), r, t.getType(), r == null));
 			
 			try {
 				Thread.sleep(sleepTimePerExecution * 1000);

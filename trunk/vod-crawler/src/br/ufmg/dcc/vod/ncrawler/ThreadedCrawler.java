@@ -18,14 +18,15 @@ public class ThreadedCrawler<R, T> {
 	
 	private final ThreadedProcessor<R, T> processor;
 	private final QueueServiceBasedEvaluator<R, T> evaluator;
-	private final QueueService<CrawlJob<R, T>> service;
+	private final QueueService service;
+	
 	private final int nThreads;
 	private final long sleep;
 
 	public ThreadedCrawler(int nThreads, long sleep, Evaluator<R, T> evaluator) {
 		this.nThreads = nThreads;
 		this.sleep = sleep;
-		this.service = new QueueService<CrawlJob<R, T>>();
+		this.service = new QueueService();
 		this.evaluator = new QueueServiceBasedEvaluator<R, T>(nThreads, evaluator, service);
 		this.processor = new ThreadedProcessor<R, T>(nThreads, sleep, service);
 	}
@@ -34,7 +35,7 @@ public class ThreadedCrawler<R, T> {
 	public ThreadedCrawler(int nThreads, long sleep, Evaluator<R, T> evaluator, File queueFile, Serializer s, int fileSize) throws FileNotFoundException, IOException {
 		this.nThreads = nThreads;
 		this.sleep = sleep;
-		this.service = new QueueService<CrawlJob<R, T>>();
+		this.service = new QueueService();
 		this.evaluator = new QueueServiceBasedEvaluator<R, T>(nThreads, evaluator, service);
 		this.processor = new ThreadedProcessor<R, T>(nThreads, sleep, service, s, queueFile, fileSize);
 	}
