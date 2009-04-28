@@ -1,8 +1,13 @@
 package br.ufmg.dcc.vod.ncrawler.evaluator;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlResult;
+import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.CrawlResultSerializer;
 import br.ufmg.dcc.vod.ncrawler.processor.Processor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;
@@ -16,12 +21,20 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 	private final QueueHandle myHandle;
 	private final QueueService service;
 	
-	public QueueServiceBasedEvaluator(int threads, Evaluator<R, T> e, QueueService service) {
+	public QueueServiceBasedEvaluator(Evaluator<R, T> e, QueueService service, File queueDir, int bytes) 
+		throws FileNotFoundException, IOException {
+		
 		this.e = e;
-		this.myHandle = service.createLimitedBlockMessageQueue("Evaluator", threads * 2);
 		this.service = service;
+		this.myHandle = service.createPersistentMessageQueue("Evaluator", queueDir, new CrawlResultSerializer(), bytes);
 	}
 	
+	public QueueServiceBasedEvaluator(Evaluator<R, T> e, QueueService service) {
+		this.e = e;
+		this.service = service;
+		this.myHandle = service.createMessageQueue("Evaluator");
+	}
+
 	@Override
 	public void setProcessor(Processor<R, T> p) {
 		e.setProcessor(p);

@@ -40,17 +40,4 @@ public class URLSaveCrawlSerializer extends AbstractArraySerializer<URLSaveCrawl
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
-	public static void main(String[] args) throws MalformedURLException {
-		URLSaveCrawlSerializer s = new URLSaveCrawlSerializer(null);
-		
-		URLSaveCrawlJob j = new URLSaveCrawlJob(new URL("http://www.vod.com.br"), new File("/tmp/disk"), YTHTMLType.FRIENDS, null);
-		
-		byte[] checkpointData = s.checkpointData(j);
-		URLSaveCrawlJob interpret = s.interpret(checkpointData);
-		
-		System.out.println(interpret.getUrl());
-		System.out.println(interpret.getSavePath());
-		System.out.println(interpret.getType());
-	}
 }

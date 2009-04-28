@@ -27,17 +27,18 @@ public class ThreadedCrawler<R, T> {
 		this.nThreads = nThreads;
 		this.sleep = sleep;
 		this.service = new QueueService();
-		this.evaluator = new QueueServiceBasedEvaluator<R, T>(nThreads, evaluator, service);
+		this.evaluator = new QueueServiceBasedEvaluator<R, T>(evaluator, service);
 		this.processor = new ThreadedProcessor<R, T>(nThreads, sleep, service);
 	}
 
-	@SuppressWarnings("unchecked")
-	public ThreadedCrawler(int nThreads, long sleep, Evaluator<R, T> evaluator, File queueFile, Serializer s, int fileSize) throws FileNotFoundException, IOException {
+	public <S> ThreadedCrawler(int nThreads, long sleep, Evaluator<R, T> evaluator, File pQueueDir, File eQueueDir, Serializer<S> s, int fileSize) 
+		throws FileNotFoundException, IOException {
+		
 		this.nThreads = nThreads;
 		this.sleep = sleep;
 		this.service = new QueueService();
-		this.evaluator = new QueueServiceBasedEvaluator<R, T>(nThreads, evaluator, service);
-		this.processor = new ThreadedProcessor<R, T>(nThreads, sleep, service, s, queueFile, fileSize);
+		this.evaluator = new QueueServiceBasedEvaluator<R, T>(evaluator, service, eQueueDir, fileSize);
+		this.processor = new ThreadedProcessor<R, T>(nThreads, sleep, service, s, pQueueDir, fileSize);
 	}
 	
 	public void crawl() {
@@ -56,13 +57,12 @@ public class ThreadedCrawler<R, T> {
 		int wi = 10;
 		LOG.info("Waiting until crawl ends: waitInterval="+wi+"s");
 		this.service.waitUntilWorkIsDoneAndStop(wi);
-		
+
+		//Safety loop? uncessary?
 		while(!evaluator.isDone()) {
-			System.out.println("This shoud not occur!!!");
 			try {
 				Thread.sleep(wi * 1000);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
 			}
 		}
 		
