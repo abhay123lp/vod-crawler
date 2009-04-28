@@ -84,6 +84,8 @@ public class YTHTMLType implements HTMLType {
 			return VIDEOS;
 		case PROFILE:
 			return PROFILE;
+		case SINGLE_VIDEO:
+			return SINGLE_VIDEO;
 		default:
 			return null;
 		}

@@ -14,7 +14,7 @@ public interface Evaluator<R, T> {
 
 	public void setProcessor(Processor<R, T> p);
 
-	public void dispatchIntialCrawl();
+	public void dispatchIntialCrawl() throws Exception;
 
 	public void crawlJobConcluded(CrawlResult<R, T> j);
 	

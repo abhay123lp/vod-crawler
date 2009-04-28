@@ -13,7 +13,7 @@ import br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator.TestEvaluator;
 public class ThreadedCrawlerTest {
 
 	@Test
-	public void testCrawl1Thread() {
+	public void testCrawl1Thread() throws Exception {
 		RandomizedSyncGraph g = new RandomizedSyncGraph(100);
 		
 		TestEvaluator te = new TestEvaluator(g);
@@ -27,7 +27,7 @@ public class ThreadedCrawlerTest {
 
 
 	@Test
-	public void testCrawl2Thread() {
+	public void testCrawl2Thread() throws Exception {
 		RandomizedSyncGraph g = new RandomizedSyncGraph(100);
 		
 		TestEvaluator te = new TestEvaluator(g);
@@ -40,7 +40,7 @@ public class ThreadedCrawlerTest {
 	}
 	
 	@Test
-	public void testCrawl100Thread() {
+	public void testCrawl100Thread() throws Exception {
 		RandomizedSyncGraph g = new RandomizedSyncGraph(100);
 		
 		TestEvaluator te = new TestEvaluator(g);

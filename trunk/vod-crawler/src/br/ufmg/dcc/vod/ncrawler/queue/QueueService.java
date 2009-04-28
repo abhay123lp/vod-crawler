@@ -211,10 +211,6 @@ public class QueueService {
 		this.executor.shutdownNow();
 	}
 	
-	public void shutdown() {
-		
-	}
-	
 	/**
 	 * A worker runnable guarantees that the done method of the queue is called. 
 	 */
