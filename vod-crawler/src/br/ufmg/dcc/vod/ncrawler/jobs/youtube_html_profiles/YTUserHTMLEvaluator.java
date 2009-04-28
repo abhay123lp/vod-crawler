@@ -114,18 +114,14 @@ public class YTUserHTMLEvaluator implements Evaluator<File, YTHTMLType> {
 	}
 	
 	@Override
-	public void dispatchIntialCrawl() {
+	public void dispatchIntialCrawl() throws Exception {
 		LOG.info("Dispatching initial crawl: numberOfUser="+initialUsers.size() + " , numberOfVideos="+initialVideos.size());
-		try {
-			for (String s : initialVideos) {
-				dispatchVideo(s);
-			}
-			
-			for (String s : initialUsers) {
-				dispatchUser(s);
-			}
-		} catch (Exception e) {
-			LOG.error("Error occurred:", e);
+		for (String s : initialVideos) {
+			dispatchVideo(s);
+		}
+		
+		for (String s : initialUsers) {
+			dispatchUser(s);
 		}
 		
 		initialUsers.clear();

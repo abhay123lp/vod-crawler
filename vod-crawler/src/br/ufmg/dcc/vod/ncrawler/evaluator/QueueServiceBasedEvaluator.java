@@ -41,7 +41,7 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 	}
 	
 	@Override
-	public void dispatchIntialCrawl() {
+	public void dispatchIntialCrawl() throws Exception {
 		e.dispatchIntialCrawl();
 	}
 
