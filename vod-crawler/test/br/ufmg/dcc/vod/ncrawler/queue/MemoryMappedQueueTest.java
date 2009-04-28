@@ -10,9 +10,6 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import br.ufmg.dcc.vod.ncrawler.queue.MemoryMappedFIFOQueue;
-import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
-
 
 public class MemoryMappedQueueTest extends TestCase {
 

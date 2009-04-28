@@ -2,21 +2,21 @@ package br.ufmg.dcc.vod.ncrawler.evaluator;
 
 import org.apache.log4j.Logger;
 
-import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import br.ufmg.dcc.vod.ncrawler.CrawlResult;
 import br.ufmg.dcc.vod.ncrawler.processor.Processor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
 
-public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueProcessor<CrawlJob<R, T>> {
+public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueProcessor<CrawlResult<R, T>> {
 
 	private static final Logger LOG = Logger.getLogger(QueueServiceBasedEvaluator.class);
 	
 	private final Evaluator<R, T> e;
 	private final QueueHandle myHandle;
-	private final QueueService<CrawlJob<R, T>> service;
+	private final QueueService service;
 	
-	public QueueServiceBasedEvaluator(int threads, Evaluator<R, T> e, QueueService<CrawlJob<R, T>> service) {
+	public QueueServiceBasedEvaluator(int threads, Evaluator<R, T> e, QueueService service) {
 		this.e = e;
 		this.myHandle = service.createLimitedBlockMessageQueue("Evaluator", threads * 2);
 		this.service = service;
@@ -33,9 +33,9 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 	}
 
 	@Override
-	public void crawlJobConcluded(CrawlJob<R, T> j) {
+	public void crawlJobConcluded(CrawlResult<R, T> r) {
 		try {
-			service.sendObjectToQueue(myHandle, j);
+			service.sendObjectToQueue(myHandle, r);
 		} catch (InterruptedException e) {
 			LOG.error(e);
 		}
@@ -51,8 +51,8 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 	}
 
 	@Override
-	public void process(CrawlJob<R, T> t) {
-		e.crawlJobConcluded(t);
+	public void process(CrawlResult<R, T> r) {
+		e.crawlJobConcluded(r);
 	}
 
 	@Override

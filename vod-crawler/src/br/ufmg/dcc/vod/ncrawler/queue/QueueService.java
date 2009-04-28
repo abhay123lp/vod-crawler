@@ -20,9 +20,9 @@ import br.ufmg.dcc.vod.ncrawler.common.Pair;
  * 
  * @param <T> Type of objects in a queue
  */
-public class QueueService<T> {
+public class QueueService {
 
-	private final Map<QueueHandle, MonitoredSyncQueue<T>> ids = Collections.synchronizedMap(new HashMap<QueueHandle, MonitoredSyncQueue<T>>());
+	private final Map<QueueHandle, MonitoredSyncQueue<Object>> ids = Collections.synchronizedMap(new HashMap<QueueHandle, MonitoredSyncQueue<Object>>());
 	private final ExecutorService executor = Executors.newCachedThreadPool();
 	private final AtomicInteger i = new AtomicInteger(0);
 
@@ -44,7 +44,7 @@ public class QueueService<T> {
 	 */
 	public QueueHandle createMessageQueue(String label) {
 		QueueHandle h = new QueueHandle(i.incrementAndGet());
-		this.ids.put(h, new MonitoredSyncQueue<T>(label, new SimpleEventQueue<T>()));
+		this.ids.put(h, new MonitoredSyncQueue<Object>(label, new SimpleEventQueue<Object>()));
 		return h;
 	}
 	
@@ -61,7 +61,8 @@ public class QueueService<T> {
 	 * @throws IOException In case and io error occurs 
 	 * @throws FileNotFoundException  In case the file does not exist
 	 */
-	public QueueHandle createPersistentMessageQueue(File f, Serializer<T> serializer, int bytes) throws FileNotFoundException, IOException {
+	@SuppressWarnings("unchecked")
+	public QueueHandle createPersistentMessageQueue(File f, Serializer serializer, int bytes) throws FileNotFoundException, IOException {
 		return createPersistentMessageQueue("", f, serializer, bytes);
 	}
 
@@ -79,10 +80,11 @@ public class QueueService<T> {
 	 * @throws IOException In case and io error occurs 
 	 * @throws FileNotFoundException  In case the file does not exist
 	 */
-	public QueueHandle createPersistentMessageQueue(String label, File f, Serializer<T> serializer, int bytes) throws FileNotFoundException, IOException {
+	@SuppressWarnings("unchecked")
+	public QueueHandle createPersistentMessageQueue(String label, File f, Serializer serializer, int bytes) throws FileNotFoundException, IOException {
 		QueueHandle h = new QueueHandle(i.incrementAndGet());
-		MultiFileMMapFifoQueue<T> memoryMappedQueue = new MultiFileMMapFifoQueue<T>(f, serializer, bytes);
-		this.ids.put(h, new MonitoredSyncQueue<T>(label, memoryMappedQueue));
+		MultiFileMMapFifoQueue<Object> memoryMappedQueue = new MultiFileMMapFifoQueue<Object>(f, serializer, bytes);
+		this.ids.put(h, new MonitoredSyncQueue<Object>(label, memoryMappedQueue));
 		return h;
 	}
 	
@@ -106,9 +108,9 @@ public class QueueService<T> {
 	 * 
 	 * @return A queue handle
 	 */
-	public QueueHandle createLimitedBlockMessageQueue(String label, int max) {
+	public <T> QueueHandle createLimitedBlockMessageQueue(String label, int max) {
 		QueueHandle h = new QueueHandle(i.incrementAndGet());
-		this.ids.put(h, new MonitoredSyncQueue<T>(label, new SimpleEventQueue<T>(), max));
+		this.ids.put(h, new MonitoredSyncQueue<Object>(label, new SimpleEventQueue<Object>(), max));
 		return h;
 	}
 	
@@ -119,7 +121,7 @@ public class QueueService<T> {
 	 * @param h Handle identifying the queue
 	 * @param p QueueProcessor object which will process
 	 */
-	public void startProcessor(QueueHandle h, QueueProcessor<T> p) {
+	public <T> void startProcessor(QueueHandle h, QueueProcessor<T> p) {
 		if (!this.ids.containsKey(h)) {
 			throw new QueueServiceException("Unknown handle");
 		}
@@ -135,7 +137,7 @@ public class QueueService<T> {
 	 * 
 	 * @throws InterruptedException 
 	 */
-	public void sendObjectToQueue(QueueHandle h, T t) throws InterruptedException {
+	public <T> void sendObjectToQueue(QueueHandle h, T t) throws InterruptedException {
 		if (!this.ids.containsKey(h)) {
 			throw new QueueServiceException("Unknown handle");
 		}
@@ -210,12 +212,13 @@ public class QueueService<T> {
 	/**
 	 * A worker runnable guarantees that the done method of the queue is called. 
 	 */
+	@SuppressWarnings("unchecked")
 	private class WorkerRunnable extends Thread {
 		
-		private final MonitoredSyncQueue<T> q;
-		private final QueueProcessor<T> p;
+		private final MonitoredSyncQueue q;
+		private final QueueProcessor p;
 		
-		public WorkerRunnable(MonitoredSyncQueue<T> q, QueueProcessor<T> p) {
+		public WorkerRunnable(MonitoredSyncQueue q, QueueProcessor p) {
 			super("WorkerRunnable: " + p.getName());
 			this.q = q;
 			this.p = p;
@@ -225,7 +228,7 @@ public class QueueService<T> {
 		public void run() {
 			while (true) {
 				boolean interrupted = false;
-				T take = null;
+				Object take = null;
 				try {
 					take = q.claim();
 					p.process(take);
@@ -238,7 +241,7 @@ public class QueueService<T> {
 		}
 	}
 	
-	protected MonitoredSyncQueue<T> getMessageQueue(QueueHandle handle) {
+	protected MonitoredSyncQueue<?> getMessageQueue(QueueHandle handle) {
 		return this.ids.get(handle);
 	}
 }

@@ -19,11 +19,6 @@ public class TestCrawlJob implements CrawlJob<int[], Integer> {
 	}
 
 	@Override
-	public String getID() {
-		return getType()+"";
-	}
-
-	@Override
 	public int[] getResult() {
 		return neighbours;
 	}
@@ -34,11 +29,7 @@ public class TestCrawlJob implements CrawlJob<int[], Integer> {
 	}
 
 	@Override
-	public boolean success() {
-		return true;
-	}
-
-	@Override
-	public void markWithError() {
+	public String getID() {
+		return vertex+"";
 	}
 }

@@ -3,71 +3,54 @@ package br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 
 import org.apache.http.client.HttpClient;
 
-import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
+import br.ufmg.dcc.vod.ncrawler.jobs.generic.AbstractArraySerializer;
+import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 
-public class URLSaveCrawlSerializer implements Serializer<URLSaveCrawlJob> {
+public class URLSaveCrawlSerializer extends AbstractArraySerializer<URLSaveCrawlJob<YTHTMLType>> {
 
 	private final HttpClient client;
 
 	public URLSaveCrawlSerializer(HttpClient client) {
+		super(3);
 		this.client = client;
 	}
 	
 	@Override
-	public byte[] checkpointData(URLSaveCrawlJob t) {
-		byte[] url = t.getID().getBytes();
+	public byte[][] getArrays(URLSaveCrawlJob<YTHTMLType> t) {
+		byte[] url = t.getUrl().toString().getBytes();
 		byte[] savePath = t.getSavePath().getAbsolutePath().getBytes();
-		byte[] type = t.getType().name().getBytes();
-
-		byte[] res = new byte[url.length + savePath.length + type.length + 3];
+		byte[] type = t.getType().getEnum().toString().getBytes();
 		
-		//unsafe if not!!!!
-		if ((url.length + savePath.length + type.length) > 2 * Byte.MAX_VALUE + 1) {
-			throw new RuntimeException();
-		}
-		
-		res[0] = (byte) url.length;
-		res[1] = (byte) savePath.length;
-		res[2] = (byte) type.length;
-		
-		System.arraycopy(url, 0, res, 3, url.length);
-		System.arraycopy(savePath, 0, res, 3 + url.length, savePath.length);
-		System.arraycopy(type, 0, res, 3 + url.length + savePath.length, type.length);
-		
-		return res;
+		return new byte[][]{url, savePath, type};
 	}
 
 	@Override
-	public URLSaveCrawlJob interpret(byte[] checkpoint) {
-		int urlS = checkpoint[0];
-		int savepS = checkpoint[1];
-		
-		String url = new String(Arrays.copyOfRange(checkpoint, 3, urlS + 3));
-		String savePath = new String(Arrays.copyOfRange(checkpoint, 3 + urlS, 3 + urlS + savepS));
-		String type = new String(Arrays.copyOfRange(checkpoint, 3 + urlS + savepS, checkpoint.length));
+	public URLSaveCrawlJob<YTHTMLType> setValueFromArrays(byte[][] bs) {
+		String url = new String(bs[0]);
+		String savePath = new String(bs[1]);
+		String type = new String(bs[2]);
 		
 		try {
-			return new URLSaveCrawlJob(new URL(url), new File(savePath), HTMLType.valueOf(type), client);
+			return new URLSaveCrawlJob<YTHTMLType>(new URL(url), new File(savePath), YTHTMLType.forEnum(YTHTMLType.Type.valueOf(type)), client);
 		} catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static void main(String[] args) throws MalformedURLException {
 		URLSaveCrawlSerializer s = new URLSaveCrawlSerializer(null);
 		
-		URLSaveCrawlJob j = new URLSaveCrawlJob(new URL("http://www.vod.com.br"), new File("/tmp/disk"), HTMLType.SINGLE_VIDEO, null);
+		URLSaveCrawlJob j = new URLSaveCrawlJob(new URL("http://www.vod.com.br"), new File("/tmp/disk"), YTHTMLType.FRIENDS, null);
 		
 		byte[] checkpointData = s.checkpointData(j);
 		URLSaveCrawlJob interpret = s.interpret(checkpointData);
 		
-		System.out.println(interpret.getID());
+		System.out.println(interpret.getUrl());
 		System.out.println(interpret.getSavePath());
 		System.out.println(interpret.getType());
 	}
 }
-
