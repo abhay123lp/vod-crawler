@@ -38,7 +38,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	@Test
 	public void testQueuePutErrors() throws FileNotFoundException, IOException {
 		SS ss = new SS();
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024, false);
 		
 		try {
 			q.take();
@@ -50,7 +50,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	@Test
 	public void testQueuePutGet() throws FileNotFoundException, IOException {
 		SS ss = new SS();
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024, false);
 		
 		assertEquals(0, q.size());
 		assertEquals(1, myTempDir.listFiles().length);
@@ -69,7 +69,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	@Test
 	public void testQueuePutGet2() throws FileNotFoundException, IOException {
 		SS ss = new SS();
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 14);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 14, false);
 		q.put("a"); //This will succeed!
 		assertEquals(2, myTempDir.listFiles().length);
 		assertEquals(1, q.size()); //we cannot know the size prefold, since the limit is low each object will be on
@@ -103,7 +103,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	@Test
 	public void testQueuePutGet3() throws FileNotFoundException, IOException {
 		SS ss = new SS();
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024, false);
 		assertEquals(1, myTempDir.listFiles().length);
 		
 		assertEquals(0, q.size());
@@ -139,7 +139,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	@Test
 	public void testQueuePutGet4() throws FileNotFoundException, IOException {
 		SS ss = new SS();
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024, false);
 		
 		try {
 			q.take();
@@ -161,7 +161,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	@Test
 	public void testQueuePutGet5() throws FileNotFoundException, IOException {
 		SS ss = new SS();
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 1024 * 1024, false);
 		
 		assertEquals(0, q.size());
 		q.put("a");
@@ -200,7 +200,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	public void testQueuePutGet6() throws FileNotFoundException, IOException {
 		SS ss = new SS();
 		//12 header + 512 of data
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 12 + 512);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 12 + 512, false);
 		
 		assertEquals(1, myTempDir.listFiles().length);
 		for (int i = 0; i < 512; i++) {
@@ -216,7 +216,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	public void testQueuePutGet7() throws FileNotFoundException, IOException {
 		SS ss = new SS();
 		//12 header + 512 of data
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 12 + 512);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 12 + 512, false);
 		
 		assertEquals(1, myTempDir.listFiles().length);
 		for (int i = 0; i < 512; i++) {
@@ -232,7 +232,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	public void testQueuePutGet8() throws FileNotFoundException, IOException {
 		SS ss = new SS();
 		//12 header + 512 of data
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 12 + 512);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 12 + 512, false);
 		
 		q.put("0");
 		for (int i = 1; i <= 512; i++) {
@@ -248,7 +248,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	public void testQueuePutGet9() throws FileNotFoundException, IOException {
 		SS ss = new SS();
 		//12 header + 512 of data
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 20);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 20, false);
 		assertEquals(1, myTempDir.listFiles().length);
 		q.put("0");
 		assertEquals(2, myTempDir.listFiles().length);		
