@@ -14,6 +14,10 @@ public abstract class AbstractArraySerializer<T> implements Serializer<T> {
 	public byte[] checkpointData(T t) {
 		byte[][] bs = getArrays(t);
 		
+		if (bs.length != numArrays) {
+			throw new RuntimeException();
+		}
+		
 		int size = numArrays;
 		for (int i = 0; i < numArrays; i++) {
 			size += bs[i].length;
