@@ -1,5 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.queue;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,6 +9,9 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
+import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 
 
 /**
@@ -32,11 +36,7 @@ import java.nio.channels.FileChannel.MapMode;
  */
 class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 
-	private static final int SLOT_SIZE = 255;
-	
-	private static final byte MORE_DATA_CHAR = '+';
-	public static final String MORE_DATA_CHAR_STRING = "+";
-	public static final String MORE_DATA_CHAR_ESCAPED = "\\+";
+	public static final int MAX_ENTRY_SIZE = 255;
 	
 	private static final int INT_SIZE = Integer.SIZE / 8;
 	
@@ -57,8 +57,9 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 	
 	private boolean open;
 	private boolean created;
+	private boolean compress = true;
 
-	public MemoryMappedFIFOQueue(File f, Serializer<T> mqs, int sizeInBytes) throws FileNotFoundException, IOException {
+	public MemoryMappedFIFOQueue(File f, Serializer<T> mqs, int sizeInBytes, boolean compress) throws FileNotFoundException, IOException {
 		if (sizeInBytes < (INT_SIZE * 3) + 2) { //Header + sizeInfo (1b) + entry (at least 1b)
 			throw new QueueServiceException("Size must be at least: Header (12bytes) + sizeInfo (1byte) + entry (at least 1byte)");
 		}
@@ -68,6 +69,7 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		this.sizeInBytes = sizeInBytes;
 		this.created = false;
 		this.open = false;
+		this.compress = compress;
 	}
 
 	public int remaining() {
@@ -150,37 +152,21 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		map.position(end);
 		byte[] checkpointData = mqs.checkpointData(t);
 		
-//		if (checkpointData.length > MAX_ENTRY_SIZE) {
-//			throw new QueueServiceException("Entry size is larger tham maximum allowed");
-//		}
+		if (compress) {
+		    checkpointData = compactData(checkpointData);
+		}
+		
+		if (checkpointData.length > MAX_ENTRY_SIZE) {
+			throw new QueueServiceException("Entry size is larger tham maximum allowed");
+		}
 		
 		if (map.position() + checkpointData.length + 1 > map.limit()) {
 			throw new QueueServiceException("This queue file cannot support any more data!");
 		}
 		
-		for (byte b : checkpointData) {
-			if (b == MORE_DATA_CHAR) {
-				throw new QueueServiceException("The char: " + MORE_DATA_CHAR_STRING + " must be escaped: " + MORE_DATA_CHAR_ESCAPED);
-			}
-		}
-
-		//Inserting data into 255 bytes slots
-		int amountOfSlots = checkpointData.length / SLOT_SIZE;
-		int remaining = checkpointData.length;
-		int srcPos = 0;
-		for (int i = 0; i < amountOfSlots; i++) {
-			int slotSize = Math.min(remaining, SLOT_SIZE);
-			
-			map.put(signed(slotSize));
-			ByteBuffer wrap = ByteBuffer.wrap(checkpointData, srcPos, slotSize);
-			map.put(wrap);
-			
-			remaining -= slotSize;
-			srcPos += slotSize;
-			
-			if (remaining > 0) map.put(MORE_DATA_CHAR);
-		}
-		
+		ByteBuffer wrap = ByteBuffer.wrap(checkpointData);
+		map.put(signed(wrap.capacity()));
+		map.put(checkpointData);
 
 		//Updating tail pointer
 		end = map.position();
@@ -191,6 +177,31 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		map.position(waterMarkSizePos);
 		size ++;
 		map.putInt(size);
+	}
+
+	private byte[] compactData(byte[] checkpointData) {
+		Deflater compressor = new Deflater();
+		compressor.setLevel(Deflater.BEST_COMPRESSION);
+		
+		compressor.setInput(checkpointData);
+		compressor.finish();
+		
+		ByteArrayOutputStream bos = new ByteArrayOutputStream(checkpointData.length);
+		byte[] buf = new byte[MAX_ENTRY_SIZE];
+		
+		while (!compressor.finished()) {
+		    int count = compressor.deflate(buf);
+		    bos.write(buf, 0, count);
+		}
+		
+		try {
+			bos.close();
+		} catch (IOException e) {
+		}
+		
+		// Get the compressed data
+		checkpointData = bos.toByteArray();
+		return checkpointData;
 	}
 
     @Override
@@ -218,7 +229,36 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		size --;
 		map.putInt(size);
 		
+		if (compress) {
+		    data = uncompactData(data);
+		}
+		
 		return mqs.interpret(data);
+	}
+
+	private byte[] uncompactData(byte[] data) {
+		Inflater decompressor = new Inflater();
+		decompressor.setInput(data);
+		
+		ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length);
+		
+		byte[] buf = new byte[MAX_ENTRY_SIZE];
+		while (!decompressor.finished()) {
+		    try {
+		        int count = decompressor.inflate(buf);
+		        bos.write(buf, 0, count);
+		    } catch (DataFormatException e) {
+		    	throw new QueueServiceException("Unknow error! " + e);
+		    }
+		}
+		
+		try {
+		    bos.close();
+		} catch (IOException e) {
+		}
+		
+		data = bos.toByteArray();
+		return data;
 	}
 
 	public void sync() {
