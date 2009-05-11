@@ -1,5 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.common;
 
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -23,7 +24,10 @@ public class NetIFRoundRobin {
 				if (!next.isLoopback()) {
 					Enumeration<InetAddress> inetAddresses = next.getInetAddresses();
 					while (inetAddresses.hasMoreElements()) {
-						ifs.add(inetAddresses.nextElement());
+						InetAddress nextElement = inetAddresses.nextElement();
+						if (!(nextElement instanceof Inet6Address)) {
+							ifs.add(nextElement);
+						}
 					}
 				}
 			}
@@ -42,5 +46,9 @@ public class NetIFRoundRobin {
 
 	public synchronized InetAddress nextIF() {
 		return ifs.get(current++ % ifs.size());
+	}
+	
+	public static void main(String[] args) {
+		System.out.println(NetIFRoundRobin.getInstance().ifs);
 	}
 }

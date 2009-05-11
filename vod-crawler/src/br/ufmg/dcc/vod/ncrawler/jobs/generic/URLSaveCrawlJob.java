@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLEncoder;
 
@@ -49,7 +50,8 @@ public class URLSaveCrawlJob<T extends HTMLType> implements CrawlJob<File, T> {
 			
 			//We create a client because we believe there is a deadlock bug
 			HttpParams copy = httpClient.getParams().copy();
-			ConnRouteParams.setLocalAddress(copy, NetIFRoundRobin.getInstance().nextIF());
+			InetAddress nextIF = NetIFRoundRobin.getInstance().nextIF();
+			ConnRouteParams.setLocalAddress(copy, nextIF);
 			HttpResponse execute = new DefaultHttpClient(httpClient.getConnectionManager(), copy).execute(request);
 			
 			HttpEntity entity = execute.getEntity();
