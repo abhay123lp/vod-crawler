@@ -88,7 +88,7 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 			}
 			
 			//R will be null if error occurred!
-			e.crawlJobConcluded(new CrawlResult<R, T>(t.getID(), r, t.getType(), r == null));
+			e.crawlJobConcluded(new CrawlResult<R, T>(t.getID(), r, t.getType(), r != null));
 			
 			try {
 				Thread.sleep(sleepTimePerExecution * 1000);

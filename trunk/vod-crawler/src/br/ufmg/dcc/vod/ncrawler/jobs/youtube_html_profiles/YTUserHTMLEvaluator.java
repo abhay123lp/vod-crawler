@@ -2,7 +2,8 @@ package br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import org.apache.http.client.HttpClient;
 import org.apache.log4j.Logger;
@@ -134,7 +136,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, YTHTMLType> {
 			LOG.info("Finished Crawl of: job= "+j.getId());
 			Pair<String, Set<String>> followUp = null;
 			if (j != null && j.getResult() != null) {
-				followUp = this.eval(j.getResult(), j.getType());
+				followUp = eval(j.getResult(), j.getType());
 			}
 			
 			if (j.success() && followUp != null) {
@@ -246,7 +248,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, YTHTMLType> {
 
 	@Override
 	public boolean isDone() {
-		return finishedUrls + errorUrls >= dispatchUrls;
+		return (finishedUrls + errorUrls) >= dispatchUrls;
 	}
 	
 	public Pair<String, Set<String>> eval(File f, YTHTMLType t) throws Exception {
@@ -255,7 +257,7 @@ public class YTUserHTMLEvaluator implements Evaluator<File, YTHTMLType> {
 		Set<String> returnValue = new HashSet<String>();
 		
 		try {
-		    in = new BufferedReader(new FileReader(f));
+		    in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(f))));
 			String inputLine;
 		    while ((inputLine = in.readLine()) != null) {
 		    	Matcher matcher = NEXT_PATTERN.matcher(inputLine);

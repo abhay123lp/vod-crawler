@@ -84,5 +84,6 @@ public class Main {
 		ThreadedCrawler<File, YTHTMLType> tc = new ThreadedCrawler<File, YTHTMLType>(nThreads, sleep, e, pQueue, eQueue, new URLSaveCrawlSerializer(httpClient), 512 * 1024 * 1024);
 		tc.crawl();
 		httpClient.getConnectionManager().shutdown();
+		System.exit(0);
 	}
 }
