@@ -18,6 +18,7 @@ import org.apache.http.params.HttpProtocolParams;
 
 import br.ufmg.dcc.vod.ncrawler.ThreadedCrawler;
 import br.ufmg.dcc.vod.ncrawler.common.FileUtil;
+import br.ufmg.dcc.vod.ncrawler.common.LoggerInitiator;
 
 public class Main {
 	
@@ -79,7 +80,7 @@ public class Main {
 		YTUserHTMLEvaluator e = new YTUserHTMLEvaluator(videoFolder, userFolder, seeds, httpClient);
 
 		//Start!
-//		LoggerInitiator.initiateLog();
+		LoggerInitiator.initiateLog();
 		ThreadedCrawler<File, YTHTMLType> tc = new ThreadedCrawler<File, YTHTMLType>(nThreads, sleep, e, pQueue, eQueue, new URLSaveCrawlSerializer(httpClient), 512 * 1024 * 1024);
 		tc.crawl();
 		httpClient.getConnectionManager().shutdown();
