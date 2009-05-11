@@ -82,7 +82,7 @@ public class QueueService {
 	 */
 	public <T> QueueHandle createPersistentMessageQueue(String label, File f, Serializer<T> serializer, int bytes) throws FileNotFoundException, IOException {
 		QueueHandle h = new QueueHandle(i.incrementAndGet());
-		MultiFileMMapFifoQueue<T> memoryMappedQueue = new MultiFileMMapFifoQueue<T>(f, serializer, bytes, true);
+		MultiFileMMapFifoQueue<T> memoryMappedQueue = new MultiFileMMapFifoQueue<T>(f, serializer, bytes);
 		this.ids.put(h, new MonitoredSyncQueue<T>(label, memoryMappedQueue));
 		return h;
 	}

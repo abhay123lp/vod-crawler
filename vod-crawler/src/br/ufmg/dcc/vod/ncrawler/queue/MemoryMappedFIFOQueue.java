@@ -1,6 +1,5 @@
 package br.ufmg.dcc.vod.ncrawler.queue;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -9,9 +8,8 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
-import java.util.zip.DataFormatException;
-import java.util.zip.Deflater;
-import java.util.zip.Inflater;
+
+import br.ufmg.dcc.vod.ncrawler.common.SignedUtils;
 
 
 /**
@@ -57,9 +55,8 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 	
 	private boolean open;
 	private boolean created;
-	private boolean compress = true;
 
-	public MemoryMappedFIFOQueue(File f, Serializer<T> mqs, int sizeInBytes, boolean compress) throws FileNotFoundException, IOException {
+	public MemoryMappedFIFOQueue(File f, Serializer<T> mqs, int sizeInBytes) throws FileNotFoundException, IOException {
 		if (sizeInBytes < (INT_SIZE * 3) + 2) { //Header + sizeInfo (1b) + entry (at least 1b)
 			throw new QueueServiceException("Size must be at least: Header (12bytes) + sizeInfo (1byte) + entry (at least 1byte)");
 		}
@@ -69,7 +66,6 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		this.sizeInBytes = sizeInBytes;
 		this.created = false;
 		this.open = false;
-		this.compress = compress;
 	}
 
 	public int remaining() {
@@ -136,14 +132,6 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		}
 	}
 	
-    private int unsigned(byte b) {
-        return b & 0xFF;
-    }
-    
-    private byte signed(int i) {
-        return (byte) i;
-    }
-    
     @Override
 	public void put(T t) {
     	verifyIfOpen();
@@ -152,9 +140,9 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		map.position(end);
 		byte[] checkpointData = mqs.checkpointData(t);
 		
-		if (compress) {
-		    checkpointData = compactData(checkpointData);
-		}
+//		if (compress) {
+//		    checkpointData = compactData(checkpointData);
+//		}
 		
 		if (checkpointData.length > MAX_ENTRY_SIZE) {
 			throw new QueueServiceException("Entry size is larger tham maximum allowed");
@@ -165,7 +153,7 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		}
 		
 		ByteBuffer wrap = ByteBuffer.wrap(checkpointData);
-		map.put(signed(wrap.capacity()));
+		map.put(SignedUtils.signedByte(wrap.capacity()));
 		map.put(checkpointData);
 
 		//Updating tail pointer
@@ -179,31 +167,6 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		map.putInt(size);
 	}
 
-	private byte[] compactData(byte[] checkpointData) {
-		Deflater compressor = new Deflater();
-		compressor.setLevel(Deflater.BEST_COMPRESSION);
-		
-		compressor.setInput(checkpointData);
-		compressor.finish();
-		
-		ByteArrayOutputStream bos = new ByteArrayOutputStream(checkpointData.length);
-		byte[] buf = new byte[MAX_ENTRY_SIZE];
-		
-		while (!compressor.finished()) {
-		    int count = compressor.deflate(buf);
-		    bos.write(buf, 0, count);
-		}
-		
-		try {
-			bos.close();
-		} catch (IOException e) {
-		}
-		
-		// Get the compressed data
-		checkpointData = bos.toByteArray();
-		return checkpointData;
-	}
-
     @Override
 	public T take() {
     	verifyIfOpen();
@@ -214,7 +177,7 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		
 		//Retrieving
 		map.position(start);
-		int dataSize = unsigned(map.get());
+		int dataSize = SignedUtils.unsignedByte(map.get());
 		byte[] data = new byte[dataSize];
 		start = map.position();
 		map.get(data);
@@ -229,36 +192,7 @@ class MemoryMappedFIFOQueue<T> implements EventQueue<T> {
 		size --;
 		map.putInt(size);
 		
-		if (compress) {
-		    data = uncompactData(data);
-		}
-		
 		return mqs.interpret(data);
-	}
-
-	private byte[] uncompactData(byte[] data) {
-		Inflater decompressor = new Inflater();
-		decompressor.setInput(data);
-		
-		ByteArrayOutputStream bos = new ByteArrayOutputStream(data.length);
-		
-		byte[] buf = new byte[MAX_ENTRY_SIZE];
-		while (!decompressor.finished()) {
-		    try {
-		        int count = decompressor.inflate(buf);
-		        bos.write(buf, 0, count);
-		    } catch (DataFormatException e) {
-		    	throw new QueueServiceException("Unknow error! " + e);
-		    }
-		}
-		
-		try {
-		    bos.close();
-		} catch (IOException e) {
-		}
-		
-		data = bos.toByteArray();
-		return data;
 	}
 
 	public void sync() {

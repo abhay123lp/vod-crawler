@@ -24,13 +24,11 @@ class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 	private int writeQueueNum;
 
 	private int size;
-	private final boolean compress;
 
-	public MultiFileMMapFifoQueue(File queueFolder, Serializer<T> s, int eachFileSize, boolean compress) throws IOException {
+	public MultiFileMMapFifoQueue(File queueFolder, Serializer<T> s, int eachFileSize) throws IOException {
 		this.queueFolder = queueFolder;
 		this.s = s;
 		this.eachFileSize = eachFileSize;
-		this.compress = compress;
 		this.queues = new ArrayList<MemoryMappedFIFOQueue<T>>();
 		this.size = 0;
 		
@@ -49,7 +47,7 @@ class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 				
 				File f = new File(queueFolder.getAbsolutePath() + File.separator + queues.size());
 				
-				MemoryMappedFIFOQueue<T> q = new MemoryMappedFIFOQueue<T>(f, s, eachFileSize, compress);
+				MemoryMappedFIFOQueue<T> q = new MemoryMappedFIFOQueue<T>(f, s, eachFileSize);
 				q.createAndOpen();
 				
 				queues.add(q);

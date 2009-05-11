@@ -1,5 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.generic;
 
+import br.ufmg.dcc.vod.ncrawler.common.SignedUtils;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 
 public abstract class AbstractArraySerializer<T> implements Serializer<T> {
@@ -26,7 +27,7 @@ public abstract class AbstractArraySerializer<T> implements Serializer<T> {
 		byte[] res = new byte[size];
 		int pos = numArrays;
 		for (int i = 0; i < numArrays; i++) {
-			res[i] = (byte) bs[i].length;
+			res[i] = SignedUtils.signedByte(bs[i].length);
 			System.arraycopy(bs[i], 0, res, pos, bs[i].length);
 			pos += bs[i].length;
 		}
@@ -40,7 +41,7 @@ public abstract class AbstractArraySerializer<T> implements Serializer<T> {
 		byte[][] bs = new byte[numArrays][];
 		
 		for (int i = 0; i < numArrays; i++) {
-			bs[i] = new byte[checkpoint[i]];
+			bs[i] = new byte[SignedUtils.unsignedByte(checkpoint[i])];
 		}
 		
 		int pos = numArrays;
