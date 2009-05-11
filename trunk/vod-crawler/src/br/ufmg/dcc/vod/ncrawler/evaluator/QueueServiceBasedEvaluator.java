@@ -49,7 +49,7 @@ public class QueueServiceBasedEvaluator<R, T> implements Evaluator<R, T>, QueueP
 	public void crawlJobConcluded(CrawlResult<R, T> r) {
 		try {
 			service.sendObjectToQueue(myHandle, r);
-		} catch (InterruptedException e) {
+		} catch (Exception e) {
 			LOG.error(e);
 		}
 	}

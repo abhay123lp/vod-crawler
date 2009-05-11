@@ -235,6 +235,8 @@ public class QueueService {
 					p.process(take);
 				} catch (InterruptedException e) {
 					interrupted = true;
+				} catch (Exception e) {
+					e.printStackTrace();
 				} finally {
 					if (!interrupted) q.done(take);
 				}
