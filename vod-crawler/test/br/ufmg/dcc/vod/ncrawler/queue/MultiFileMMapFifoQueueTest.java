@@ -69,7 +69,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 	@Test
 	public void testQueuePutGet2() throws FileNotFoundException, IOException {
 		SS ss = new SS();
-		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 14);
+		MultiFileMMapFifoQueue<String> q = new MultiFileMMapFifoQueue<String>(myTempDir, ss, 15);
 		q.put("a"); //This will succeed!
 		assertEquals(2, myTempDir.listFiles().length);
 		assertEquals(1, q.size()); //we cannot know the size prefold, since the limit is low each object will be on
@@ -207,7 +207,7 @@ public class MultiFileMMapFifoQueueTest extends TestCase {
 			q.put("a");
 		}
 		
-		assertEquals(4, myTempDir.listFiles().length);
+		assertEquals(513, myTempDir.listFiles().length);
 		q.shutdownAndDeleteAll();
 		assertEquals(0, myTempDir.listFiles().length);
 	}

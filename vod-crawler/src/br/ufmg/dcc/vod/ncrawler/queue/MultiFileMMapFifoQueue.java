@@ -14,7 +14,7 @@ import java.util.List;
  */
 class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 
-	private List<MemoryMappedFIFOQueue<T>> queues;
+	private List<FIFOByteArrayQueue> queues;
 	
 	private final int eachFileSize;
 	private final File queueFolder;
@@ -29,7 +29,7 @@ class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 		this.queueFolder = queueFolder;
 		this.s = s;
 		this.eachFileSize = eachFileSize;
-		this.queues = new ArrayList<MemoryMappedFIFOQueue<T>>();
+		this.queues = new ArrayList<FIFOByteArrayQueue>();
 		this.size = 0;
 		
 		this.writeQueueNum = 0;
@@ -40,14 +40,14 @@ class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 	
 	private void updateWriteReference() {
 		try {
-			if (queues.size() == 0 || getWriteQueue().remaining() < MemoryMappedFIFOQueue.MAX_ENTRY_SIZE) {
+			if (queues.size() == 0 || getWriteQueue().remaining() < FIFOByteArrayQueue.MAX_ENTRY_SIZE) {
 				if (readQueueNum != writeQueueNum) { //Closing queue if not still being read
 					getWriteQueue().shutdownAndSync();
 				}
 				
 				File f = new File(queueFolder.getAbsolutePath() + File.separator + queues.size());
 				
-				MemoryMappedFIFOQueue<T> q = new MemoryMappedFIFOQueue<T>(f, s, eachFileSize);
+				FIFOByteArrayQueue q = new FIFOByteArrayQueue(f, eachFileSize);
 				q.createAndOpen();
 				
 				queues.add(q);
@@ -59,7 +59,7 @@ class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 	}
 
 	private void updateReadReference() {
-		if (getReadQueue().size() == 0 && getReadQueue().remaining() < MemoryMappedFIFOQueue.MAX_ENTRY_SIZE) {
+		if (getReadQueue().size() == 0 && getReadQueue().remaining() < FIFOByteArrayQueue.MAX_ENTRY_SIZE) {
 			try {
 				if (getReadQueue().isOpen()) { //Maybe a put operation already closed the queue
 					getReadQueue().shutdownAndSync(); //closing queue!
@@ -80,18 +80,19 @@ class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 		}
 	}
 	
-	private MemoryMappedFIFOQueue<T> getWriteQueue() {
+	private FIFOByteArrayQueue getWriteQueue() {
 		return queues.get(writeQueueNum);
 	}
 	
-	private MemoryMappedFIFOQueue<T> getReadQueue() {
+	private FIFOByteArrayQueue getReadQueue() {
 		return queues.get(readQueueNum);
 	}
 	
 	@Override
 	public void put(T t) {
+		byte[] checkpointData = s.checkpointData(t);
 		updateWriteReference();
-		getWriteQueue().put(t);
+		getWriteQueue().put(checkpointData);
 		size++;
 	}
 
@@ -104,7 +105,7 @@ class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 
 		updateReadReference();
 		size--;
-		return getReadQueue().take();
+		return s.interpret(getReadQueue().take());
 	}
 
 	@Override
@@ -113,7 +114,7 @@ class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 	}
 
 	public void shutdownAndSyncAll() throws IOException {
-		for (MemoryMappedFIFOQueue<T> mmap : queues) {
+		for (FIFOByteArrayQueue mmap : queues) {
 			if (mmap.isOpen()) {
 				mmap.shutdownAndSync();
 			}
@@ -121,7 +122,7 @@ class MultiFileMMapFifoQueue<T> implements EventQueue<T> {
 	}
 
 	public void shutdownAndDeleteAll() throws IOException {
-		for (MemoryMappedFIFOQueue<T> mmap : queues) {
+		for (FIFOByteArrayQueue mmap : queues) {
 			if (mmap.isOpen()) {
 				mmap.shutdownAndDelete();
 			} else {
