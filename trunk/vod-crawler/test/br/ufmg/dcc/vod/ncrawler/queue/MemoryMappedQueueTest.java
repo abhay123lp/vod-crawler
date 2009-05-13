@@ -108,7 +108,7 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 14);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 15);
 		q.createAndOpen();
 
 		q.put("a"); //This will succeed!
@@ -127,15 +127,11 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 15);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 18);
 		q.createAndOpen();
 
 		q.put("a"); //This will succeed!
-		
-		try {
-			q.put("a");
-		} catch (QueueServiceException e) {
-		}
+		q.put("a");
 		
 		f.delete();
 	}
@@ -146,11 +142,19 @@ public class MemoryMappedQueueTest extends TestCase {
 		f.deleteOnExit();
 		
 		SS ss = new SS();
-		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 16);
+		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 18);
 		q.createAndOpen();
-
-		q.put("a"); //This will succeed!
+		
+		assertEquals(6, q.remaining());
 		q.put("a");
+		assertEquals(3, q.remaining());
+		q.put("a");
+		assertEquals(0, q.remaining());
+		
+		try {
+			q.put("a");
+		} catch (QueueServiceException e) {
+		}
 		
 		f.delete();
 	}
@@ -165,31 +169,8 @@ public class MemoryMappedQueueTest extends TestCase {
 		q.createAndOpen();
 		
 		assertEquals(4, q.remaining());
-		q.put("a");
-		assertEquals(2, q.remaining());
-		q.put("a");
-		assertEquals(0, q.remaining());
-		
-		try {
-			q.put("a");
-		} catch (QueueServiceException e) {
-		}
-		
-		f.delete();
-	}
-	
-	@Test
-	public void testQueuePutGetLimit7() throws FileNotFoundException, IOException {
-		File f = File.createTempFile("temp", "test");
-		f.deleteOnExit();
-		
-		SS ss = new SS();
-		MemoryMappedFIFOQueue<String> q = new MemoryMappedFIFOQueue<String>(f, ss, 16);
-		q.createAndOpen();
-		
-		assertEquals(4, q.remaining());
 		q.put("aa"); //16 - 12header - 2data -1len
-		assertEquals(1, q.remaining());
+		assertEquals(0, q.remaining());
 		
 		try {
 			q.put("a");
@@ -213,27 +194,27 @@ public class MemoryMappedQueueTest extends TestCase {
 		assertEquals(0, q.size());
 		q.put("a");
 		assertEquals(12, q.getStart());
-		assertEquals(14, q.getEnd()); //17 because the size is also written. 1 bytes containing the size of the information and another containing the informatation
+		assertEquals(15, q.getEnd());
 		assertEquals(1, q.size());
 		
 		q.put("b");
 		assertEquals(12, q.getStart());
-		assertEquals(16, q.getEnd());
+		assertEquals(18, q.getEnd());
 		assertEquals(2, q.size());
 		
 		q.put("c");
 		assertEquals(12, q.getStart());
-		assertEquals(18, q.getEnd());
+		assertEquals(21, q.getEnd());
 		assertEquals(3, q.size());
 		
 		q.put("d");
 		assertEquals(12, q.getStart());
-		assertEquals(20, q.getEnd());
+		assertEquals(24, q.getEnd());
 		assertEquals(4, q.size());
 		
 		q.put("e");
 		assertEquals(12, q.getStart());
-		assertEquals(22, q.getEnd());
+		assertEquals(27, q.getEnd());
 		assertEquals(5, q.size());
 		
 		assertEquals("a", q.take());
@@ -292,27 +273,27 @@ public class MemoryMappedQueueTest extends TestCase {
 		assertEquals(0, q.size());
 		q.put("a");
 		assertEquals(12, q.getStart());
-		assertEquals(14, q.getEnd()); //17 because the size is also written. 1 bytes containing the size of the information and another containing the informatation
+		assertEquals(15, q.getEnd()); 
 		assertEquals(1, q.size());
 		
 		q.put("b");
 		assertEquals(12, q.getStart());
-		assertEquals(16, q.getEnd());
+		assertEquals(18, q.getEnd());
 		assertEquals(2, q.size());
 		
 		q.put("c");
 		assertEquals(12, q.getStart());
-		assertEquals(18, q.getEnd());
+		assertEquals(21, q.getEnd());
 		assertEquals(3, q.size());
 		
 		q.put("d");
 		assertEquals(12, q.getStart());
-		assertEquals(20, q.getEnd());
+		assertEquals(24, q.getEnd());
 		assertEquals(4, q.size());
 		
 		q.put("e");
 		assertEquals(12, q.getStart());
-		assertEquals(22, q.getEnd());
+		assertEquals(27, q.getEnd());
 		assertEquals(5, q.size());
 		
 		assertEquals("a", q.take());
@@ -348,27 +329,27 @@ public class MemoryMappedQueueTest extends TestCase {
 		assertEquals(0, q.size());
 		q.put("a");
 		assertEquals(12, q.getStart());
-		assertEquals(14, q.getEnd()); //17 because the size is also written. 1 bytes containing the size of the information and another containing the informatation
+		assertEquals(15, q.getEnd()); //17 because the size is also written. 1 bytes containing the size of the information and another containing the informatation
 		assertEquals(1, q.size());
 		
 		q.put("b");
 		assertEquals(12, q.getStart());
-		assertEquals(16, q.getEnd());
+		assertEquals(18, q.getEnd());
 		assertEquals(2, q.size());
 		
 		q.put("c");
 		assertEquals(12, q.getStart());
-		assertEquals(18, q.getEnd());
+		assertEquals(21, q.getEnd());
 		assertEquals(3, q.size());
 		
 		q.put("d");
 		assertEquals(12, q.getStart());
-		assertEquals(20, q.getEnd());
+		assertEquals(24, q.getEnd());
 		assertEquals(4, q.size());
 		
 		q.put("e");
 		assertEquals(12, q.getStart());
-		assertEquals(22, q.getEnd());
+		assertEquals(27, q.getEnd());
 		assertEquals(5, q.size());
 		
 		assertEquals("a", q.take());
@@ -379,16 +360,16 @@ public class MemoryMappedQueueTest extends TestCase {
 		q.shutdownAndSync();
 		q.reopen();
 		assertEquals(3, q.size());
-		assertEquals(16, q.getStart());
-		assertEquals(22, q.getEnd());
+		assertEquals(18, q.getStart());
+		assertEquals(27, q.getEnd());
 		
 		q.put("f");
-		assertEquals(16, q.getStart());
-		assertEquals(24, q.getEnd());
+		assertEquals(18, q.getStart());
+		assertEquals(30, q.getEnd());
 		
 		q.put("g");
-		assertEquals(16, q.getStart());
-		assertEquals(26, q.getEnd());
+		assertEquals(18, q.getStart());
+		assertEquals(33, q.getEnd());
 		
 		assertEquals(5, q.size());
 		assertEquals("c", q.take());
@@ -451,10 +432,10 @@ public class MemoryMappedQueueTest extends TestCase {
 		assertEquals(12, wrap.getInt()); //starts at 12 bytes
 		assertEquals(12, q.getStart()); 
 		
-		assertEquals("avcl".getBytes().length + 12 + 1, wrap.getInt()); 
-		assertEquals("avcl".getBytes().length + 12 + 1, q.getEnd());
+		assertEquals("avcl".getBytes().length + 12 + 2, wrap.getInt()); 
+		assertEquals("avcl".getBytes().length + 12 + 2, q.getEnd());
 		
-		assertEquals(4, wrap.get()); //size of info
+		assertEquals(4, wrap.getShort()); //size of info
 		
 		byte[] r = new byte[4];
 		wrap.get(r);
@@ -489,15 +470,15 @@ public class MemoryMappedQueueTest extends TestCase {
 		assertEquals(0, wrap.getInt());
 		assertEquals(0, q.size());
 		
-		int e = "a".getBytes().length + 12 + 1;
-		assertEquals(e, wrap.getInt()); //starts at 14 bytes, element deleted but remains on file (2bytes)
+		int e = "a".getBytes().length + 12 + 2;
+		assertEquals(e, wrap.getInt()); //starts at 15 bytes, element deleted but remains on file (2bytes)
 		assertEquals(e, q.getStart()); 
 		
 		assertEquals(e, wrap.getInt()); 
 		assertEquals(e, q.getEnd());
 		
 		//Garbage data
-		assertEquals(1, wrap.get());
+		assertEquals(1, wrap.getShort());
 		assertEquals("a", new String(new byte[]{wrap.get()}));
 		
 		while (wrap.limit() != wrap.position())
@@ -534,22 +515,22 @@ public class MemoryMappedQueueTest extends TestCase {
 		assertEquals(2, wrap.getInt());
 		assertEquals(2, q.size());
 		
-		assertEquals(16, wrap.getInt()); //starts at 16 bytes
-		assertEquals(16, q.getStart()); 
+		assertEquals(18, wrap.getInt());
+		assertEquals(18, q.getStart()); 
 		
-		assertEquals(20, wrap.getInt()); 
-		assertEquals(20, q.getEnd());
+		assertEquals(24, wrap.getInt()); 
+		assertEquals(24, q.getEnd());
 		
 		//Garbage
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("a", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("v", new String(new byte[]{wrap.get()}));
 		
 		//Real Data
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("c", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("l", new String(new byte[]{wrap.get()}));
 		
 		while (wrap.limit() != wrap.position())
@@ -587,24 +568,24 @@ public class MemoryMappedQueueTest extends TestCase {
 		assertEquals(3, wrap.getInt());
 		assertEquals(3, q.size());
 		
-		assertEquals(16, wrap.getInt()); //starts at 16 bytes
-		assertEquals(16, q.getStart()); 
+		assertEquals(18, wrap.getInt()); //starts at 16 bytes
+		assertEquals(18, q.getStart()); 
 		
-		assertEquals(22, wrap.getInt()); 
-		assertEquals(22, q.getEnd());
+		assertEquals(27, wrap.getInt()); 
+		assertEquals(27, q.getEnd());
 		
 		//Garbage
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("a", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("v", new String(new byte[]{wrap.get()}));
 		
 		//Real Data
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("c", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("l", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("z", new String(new byte[]{wrap.get()}));
 		
 		while (wrap.limit() != wrap.position())
@@ -644,28 +625,28 @@ public class MemoryMappedQueueTest extends TestCase {
 		assertEquals(5, wrap.getInt());
 		assertEquals(5, q.size());
 		
-		assertEquals(16, wrap.getInt()); //starts at 16 bytes
-		assertEquals(16, q.getStart()); 
+		assertEquals(18, wrap.getInt()); //starts at 16 bytes
+		assertEquals(18, q.getStart()); 
 		
-		assertEquals(26, wrap.getInt()); 
-		assertEquals(26, q.getEnd());
+		assertEquals(33, wrap.getInt()); 
+		assertEquals(33, q.getEnd());
 		
 		//Garbage
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("a", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("v", new String(new byte[]{wrap.get()}));
 		
 		//Real Data
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("c", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("l", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("z", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("e", new String(new byte[]{wrap.get()}));
-		assertEquals(1, wrap.get()); //size of info
+		assertEquals(1, wrap.getShort()); //size of info
 		assertEquals("b", new String(new byte[]{wrap.get()}));
 		
 		while (wrap.limit() != wrap.position())
