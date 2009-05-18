@@ -7,9 +7,10 @@ import java.net.URL;
 import org.apache.http.client.HttpClient;
 
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.AbstractArraySerializer;
+import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 
-public class URLSaveCrawlSerializer extends AbstractArraySerializer<URLSaveCrawlJob<YTHTMLType>> {
+public class URLSaveCrawlSerializer extends AbstractArraySerializer<URLSaveCrawlJob> {
 
 	private final HttpClient client;
 
@@ -19,22 +20,22 @@ public class URLSaveCrawlSerializer extends AbstractArraySerializer<URLSaveCrawl
 	}
 	
 	@Override
-	public byte[][] getArrays(URLSaveCrawlJob<YTHTMLType> t) {
+	public byte[][] getArrays(URLSaveCrawlJob t) {
 		byte[] url = t.getUrl().toString().getBytes();
 		byte[] savePath = t.getSavePath().getAbsolutePath().getBytes();
-		byte[] type = t.getType().getEnum().toString().getBytes();
+		byte[] type = t.getType().getFeatureName().getBytes();
 		
 		return new byte[][]{url, savePath, type};
 	}
 
 	@Override
-	public URLSaveCrawlJob<YTHTMLType> setValueFromArrays(byte[][] bs) {
+	public URLSaveCrawlJob setValueFromArrays(byte[][] bs) {
 		String url = new String(bs[0]);
 		String savePath = new String(bs[1]);
 		String type = new String(bs[2]);
 		
 		try {
-			return new URLSaveCrawlJob<YTHTMLType>(new URL(url), new File(savePath), YTHTMLType.forEnum(YTHTMLType.Type.valueOf(type)), client);
+			return new URLSaveCrawlJob(new URL(url), new File(savePath), YTHTMLType.forFeatureName(type), client);
 		} catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		}

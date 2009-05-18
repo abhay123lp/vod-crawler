@@ -35,6 +35,7 @@ public class YTHTMLType implements HTMLType {
 			t == Type.FAVORITES || t == Type.GROUPS || t == Type.PROFILE;
 	}
 	
+	@Override
 	public String getFeatureName() {
 		switch (t) {
 		case FAVORITES:

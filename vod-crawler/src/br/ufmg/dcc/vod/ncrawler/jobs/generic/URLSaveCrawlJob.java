@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Collection;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -17,34 +18,35 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpParams;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.common.FileUtil;
+import br.ufmg.dcc.vod.ncrawler.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.common.NetIFRoundRobin;
+import br.ufmg.dcc.vod.ncrawler.common.Pair;
 
-public class URLSaveCrawlJob<T extends HTMLType> implements CrawlJob<File, T> {
+public class URLSaveCrawlJob implements CrawlJob {
 
 	private final URL url;
 	private final File savePath;
-	private final T t;
 	private final HttpClient httpClient;
+	private final HTMLType t;
 	
-	private File resultFile;
-
-	public URLSaveCrawlJob(URL url, File savePath, T t, HttpClient httpClient) {
+	private Evaluator<Pair<String, HTMLType>, InputStream> e;
+	
+	public URLSaveCrawlJob(URL url, File savePath, HTMLType t, HttpClient httpClient) {
 		this.url = url;
-		this.savePath = savePath;
 		this.t = t;
+		this.savePath = savePath;
 		this.httpClient = httpClient;
 	}
 	
 	@Override
-	public void collect() throws Exception {
+	public Collection<CrawlJob> collect() throws Exception {
 		InputStream content = null;
 		BufferedReader in = null;
 		PrintStream out = null;
 		
 		try {
 			String encode = URLEncoder.encode(url.toString(), "UTF-8");
-			this.resultFile = new File(savePath + File.separator + encode);
+			File resultFile = new File(savePath + File.separator + encode);
 			
 			HttpGet request = new HttpGet(url.toString());
 			
@@ -52,14 +54,17 @@ public class URLSaveCrawlJob<T extends HTMLType> implements CrawlJob<File, T> {
 			HttpParams copy = httpClient.getParams().copy();
 			InetAddress nextIF = NetIFRoundRobin.getInstance().nextIF();
 			ConnRouteParams.setLocalAddress(copy, nextIF);
-			HttpResponse execute = new DefaultHttpClient(httpClient.getConnectionManager(), copy).execute(request);
 			
+			HttpResponse execute = new DefaultHttpClient(httpClient.getConnectionManager(), copy).execute(request);
 			HttpEntity entity = execute.getEntity();
 			if (entity != null) {
 				content = entity.getContent();
-				FileUtil.saveUrlGzip(content, resultFile);
+				Collection<CrawlJob> nextCrawl = e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), content, resultFile);
 			    entity.consumeContent();
+			    return nextCrawl;
 			}
+			
+			return null;
 	    }
 	    finally
 	    {
@@ -67,6 +72,11 @@ public class URLSaveCrawlJob<T extends HTMLType> implements CrawlJob<File, T> {
 			if (out != null) out.close();
 			if (content != null) content.close();
 	    }
+	}
+
+	@Override
+	public void setvaluator(Evaluator e) {
+		this.e = e;
 	}
 	
 	public File getSavePath() {
@@ -80,19 +90,8 @@ public class URLSaveCrawlJob<T extends HTMLType> implements CrawlJob<File, T> {
 	public String toString() {
 		return url.toString();
 	}
-
-	@Override
-	public File getResult() {
-		return resultFile;
-	}
-
-	@Override
-	public T getType() {
+	
+	public HTMLType getType() {
 		return t;
-	}
-
-	@Override
-	public String getID() {
-		return url.toString();
 	}
 }

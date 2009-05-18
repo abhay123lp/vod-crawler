@@ -3,18 +3,18 @@ package br.ufmg.dcc.vod.ncrawler.processor;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.CrawlResult;
-import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 
-public class ThreadedProcessor<R, T> implements Processor<R, T> {
+public class ThreadedProcessor implements Processor {
 	
 	private static final Logger LOG = Logger.getLogger(ThreadedProcessor.class);
 	
@@ -22,22 +22,24 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 	private final int nThreads;
 	private final QueueHandle myHandle;
 	private final QueueService service;
-	private Evaluator<R, T> e;
+	private final Evaluator e;
 
-	public <S> ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service,
-			Serializer<S> serializer, File queueFile, int queueSize) 
+	public <S, I, C> ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service,
+			Serializer<S> serializer, File queueFile, int queueSize, Evaluator<I, C> e) 
 			throws FileNotFoundException, IOException {
 		
 		this.nThreads = nThreads;
 		this.sleepTimePerExecution = sleepTimePerExecution;
 		this.service = service;
+		this.e = e;
 		this.myHandle = service.createPersistentMessageQueue("Workers", queueFile, serializer, queueSize);
 	}
 	
-	public ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service) {
+	public <I, C> ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service, Evaluator<I, C> e) {
 		this.nThreads = nThreads;
 		this.sleepTimePerExecution = sleepTimePerExecution;
 		this.service = service;
+		this.e = e;
 		this.myHandle = service.createMessageQueue("Workers");
 	}
 
@@ -48,7 +50,7 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 	}
 
 	@Override
-	public void dispatch(CrawlJob<R, T> c) {
+	public void dispatch(CrawlJob c) {
 		try {
 			service.sendObjectToQueue(myHandle, c);
 		} catch (InterruptedException e) {
@@ -56,12 +58,7 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 		}
 	}
 
-	@Override
-	public void setEvaluator(Evaluator<R, T> e) {
-		this.e = e;
-	}
-	
-	private class CrawlProcessor implements QueueProcessor<CrawlJob<R, T>> {
+	private class CrawlProcessor implements QueueProcessor<CrawlJob> {
 		
 		private final int i;
 
@@ -75,23 +72,19 @@ public class ThreadedProcessor<R, T> implements Processor<R, T> {
 		}
 
 		@Override
-		public void process(CrawlJob<R, T> t) {
-			R r = null;
-			
+		public void process(CrawlJob t) {
 			try {
-				LOG.info("STARTING Collecting url: url="+t);
-				t.collect();
-				r = t.getResult();
-				LOG.info("DONE Collected url: url="+t);
+				t.setvaluator(e);
+				Collection<CrawlJob> collect = t.collect();
+				for (CrawlJob j : collect) {
+					ThreadedProcessor.this.dispatch(j);
+				}
 			} catch (Exception e) {
-				LOG.error("ERROR Collecting: url="+t, e);
+				//FIXME!!
 			}
 			
-			//R will be null if error occurred!
-			e.crawlJobConcluded(new CrawlResult<R, T>(t.getID(), r, t.getType(), r != null));
-			
 			try {
-				Thread.sleep(sleepTimePerExecution * 1000);
+				Thread.sleep(sleepTimePerExecution);
 			} catch (InterruptedException e) {
 			}
 		}
