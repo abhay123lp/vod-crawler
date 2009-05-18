@@ -2,29 +2,31 @@ package br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
 
 import org.apache.http.client.HttpClient;
 import org.apache.log4j.Logger;
 
-import br.ufmg.dcc.vod.ncrawler.CrawlResult;
+import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import br.ufmg.dcc.vod.ncrawler.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
 import br.ufmg.dcc.vod.ncrawler.common.SimpleBloomFilter;
-import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.YTHTMLType.Type;
-import br.ufmg.dcc.vod.ncrawler.processor.Processor;
+import br.ufmg.dcc.vod.ncrawler.tracker.BFTracker;
+import br.ufmg.dcc.vod.ncrawler.tracker.ThreadSafeTracker;
 
 /*
  * - Profile
@@ -51,7 +53,7 @@ import br.ufmg.dcc.vod.ncrawler.processor.Processor;
  * Procurar por next em cada página!!!!!
  * <a href="/profile?user=USER&amp;view=QUE_BUSCO&amp;start=##">Next</a>
  */
-public class YTUserHTMLEvaluator implements Evaluator<File, YTHTMLType> {
+public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, InputStream> {
 
 	private static final Logger LOG = Logger.getLogger(YTUserHTMLEvaluator.class);
 	
@@ -67,25 +69,15 @@ public class YTUserHTMLEvaluator implements Evaluator<File, YTHTMLType> {
 	private static final String GL_US_HL_EN = "&gl=US&hl=en";
 	private static final String BASE_URL = "http://www.youtube.com/";
 	
-	private final Set<String> crawledUsers;
-	private final Set<String> crawledVideos;
+	private final ThreadSafeTracker<String> crawledUsers;
+	private final ThreadSafeTracker<String> crawledVideos;
+	
 	private final File videosFolder;
 	private final File usersFolder;
-	
-	private Processor<File, YTHTMLType> p;
-	
-	private final List<String> initialUsers;
-	private final List<String> initialVideos;
 	private final HttpClient httpClient;
 
-	private int dispatchUrls = 0;
-	private int finishedUrls = 0;
-	private int errorUrls = 0;
-	private int finishedVideos = 0;
-	private int userUrls = 0;
-	private int finishedUserUrls = 0;
-	private int errorUserUrls = 0;
-	private int errorVideos = 0;
+	private List<String> initialVideos;
+	private List<String> initialUsers;
 
 	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, HttpClient client) {
 		this(videosFolder, usersFolder, initialUsers, new LinkedList<String>(), new HashSet<String>(), new HashSet<String>(), client);
@@ -96,13 +88,13 @@ public class YTUserHTMLEvaluator implements Evaluator<File, YTHTMLType> {
 		this.usersFolder = usersFolder;
 		this.initialUsers = initialUsers;
 		this.initialVideos = initialVideos;
-		this.crawledUsers = new SimpleBloomFilter<String>(5 * TEN_MILLION * 16, 5 * TEN_MILLION);
 		
+		this.crawledUsers = new ThreadSafeTracker<String>(new BFTracker<String>(new SimpleBloomFilter<String>(5 * TEN_MILLION * 16, 5 * TEN_MILLION)));		
 		for (String u : crawledUsers) {
 			this.crawledUsers.add(u);
 		}
 		
-		this.crawledVideos = new SimpleBloomFilter<String>(5 * TEN_MILLION * 16, 5 * TEN_MILLION);
+		this.crawledVideos = new ThreadSafeTracker<String>(new BFTracker<String>(new SimpleBloomFilter<String>(5 * TEN_MILLION * 16, 5 * TEN_MILLION)));
 		for (String v : crawledVideos) {
 			this.crawledVideos.add(v);
 		}
@@ -110,110 +102,44 @@ public class YTUserHTMLEvaluator implements Evaluator<File, YTHTMLType> {
 		this.httpClient = client;
 	}
 	
-	@Override
-	public void setProcessor(Processor<File, YTHTMLType> p) {
-		this.p = p;
-	}
+//	private void printStats() {
+//		System.out.println("---");
+//		System.out.println("Stats: " + new Date());
+//		System.out.println("-- in users");
+//		System.out.println("Discovered Users = " + crawledUsers.size());
+//		System.out.println("In URLs = " + userUrls);
+//		System.out.println("Collected user URLs = " + finishedUserUrls + " (" + ((double)finishedUserUrls/userUrls) + ")");
+//		System.out.println("User URLs with error = " + errorUserUrls + " (" + ((double)errorUserUrls/userUrls) + ")");
+//		System.out.println("-- in videos (each video is one url only)");
+//		System.out.println("Discovered Videos = " + crawledVideos.size());
+//		System.out.println("Collected Videos = " + finishedVideos + " (" + ((double)finishedVideos/crawledVideos.size()) + ")");
+//		System.out.println("Videos with error = " + errorVideos + " (" + ((double)errorVideos/crawledVideos.size()) + ")");
+//		System.out.println("-- in total urls");
+//		System.out.println("Discovered  URL = " + dispatchUrls);
+//		System.out.println("URLs collected = " + finishedUrls + " (" + ((double)finishedUrls/dispatchUrls) + ")");
+//		System.out.println("URLs with error = " + errorUrls + " (" + ((double)errorUrls/dispatchUrls) + ")");
+//		System.out.println("---");
+//		System.out.println();
+//	}
+
 	
 	@Override
-	public void dispatchIntialCrawl() throws Exception {
-		LOG.info("Dispatching initial crawl: numberOfUser="+initialUsers.size() + " , numberOfVideos="+initialVideos.size());
-		for (String s : initialVideos) {
-			dispatchVideo(s);
+	public Collection<CrawlJob> getInitialCrawl() throws Exception {
+		List<CrawlJob> rv = new ArrayList<CrawlJob>();
+		
+		for (String v : initialVideos) {
+			generateVideoUrls(v, rv);
 		}
 		
-		for (String s : initialUsers) {
-			dispatchUser(s);
+		for (String u : initialUsers) {
+			generateUserUrls(u, rv);
 		}
 		
-		initialUsers.clear();
-		initialVideos.clear();
+		return rv;
 	}
 	
-	@Override
-	public void crawlJobConcluded(CrawlResult<File, YTHTMLType> j) {
-		try {
-			LOG.info("Finished Crawl of: job= "+j.getId());
-			Pair<String, Set<String>> followUp = null;
-			if (j != null && j.getResult() != null) {
-				followUp = eval(j.getResult(), j.getType());
-			}
-			
-			if (j.success() && followUp != null) {
-				//Has something to follow, can follow, and is not equal to the last link (Youtube specific)
-				String nextLink = BASE_URL + followUp.first + GL_US_HL_EN;
-				if (followUp.first != null && j.getType().hasFollowUp() && !nextLink.equals(j.getId())) {
-					LOG.info("Dispatching following link: link="+nextLink);
-					URL next = new URL(nextLink);
-					dispatch(new URLSaveCrawlJob<YTHTMLType>(next, j.getResult().getParentFile(), j.getType(), httpClient));
-				}
-
-				if (j.getType() == YTHTMLType.FAVORITES || j.getType() == YTHTMLType.VIDEOS) {
-					for (String v : followUp.second) {
-						dispatchVideo(v);
-					}
-				} else if (j.getType() == YTHTMLType.SUBSCRIBERS || j.getType() == YTHTMLType.SUBSCRIPTIONS) {
-					for (String u : followUp.second) {
-						dispatchUser(u);	
-					}
-				} 
-				
-				if (j.getType() != YTHTMLType.SINGLE_VIDEO) {
-					finishedUserUrls++;
-				} else if (j.getType() == YTHTMLType.SINGLE_VIDEO) {
-					finishedVideos++;
-				}
-				finishedUrls++;
-				LOG.info("URL url=" + j.getId() + " collected ok!");
-			} else {
-				LOG.error("URL url=" + j.getId() + " was not collected due to error!");
-				errorUrls++;
-				
-				if (j.getType() != YTHTMLType.SINGLE_VIDEO) {
-					errorUserUrls++;
-				} else  {
-					errorVideos++;
-				}
-			}
-		} catch (Exception e) {
-			errorUrls++;
-			LOG.error("URL url=" + j.getId() + " was not collected due to error!");
-			LOG.error("Exception occurred:", e);
-			
-			if (j.getType() != YTHTMLType.SINGLE_VIDEO) {
-				errorUserUrls++;
-			} else {
-				errorVideos++;
-			}
-		}
-		
-		printStats();
-	}
-
-	private void printStats() {
-		System.out.println("---");
-		System.out.println("Stats: " + new Date());
-		System.out.println("-- in users");
-		System.out.println("Discovered Users = " + crawledUsers.size());
-		System.out.println("In URLs = " + userUrls);
-		System.out.println("Collected user URLs = " + finishedUserUrls + " (" + ((double)finishedUserUrls/userUrls) + ")");
-		System.out.println("User URLs with error = " + errorUserUrls + " (" + ((double)errorUserUrls/userUrls) + ")");
-		System.out.println("-- in videos (each video is one url only)");
-		System.out.println("Discovered Videos = " + crawledVideos.size());
-		System.out.println("Collected Videos = " + finishedVideos + " (" + ((double)finishedVideos/crawledVideos.size()) + ")");
-		System.out.println("Videos with error = " + errorVideos + " (" + ((double)errorVideos/crawledVideos.size()) + ")");
-		System.out.println("-- in total urls");
-		System.out.println("Discovered  URL = " + dispatchUrls);
-		System.out.println("URLs collected = " + finishedUrls + " (" + ((double)finishedUrls/dispatchUrls) + ")");
-		System.out.println("URLs with error = " + errorUrls + " (" + ((double)errorUrls/dispatchUrls) + ")");
-		System.out.println("---");
-		System.out.println();
-	}
-
-	private void dispatchUser(String u) throws MalformedURLException {
-		if (!crawledUsers.contains(u)) {
-			LOG.info("Dispatching user: user="+u);
-			crawledUsers.add(u);
+	private void generateUserUrls(String u, List<CrawlJob> rv) throws MalformedURLException {
+		if (crawledUsers.add(u)) {
 			for (Type t : YTHTMLType.Type.values()) {
 				YTHTMLType ytt = YTHTMLType.forEnum(t);
 				
@@ -221,71 +147,76 @@ public class YTUserHTMLEvaluator implements Evaluator<File, YTHTMLType> {
 					String url = BASE_URL + PROFILE_USER + u + VIEW + ytt.getFeatureName() + GL_US_HL_EN;
 					File folder = new File(usersFolder + File.separator + u + File.separator + ytt.getFeatureName());
 					folder.mkdirs();
-					dispatch(new URLSaveCrawlJob<YTHTMLType>(new URL(url), folder, ytt, httpClient));
+					rv.add(new URLSaveCrawlJob(new URL(url), folder, ytt, httpClient));
 				}
 			}
 		}
 	}
 
-	private void dispatchVideo(String v) throws MalformedURLException {
-		if (!crawledVideos.contains(v)) {
-			crawledVideos.add(v);
+	private void generateVideoUrls(String v, List<CrawlJob> rv) throws MalformedURLException {
+		if (crawledVideos.add(v)) {
 			String url = BASE_URL + "watch?v=" + v + GL_US_HL_EN;
 			LOG.info("Dispatching video: video="+v + ", url="+url);
 			videosFolder.mkdirs();
-			dispatch(new URLSaveCrawlJob<YTHTMLType>(new URL(url), videosFolder, YTHTMLType.SINGLE_VIDEO, httpClient));
+			rv.add(new URLSaveCrawlJob(new URL(url), videosFolder, YTHTMLType.SINGLE_VIDEO, httpClient));
 		}
-	}
-	
-	private void dispatch(URLSaveCrawlJob<YTHTMLType> j) {
-		if (j.getType() != YTHTMLType.SINGLE_VIDEO) {
-			this.userUrls++;
-		}
-		
-		this.dispatchUrls++;
-		p.dispatch(j);
 	}
 
 	@Override
-	public boolean isDone() {
-		return (finishedUrls + errorUrls) >= dispatchUrls;
-	}
-	
-	public Pair<String, Set<String>> eval(File f, YTHTMLType t) throws Exception {
+	public Collection<CrawlJob> evaluteAndSave(Pair<String, HTMLType> collectID, InputStream collectContent, File savePath) throws Exception {
 		String nextLink = null;
 		BufferedReader in = null;
-		Set<String> returnValue = new HashSet<String>();
+		Set<String> nextUrls = new HashSet<String>();
+		
+		HTMLType t = collectID.second;
 		
 		try {
-		    in = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(f))));
+			in = new BufferedReader(new InputStreamReader(collectContent));
 			String inputLine;
-		    while ((inputLine = in.readLine()) != null) {
-		    	Matcher matcher = NEXT_PATTERN.matcher(inputLine);
-		    	if (matcher.matches() && inputLine.contains(t.getFeatureName())) {
-		    		nextLink = matcher.group(2);
-		    	}
-		    	
+			while ((inputLine = in.readLine()) != null) {
+				Matcher matcher = NEXT_PATTERN.matcher(inputLine);
+				if (matcher.matches() && inputLine.contains(t.getFeatureName())) {
+					nextLink = matcher.group(2);
+				}
+				
 				Pattern pat = null;
 				if (t == YTHTMLType.FAVORITES || t == YTHTMLType.VIDEOS) {
 					pat = VIDEO_PATTERN;
 				} else if (t == YTHTMLType.SUBSCRIBERS || t == YTHTMLType.SUBSCRIPTIONS || t == YTHTMLType.FRIENDS) {
 					pat = RELATION_PATTERN;
 				} 
-		    	
-		    	if (pat != null) {
-			    	matcher = pat.matcher(inputLine);
-			    	if (matcher.matches()) {
-			    		returnValue.add(matcher.group(2));
-			    	}
-		    	}
-		    	
-		    	matcher = ERROR_PATTERN.matcher(inputLine);
-		    	if (matcher.matches()) {
-		    		throw new YTErrorPageException();
-		    	}
-		    }
-		    
-		    return new Pair<String, Set<String>>(nextLink, returnValue);
+				
+				matcher = pat.matcher(inputLine);
+				if (matcher.matches()) {
+					nextUrls.add(matcher.group(2));
+				}
+				
+				matcher = ERROR_PATTERN.matcher(inputLine);
+				if (matcher.matches()) {
+					throw new YTErrorPageException();
+				}
+			}
+
+			List<CrawlJob> rv = new ArrayList<CrawlJob>();
+			
+			//Has something to follow, can follow, and is not equal to the last link (Youtube specific)
+			String followUp = BASE_URL + nextLink + GL_US_HL_EN;
+			if (nextLink != null && t.hasFollowUp() && !nextLink.equals(collectID.first)) {
+				File folder = new File(usersFolder + File.separator + savePath.getParentFile() + File.separator + t.getFeatureName());
+				rv.add(new URLSaveCrawlJob(new URL(followUp), folder, t, httpClient));
+			}
+
+			if (t == YTHTMLType.FAVORITES || t == YTHTMLType.VIDEOS) {
+				for (String v : nextUrls) {
+					generateVideoUrls(v, rv);
+				}
+			} else if (t == YTHTMLType.SUBSCRIBERS || t == YTHTMLType.SUBSCRIPTIONS) {
+				for (String u : nextUrls) {
+					generateUserUrls(u, rv);	
+				}
+			}
+			
+			return rv;
 		} finally {
 			if (in != null) in.close();
 		}

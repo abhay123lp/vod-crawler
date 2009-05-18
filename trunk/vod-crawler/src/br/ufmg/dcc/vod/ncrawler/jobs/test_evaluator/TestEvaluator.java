@@ -3,7 +3,7 @@ package br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator;
 import java.util.HashMap;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlResult;
-import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.processor.Processor;
 
 public class TestEvaluator implements Evaluator<int[], Integer> {

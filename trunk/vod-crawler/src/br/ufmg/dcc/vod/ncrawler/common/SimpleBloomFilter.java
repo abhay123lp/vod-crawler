@@ -65,7 +65,7 @@ public class SimpleBloomFilter<E> implements Set<E> {
 	}
 
 	/*
-	 * @return This method will always return false
+	 * @return This method will always return true
 	 * 
 	 * @see java.util.Set#add(java.lang.Object)
 	 */
@@ -75,7 +75,7 @@ public class SimpleBloomFilter<E> implements Set<E> {
 			bitSet.set(r.nextInt(bitArraySize), true);
 		}
 		amountOfInserted++;
-		return false;
+		return true;
 	}
 
 	/**
