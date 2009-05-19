@@ -4,6 +4,14 @@ import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
 
 public class YTHTMLType implements HTMLType {
 
+	private enum Type {
+		//These have no following links
+		SINGLE_VIDEO,
+		
+		//These do
+		PROFILE, FRIENDS, SUBSCRIBERS, SUBSCRIPTIONS, VIDEOS, FAVORITES, GROUPS;
+	}
+	
 	public static final YTHTMLType SINGLE_VIDEO = new YTHTMLType(Type.SINGLE_VIDEO);
 	public static final YTHTMLType PROFILE = new YTHTMLType(Type.PROFILE);
 	public static final YTHTMLType SUBSCRIBERS = new YTHTMLType(Type.SUBSCRIBERS);
@@ -52,48 +60,46 @@ public class YTHTMLType implements HTMLType {
 			return "videos";
 		case PROFILE:
 			return "profile";
+		case SINGLE_VIDEO:
+			return "single-vid";
 		default:
 			return "no-name";
-		}
-	}
-	
-	public Type getEnum() {
-		return t;
-	}
-	
-	public enum Type {
-		//These have no following links
-		SINGLE_VIDEO,
-		
-		//These do
-		PROFILE, FRIENDS, SUBSCRIBERS, SUBSCRIPTIONS, VIDEOS, FAVORITES, GROUPS;
-	}
-
-	public static YTHTMLType forEnum(Type t) {
-		switch (t) {
-		case FAVORITES:
-			return FAVORITES;
-		case FRIENDS:
-			return FRIENDS;
-		case GROUPS:
-			return GROUPS;
-		case SUBSCRIBERS:
-			return SUBSCRIBERS;
-		case SUBSCRIPTIONS:
-			return SUBSCRIPTIONS;
-		case VIDEOS:
-			return VIDEOS;
-		case PROFILE:
-			return PROFILE;
-		case SINGLE_VIDEO:
-			return SINGLE_VIDEO;
-		default:
-			return null;
 		}
 	}
 	
 	@Override
 	public String toString() {
 		return getFeatureName();
+	}
+
+	@Override
+	public HTMLType[] enumerate() {
+		return new HTMLType[]{SINGLE_VIDEO,  PROFILE, SUBSCRIBERS, SUBSCRIPTIONS,
+			VIDEOS, FAVORITES , GROUPS, FRIENDS};
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((t == null) ? 0 : t.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		YTHTMLType other = (YTHTMLType) obj;
+		if (t == null) {
+			if (other.t != null)
+				return false;
+		} else if (!t.equals(other.t))
+			return false;
+		return true;
 	}
 }

@@ -18,9 +18,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpParams;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.common.NetIFRoundRobin;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
+import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 
 public class URLSaveCrawlJob implements CrawlJob {
 

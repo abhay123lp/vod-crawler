@@ -2,6 +2,8 @@ package br.ufmg.dcc.vod.ncrawler;
 
 import java.util.Collection;
 
+import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+
 
 /**
  * Collects an object and returns the result of this crawl.

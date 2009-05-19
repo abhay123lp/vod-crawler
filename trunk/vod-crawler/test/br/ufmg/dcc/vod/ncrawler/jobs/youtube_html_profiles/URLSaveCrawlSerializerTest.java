@@ -9,6 +9,7 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
+import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlSerializer;
 
 
 public class URLSaveCrawlSerializerTest {

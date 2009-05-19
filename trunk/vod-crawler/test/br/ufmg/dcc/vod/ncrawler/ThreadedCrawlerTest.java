@@ -2,7 +2,7 @@ package br.ufmg.dcc.vod.ncrawler;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.junit.Test;
@@ -17,11 +17,11 @@ public class ThreadedCrawlerTest {
 		RandomizedSyncGraph g = new RandomizedSyncGraph(100);
 		
 		TestEvaluator te = new TestEvaluator(g);
-		ThreadedCrawler<int[], Integer> tc = new ThreadedCrawler<int[], Integer>(1, 0, te);
+		ThreadedCrawler tc = new ThreadedCrawler(1, 0, te);
 		
 		tc.crawl();
 		
-		HashMap<Integer, int[]> crawled = te.getCrawled();
+		Map<Integer, int[]> crawled = te.getCrawled();
 		doTheAsserts(crawled, g);
 	}
 
@@ -31,11 +31,11 @@ public class ThreadedCrawlerTest {
 		RandomizedSyncGraph g = new RandomizedSyncGraph(100);
 		
 		TestEvaluator te = new TestEvaluator(g);
-		ThreadedCrawler<int[], Integer> tc = new ThreadedCrawler<int[], Integer>(2, 0, te);
+		ThreadedCrawler tc = new ThreadedCrawler(2, 0, te);
 		
 		tc.crawl();
 		
-		HashMap<Integer, int[]> crawled = te.getCrawled();
+		Map<Integer, int[]> crawled = te.getCrawled();
 		doTheAsserts(crawled, g);
 	}
 	
@@ -44,16 +44,16 @@ public class ThreadedCrawlerTest {
 		RandomizedSyncGraph g = new RandomizedSyncGraph(100);
 		
 		TestEvaluator te = new TestEvaluator(g);
-		ThreadedCrawler<int[], Integer> tc = new ThreadedCrawler<int[], Integer>(100, 0, te);
+		ThreadedCrawler tc = new ThreadedCrawler(100, 0, te);
 		
 		tc.crawl();
 		
-		HashMap<Integer, int[]> crawled = te.getCrawled();
+		Map<Integer, int[]> crawled = te.getCrawled();
 		doTheAsserts(crawled, g);
 	}
 
 	
-	private void doTheAsserts(HashMap<Integer, int[]> crawled, RandomizedSyncGraph g) {
+	private void doTheAsserts(Map<Integer, int[]> crawled, RandomizedSyncGraph g) {
 		assertEquals(crawled.size(), g.getNumVertex());
 		
 		for (Entry<Integer, int[]> e: crawled.entrySet()) {
