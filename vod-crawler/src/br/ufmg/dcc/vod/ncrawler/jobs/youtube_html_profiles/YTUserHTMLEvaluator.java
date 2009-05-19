@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.http.client.HttpClient;
+import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
@@ -64,6 +65,8 @@ import br.ufmg.dcc.vod.ncrawler.tracker.ThreadSafeTracker;
  */
 public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, InputStream> {
 
+	private static final Logger LOG = Logger.getLogger(YTUserHTMLEvaluator.class);
+	
 	private final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\"\\s*>\\s*Next.*)");
 	private final Pattern VIDEO_PATTERN = Pattern.compile("(\\s+<div class=\"video-main-content\" id=\"video-main-content-)(.*?)(\".*)");
 	private final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
@@ -171,6 +174,7 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 					File folder = new File(usersFolder + File.separator + u + File.separator + t.getFeatureName());
 					folder.mkdirs();
 					rv.add(new URLSaveCrawlJob(new URL(url), folder, t, httpClient));
+					LOG.info("Found user url: " + url);
 					i++;
 				}
 			}
@@ -185,6 +189,7 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 			String url = BASE_URL + "watch?v=" + v + GL_US_HL_EN;
 			videosFolder.mkdirs();
 			rv.add(new URLSaveCrawlJob(new URL(url), videosFolder, YTHTMLType.SINGLE_VIDEO, httpClient));
+			LOG.info("Found video url: " + url);
 			i++;
 		}
 		
@@ -204,6 +209,8 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		List<CrawlJob> rv = new ArrayList<CrawlJob>();
 		try {
+			LOG.info("Flushing " + collectID.first + " to disk");
+			
 			in = new BufferedReader(new InputStreamReader(collectContent));
 			out = new PrintStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(savePath))));
 			
@@ -272,6 +279,7 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 			else
 				incs.put(COL_USERS, 1);
 			
+			LOG.info("File saved, found an additional " + urls + " urls to collect.");
 		} catch (Exception e) {
 			errorOccurred(collectID, e);
 		} finally {
@@ -335,6 +343,6 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 			incs.put(ERR_USERS, 1);
 		incs.put(ERR_URLS, 1);
 		sp.notify(new CompositeStatEvent(incs));
-		e.printStackTrace();
+		LOG.error("Error collecting: " + collectID.first, e);
 	}
 }
