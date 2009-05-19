@@ -10,6 +10,7 @@ import java.util.Map;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 
 public class TestEvaluator implements Evaluator<Integer, int[]> {
 
@@ -26,9 +27,8 @@ public class TestEvaluator implements Evaluator<Integer, int[]> {
 	}
 
 	@Override
-	public Collection<CrawlJob> evaluteAndSave(Integer collectID, int[] collectContent, File savePath) throws Exception {
+	public Collection<CrawlJob> evaluteAndSave(Integer collectID, int[] collectContent, File savePath) {
 		ArrayList<CrawlJob> rv = new ArrayList<CrawlJob>();
-		
 		this.crawled.put(collectID, collectContent);
 		for (int i : collectContent) {
 			if (!crawled.containsKey(i)) {
@@ -40,8 +40,15 @@ public class TestEvaluator implements Evaluator<Integer, int[]> {
 	}
 
 	@Override
-	public Collection<CrawlJob> getInitialCrawl() throws Exception {
+	public Collection<CrawlJob> getInitialCrawl()  {
 		return new ArrayList<CrawlJob>(Arrays.asList(new TestCrawlJob(0, g)));
 	}
 
+	@Override
+	public void setStatsKeeper(StatsPrinter sp) {
+	}
+
+	@Override
+	public void errorOccurred(Integer collectID, Exception e) {
+	}
 }

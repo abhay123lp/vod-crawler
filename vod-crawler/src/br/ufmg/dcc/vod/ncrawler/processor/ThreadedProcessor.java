@@ -47,6 +47,11 @@ public class ThreadedProcessor implements Processor {
 		for (int i = 0; i < nThreads; i++) {
 			service.startProcessor(myHandle, new CrawlProcessor(i));
 		}
+		
+		Collection<CrawlJob> initialCrawl = e.getInitialCrawl();
+		for (CrawlJob j : initialCrawl) {
+			dispatch(j);
+		}
 	}
 
 	@Override
@@ -73,14 +78,10 @@ public class ThreadedProcessor implements Processor {
 
 		@Override
 		public void process(CrawlJob t) {
-			try {
-				t.setvaluator(e);
-				Collection<CrawlJob> collect = t.collect();
-				for (CrawlJob j : collect) {
-					ThreadedProcessor.this.dispatch(j);
-				}
-			} catch (Exception e) {
-				//FIXME!!
+			t.setvaluator(e);
+			Collection<CrawlJob> collect = t.collect();
+			for (CrawlJob j : collect) {
+				ThreadedProcessor.this.dispatch(j);
 			}
 			
 			try {

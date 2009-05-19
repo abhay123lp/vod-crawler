@@ -21,7 +21,6 @@ import br.ufmg.dcc.vod.ncrawler.common.FileUtil;
 import br.ufmg.dcc.vod.ncrawler.common.LoggerInitiator;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLTypeFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlSerializer;
-import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 
 public class Main {
 	
@@ -84,9 +83,8 @@ public class Main {
 
 		//Start!
 		LoggerInitiator.initiateLog();
-		ThreadedCrawler tc = new ThreadedCrawler(nThreads, sleep, e, pQueue, eQueue, new URLSaveCrawlSerializer(httpClient), 512 * 1024 * 1024);
+		ThreadedCrawler tc = new ThreadedCrawler(nThreads, sleep, e, pQueue, eQueue, new URLSaveCrawlSerializer(httpClient), 2 * 1024 * 1024);
 		HTMLTypeFactory.getInstance().addMappings(YTHTMLType.FAVORITES.enumerate(), false);
-//		StatsPrinter statsPrinter = new StatsPrinter(service, "U-FOUND", "UU-FOUND", "UU-OK", "UU-ERR", "VID-FOUND", "VID-OK", "VID-ERR");
 		
 		tc.crawl();
 		httpClient.getConnectionManager().shutdown();

@@ -18,7 +18,7 @@ public class TestCrawlJob implements CrawlJob {
 	}
 
 	@Override
-	public Collection<CrawlJob> collect() throws Exception {
+	public Collection<CrawlJob> collect() {
 		return e.evaluteAndSave(vertex, g.getNeighbours(vertex), null);
 	}
 

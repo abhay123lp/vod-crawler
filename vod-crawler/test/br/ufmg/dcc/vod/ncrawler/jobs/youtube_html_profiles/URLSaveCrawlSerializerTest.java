@@ -8,15 +8,16 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLTypeFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlSerializer;
 
 
 public class URLSaveCrawlSerializerTest {
 
-	@SuppressWarnings("unchecked")
 	@Test
 	public void testSave() throws MalformedURLException {
+		HTMLTypeFactory.getInstance().addMappings(YTHTMLType.FAVORITES.enumerate(), false);
 		
 		URLSaveCrawlSerializer s = new URLSaveCrawlSerializer(null);
 		

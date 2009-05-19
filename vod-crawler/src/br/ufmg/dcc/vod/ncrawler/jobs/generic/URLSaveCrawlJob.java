@@ -7,6 +7,7 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.http.HttpEntity;
@@ -39,11 +40,13 @@ public class URLSaveCrawlJob implements CrawlJob {
 	}
 	
 	@Override
-	public Collection<CrawlJob> collect() throws Exception {
+	public Collection<CrawlJob> collect() {
 		InputStream content = null;
 		BufferedReader in = null;
 		PrintStream out = null;
+		HttpEntity entity = null;
 		
+		Collection<CrawlJob> nextCrawl = new ArrayList<CrawlJob>();
 		try {
 			String encode = URLEncoder.encode(url.toString(), "UTF-8");
 			File resultFile = new File(savePath + File.separator + encode);
@@ -56,22 +59,25 @@ public class URLSaveCrawlJob implements CrawlJob {
 			ConnRouteParams.setLocalAddress(copy, nextIF);
 			
 			HttpResponse execute = new DefaultHttpClient(httpClient.getConnectionManager(), copy).execute(request);
-			HttpEntity entity = execute.getEntity();
+			
+			entity = execute.getEntity();
 			if (entity != null) {
 				content = entity.getContent();
-				Collection<CrawlJob> nextCrawl = e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), content, resultFile);
-			    entity.consumeContent();
-			    return nextCrawl;
 			}
 			
-			return null;
+			nextCrawl.addAll(e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), content, resultFile));
+	    } catch (Exception e) {
+	    	this.e.errorOccurred(new Pair<String, HTMLType>(url.toString(), t), e);
+	    } finally {
+	    	try {
+				if (in != null) in.close();
+				if (out != null) out.close();
+				if (content != null) content.close();
+				if (entity != null) entity.consumeContent();
+	    	} catch (Exception e) {}
 	    }
-	    finally
-	    {
-			if (in != null) in.close();
-			if (out != null) out.close();
-			if (content != null) content.close();
-	    }
+	    
+	    return nextCrawl;
 	}
 
 	@Override
