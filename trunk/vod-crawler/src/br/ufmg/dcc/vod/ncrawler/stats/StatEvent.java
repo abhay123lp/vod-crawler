@@ -1,13 +1,9 @@
 package br.ufmg.dcc.vod.ncrawler.stats;
 
-public class StatEvent {
+import java.util.Map;
 
-	public final String t;
-	public final int value;
+public interface StatEvent {
 
-	public StatEvent(String t, int value) {
-		this.t = t;
-		this.value = value;
-	}
+	public Map<String, Integer> getIncrements();
 	
 }

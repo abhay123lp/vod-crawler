@@ -13,7 +13,7 @@ import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
  */
 public interface CrawlJob {
 
-	public Collection<CrawlJob> collect() throws Exception;
+	public Collection<CrawlJob> collect();
 
 	public void setvaluator(Evaluator e);
 	

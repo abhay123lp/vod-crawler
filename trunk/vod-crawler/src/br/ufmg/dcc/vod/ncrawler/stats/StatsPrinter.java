@@ -1,5 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.stats;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
@@ -9,20 +10,22 @@ import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
 
 public class StatsPrinter implements QueueProcessor<StatEvent> {
 
-	public static final String SEP = "iu34ry8919uxc328urbn981";
-	
-	private final LinkedHashMap<String, Integer> map;
-	private QueueHandle h;
+	private final HashMap<String, Integer> map;
 	private final QueueService service;
+	private QueueHandle h;
+	private Display display;
 	
-	public StatsPrinter(QueueService service, String... ts) {
-		map = new LinkedHashMap<String, Integer>();
-		for (String est : ts) {
-			map.put(est, 0);
-		}
-		
+	public StatsPrinter(QueueService service) {
+		this.map = new HashMap<String, Integer>();
 		this.h = service.createMessageQueue("Stats");
 		this.service = service;
+	}
+
+	/**
+	 * SHOULD BE CALLED BEFORE THREAD STARTS!
+	 */
+	public void setDisplay(Display display) {
+		this.display = display;
 	}
 
 	public void start() {
@@ -34,22 +37,25 @@ public class StatsPrinter implements QueueProcessor<StatEvent> {
 		return "StatsPrinter";
 	}
 
+	public void notify(StatEvent se) {
+		try {
+			service.sendObjectToQueue(h, se);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	@Override
 	public void process(StatEvent se) {
-		if (map.containsKey(se.t)) {
-			map.put(se.t, map.get(se) + se.value);
+		for (Entry<String, Integer> e : se.getIncrements().entrySet()) {
+			Integer integer = map.get(e.getKey());
+			if (integer == null) {
+				integer = 0;
+			}
+			map.put(e.getKey(), integer + e.getValue());
 		}
 		
-		printStats();
-	}
-
-	private void printStats() {
-		for (Entry<String, Integer> e : map.entrySet()) {
-			if (e.getKey() == SEP) {
-				System.out.println("--");
-			} else {
-				System.out.println(e.getKey() + " : " + e.getValue());
-			}
-		}
+		System.out.println(se.getIncrements());
+		display.print(map);
 	}
 }

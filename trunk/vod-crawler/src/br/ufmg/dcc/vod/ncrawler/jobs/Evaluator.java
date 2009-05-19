@@ -4,12 +4,15 @@ import java.io.File;
 import java.util.Collection;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
+import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 
 public interface Evaluator<I, C> {
-
-	public Collection<CrawlJob> evaluteAndSave(I collectID, C collectContent, File savePath) throws Exception;
-
-	public Collection<CrawlJob> getInitialCrawl() throws Exception;
+	
+	public void setStatsKeeper(StatsPrinter sp);
+	public Collection<CrawlJob> getInitialCrawl();
+	
+	public Collection<CrawlJob> evaluteAndSave(I collectID, C collectContent, File savePath);
+	public void errorOccurred(I collectID, Exception e);
+	
 	
 }
