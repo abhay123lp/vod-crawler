@@ -1,49 +1,47 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
-import br.ufmg.dcc.vod.ncrawler.CrawlResult;
-import br.ufmg.dcc.vod.ncrawler.Evaluator;
-import br.ufmg.dcc.vod.ncrawler.processor.Processor;
+import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 
-public class TestEvaluator implements Evaluator<int[], Integer> {
+public class TestEvaluator implements Evaluator<Integer, int[]> {
 
-	private Processor<int[], Integer> p;
-	private final HashMap<Integer, int[]> crawled;
+	private final Map<Integer, int[]> crawled;
 	private final RandomizedSyncGraph g;
 
 	public TestEvaluator(RandomizedSyncGraph g) {
 		this.g = g;
-		this.crawled = new HashMap<Integer, int[]>();
+		this.crawled = Collections.synchronizedMap(new HashMap<Integer, int[]>());
 	}
 	
-	@Override
-	public void crawlJobConcluded(CrawlResult<int[], Integer> j) {
-		this.crawled.put(j.getType(), j.getResult());
-		for (int i : j.getResult()) {
-			if (!crawled.containsKey(i)) {
-				p.dispatch(new TestCrawlJob(i, g));
-			}
-		}
-	}
-
-	@Override
-	public void dispatchIntialCrawl() {
-		p.dispatch(new TestCrawlJob(0, g));
-	}
-
-	@Override
-	public void setProcessor(Processor<int[], Integer> p) {
-		this.p = p;
-	}
-
-	public HashMap<Integer, int[]> getCrawled() {
+	public Map<Integer, int[]> getCrawled() {
 		return crawled;
 	}
 
 	@Override
-	public boolean isDone() {
-		return this.crawled.size() == g.getNumVertex();
+	public Collection<CrawlJob> evaluteAndSave(Integer collectID, int[] collectContent, File savePath) throws Exception {
+		ArrayList<CrawlJob> rv = new ArrayList<CrawlJob>();
+		
+		this.crawled.put(collectID, collectContent);
+		for (int i : collectContent) {
+			if (!crawled.containsKey(i)) {
+				rv.add(new TestCrawlJob(i, g));
+			}
+		}
+		
+		return rv;
+	}
+
+	@Override
+	public Collection<CrawlJob> getInitialCrawl() throws Exception {
+		return new ArrayList<CrawlJob>(Arrays.asList(new TestCrawlJob(0, g)));
 	}
 
 }

@@ -1,8 +1,9 @@
-package br.ufmg.dcc.vod.ncrawler;
+package br.ufmg.dcc.vod.ncrawler.jobs;
 
 import java.io.File;
 import java.util.Collection;
 
+import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 
 public interface Evaluator<I, C> {

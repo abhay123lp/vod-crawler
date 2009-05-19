@@ -8,10 +8,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,12 +21,11 @@ import org.apache.http.client.HttpClient;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
 import br.ufmg.dcc.vod.ncrawler.common.SimpleBloomFilter;
+import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
-import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.YTHTMLType.Type;
 import br.ufmg.dcc.vod.ncrawler.tracker.BFTracker;
 import br.ufmg.dcc.vod.ncrawler.tracker.ThreadSafeTracker;
 
@@ -102,27 +103,6 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 		this.httpClient = client;
 	}
 	
-//	private void printStats() {
-//		System.out.println("---");
-//		System.out.println("Stats: " + new Date());
-//		System.out.println("-- in users");
-//		System.out.println("Discovered Users = " + crawledUsers.size());
-//		System.out.println("In URLs = " + userUrls);
-//		System.out.println("Collected user URLs = " + finishedUserUrls + " (" + ((double)finishedUserUrls/userUrls) + ")");
-//		System.out.println("User URLs with error = " + errorUserUrls + " (" + ((double)errorUserUrls/userUrls) + ")");
-//		System.out.println("-- in videos (each video is one url only)");
-//		System.out.println("Discovered Videos = " + crawledVideos.size());
-//		System.out.println("Collected Videos = " + finishedVideos + " (" + ((double)finishedVideos/crawledVideos.size()) + ")");
-//		System.out.println("Videos with error = " + errorVideos + " (" + ((double)errorVideos/crawledVideos.size()) + ")");
-//		System.out.println("-- in total urls");
-//		System.out.println("Discovered  URL = " + dispatchUrls);
-//		System.out.println("URLs collected = " + finishedUrls + " (" + ((double)finishedUrls/dispatchUrls) + ")");
-//		System.out.println("URLs with error = " + errorUrls + " (" + ((double)errorUrls/dispatchUrls) + ")");
-//		System.out.println("---");
-//		System.out.println();
-//	}
-
-	
 	@Override
 	public Collection<CrawlJob> getInitialCrawl() throws Exception {
 		List<CrawlJob> rv = new ArrayList<CrawlJob>();
@@ -140,14 +120,12 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 	
 	private void generateUserUrls(String u, List<CrawlJob> rv) throws MalformedURLException {
 		if (crawledUsers.add(u)) {
-			for (Type t : YTHTMLType.Type.values()) {
-				YTHTMLType ytt = YTHTMLType.forEnum(t);
-				
-				if (ytt.hasFollowUp()) {
-					String url = BASE_URL + PROFILE_USER + u + VIEW + ytt.getFeatureName() + GL_US_HL_EN;
-					File folder = new File(usersFolder + File.separator + u + File.separator + ytt.getFeatureName());
+			for (HTMLType t : YTHTMLType.FAVORITES.enumerate()) {
+				if (t.hasFollowUp()) {
+					String url = BASE_URL + PROFILE_USER + u + VIEW + t.getFeatureName() + GL_US_HL_EN;
+					File folder = new File(usersFolder + File.separator + u + File.separator + t.getFeatureName());
 					folder.mkdirs();
-					rv.add(new URLSaveCrawlJob(new URL(url), folder, ytt, httpClient));
+					rv.add(new URLSaveCrawlJob(new URL(url), folder, t, httpClient));
 				}
 			}
 		}
@@ -215,10 +193,32 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 					generateUserUrls(u, rv);	
 				}
 			}
+		
+			/*
+			this.dispatchUrls.getAndAdd(rv.size());
+			finishedUrls.incrementAndGet();
+			if (t == YTHTMLType.SINGLE_VIDEO) {
+				finishedVideos.incrementAndGet();
+			} else {
+				finishedUserUrls.incrementAndGet();
+			}
+			*/
 			
 			return rv;
+		} catch (Exception e) {
+			/*
+			if (t == YTHTMLType.SINGLE_VIDEO) {
+				errorVideos.incrementAndGet();
+			} else {
+				errorUserUrls.incrementAndGet();
+			}
+			
+			errorUrls.incrementAndGet();
+			*/
+			throw e;
 		} finally {
 			if (in != null) in.close();
+			//printStats();
 		}
 	}
 }

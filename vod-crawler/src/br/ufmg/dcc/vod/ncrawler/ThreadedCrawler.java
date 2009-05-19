@@ -6,11 +6,13 @@ import java.io.IOException;
 
 import org.apache.log4j.Logger;
 
+import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.processor.ThreadedProcessor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
+import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 
-public class ThreadedCrawler<R, T> {
+public class ThreadedCrawler {
 
 	private static final Logger LOG = Logger.getLogger(ThreadedCrawler.class);
 	
@@ -20,14 +22,14 @@ public class ThreadedCrawler<R, T> {
 	private final int nThreads;
 	private final long sleep;
 
-	public ThreadedCrawler(int nThreads, long sleep, Evaluator<R, T> evaluator) {
+	public ThreadedCrawler(int nThreads, long sleep, Evaluator evaluator) {
 		this.nThreads = nThreads;
 		this.sleep = sleep;
 		this.service = new QueueService();
 		this.processor = new ThreadedProcessor(nThreads, sleep, service, evaluator);
 	}
 
-	public <S> ThreadedCrawler(int nThreads, long sleep, Evaluator<R, T> evaluator, File pQueueDir, File eQueueDir, Serializer<S> s, int fileSize) 
+	public <S> ThreadedCrawler(int nThreads, long sleep, Evaluator evaluator, File pQueueDir, File eQueueDir, Serializer<S> s, int fileSize) 
 		throws FileNotFoundException, IOException {
 		
 		this.nThreads = nThreads;

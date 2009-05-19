@@ -1,35 +1,29 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator;
 
-import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import java.util.Collection;
 
-public class TestCrawlJob implements CrawlJob<int[], Integer> {
+import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+
+public class TestCrawlJob implements CrawlJob {
 
 	private final int vertex;
 	private final RandomizedSyncGraph g;
 	private int[] neighbours;
+	private Evaluator e;
 
 	public TestCrawlJob(int vertex, RandomizedSyncGraph g) {
 		this.vertex = vertex;
 		this.g = g;
 	}
-	
+
 	@Override
-	public void collect() throws Exception {
-		this.neighbours = g.getNeighbours(vertex);
+	public Collection<CrawlJob> collect() throws Exception {
+		return e.evaluteAndSave(vertex, g.getNeighbours(vertex), null);
 	}
 
 	@Override
-	public int[] getResult() {
-		return neighbours;
-	}
-
-	@Override
-	public Integer getType() {
-		return vertex;
-	}
-
-	@Override
-	public String getID() {
-		return vertex+"";
+	public void setvaluator(Evaluator e) {
+		this.e = e;
 	}
 }

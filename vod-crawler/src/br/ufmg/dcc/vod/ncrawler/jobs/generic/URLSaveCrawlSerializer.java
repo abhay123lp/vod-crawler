@@ -1,4 +1,4 @@
-package br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles;
+package br.ufmg.dcc.vod.ncrawler.jobs.generic;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -6,9 +6,6 @@ import java.net.URL;
 
 import org.apache.http.client.HttpClient;
 
-import br.ufmg.dcc.vod.ncrawler.jobs.generic.AbstractArraySerializer;
-import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
-import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 
 public class URLSaveCrawlSerializer extends AbstractArraySerializer<URLSaveCrawlJob> {
 
@@ -35,7 +32,7 @@ public class URLSaveCrawlSerializer extends AbstractArraySerializer<URLSaveCrawl
 		String type = new String(bs[2]);
 		
 		try {
-			return new URLSaveCrawlJob(new URL(url), new File(savePath), YTHTMLType.forFeatureName(type), client);
+			return new URLSaveCrawlJob(new URL(url), new File(savePath), HTMLTypeFactory.getInstance().resolv(type), client);
 		} catch (MalformedURLException e) {
 			throw new RuntimeException(e);
 		}

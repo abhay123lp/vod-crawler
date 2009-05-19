@@ -8,7 +8,7 @@ import java.util.Collection;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
