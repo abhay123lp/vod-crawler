@@ -12,7 +12,8 @@ public class BFTracker<S> implements Tracker<S> {
 
 	@Override
 	public boolean add(S s) {
-		return this.simpleBloomFilter.add(s);
+		this.simpleBloomFilter.add(s);
+		return true;
 	}
 
 	@Override
