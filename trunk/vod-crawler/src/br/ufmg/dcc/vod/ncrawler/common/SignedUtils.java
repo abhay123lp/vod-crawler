@@ -9,5 +9,9 @@ public class SignedUtils {
     public static byte signedByte(int i) {
         return (byte) i;
     }
-	
+
+	public static int unsignedInt(int b) {
+        return b & 0xFF;
+    }
+    
 }
