@@ -1,7 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.stats;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;

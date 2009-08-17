@@ -80,10 +80,11 @@ public class ThreadedProcessor implements Processor {
 		public void process(CrawlJob t) {
 			t.setvaluator(e);
 			Collection<CrawlJob> collect = t.collect();
-			for (CrawlJob j : collect) {
-				ThreadedProcessor.this.dispatch(j);
+			if (collect != null) {
+				for (CrawlJob j : collect) {
+					ThreadedProcessor.this.dispatch(j);
+				}
 			}
-			
 			try {
 				Thread.sleep(sleepTimePerExecution);
 			} catch (InterruptedException e) {
