@@ -49,11 +49,14 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 	
 	private StatsPrinter sp;
 	private Tracker<String> tracker;
+
+	private final long sleepTime;
 	
-	public YoutubeAPIEvaluator(YouTubeService service, Collection<String> initialUsers, File savePath) {
+	public YoutubeAPIEvaluator(YouTubeService service, Collection<String> initialUsers, File savePath, long sleepTime) {
 		this.service = service;
 		this.initialUsers = initialUsers;
 		this.savePath = savePath;
+		this.sleepTime = sleepTime;
 	}
 	
 	@Override
@@ -82,20 +85,14 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 			//Subscriptions
 			Set<String> subscriptions = collectContent.getSubscriptions();
 			for (String s : subscriptions) {
-				if (!tracker.contains(s)) {
-					tracker.add(s);
-					followup.add(s);
-				}
+				followup.add(s);
 			}
 			
 			//Subscribers
 			try {
 				Set<String> subscribers = discoverSubscribers(collectID);
 				for (String s : subscribers) {
-					if (!tracker.contains(s)) {
-						tracker.add(s);
-						followup.add(s);
-					}
+					followup.add(s);
 				}
 			} catch (Exception e) {
 				LOG.warn("Unable to discover subscribers for user: " + collectID, e);
@@ -166,7 +163,7 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 		for (String u : users) {
 			if (!tracker.contains(u)) {
 				LOG.info("Found user: " + u);
-				rv.add(new YoutubeUserAPICrawlJob(service, u, savePath));
+				rv.add(new YoutubeUserAPICrawlJob(service, u, savePath, sleepTime));
 				tracker.add(u);
 				incs.put(DIS, incs.get(DIS) + 1);
 			}
