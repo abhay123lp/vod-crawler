@@ -89,7 +89,7 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 					Thread.sleep(sleepTime);
 				}
 			} catch (ServiceException e) {
-				LOG.warn("Unable to collect uploads for user " + userID, e);
+				LOG.warn("Unable to collect every upload for user " + userID, e);
 			}
 
 			Set<String> friends = new HashSet<String>();
@@ -106,7 +106,7 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 					Thread.sleep(sleepTime);
 				}
 			} catch (ServiceException e) {
-				LOG.warn("Unable to collect friends for user " + userID, e);
+				LOG.warn("Unable to collect every friend for user " + userID, e);
 			}
 
 			Set<String> subscriptions = new HashSet<String>();
@@ -130,7 +130,7 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 					Thread.sleep(sleepTime);
 				}
 			} catch (ServiceException e) {
-				LOG.warn("Unable to collect subs for user " + userID, e);
+				LOG.warn("Unable to collect every subscriptions for user " + userID, e);
 			}
 			
 			return e.evaluteAndSave(userID, new YoutubeUserDAO(userID, username, age, gender, aboutMe, relationship, books, company, hobbies, hometown, location, movies, music, occupation, school, channelType, uploads, subscriptions, friends, viewCount, videoWatchCount, lastWebAccess), savePath);
