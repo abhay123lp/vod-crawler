@@ -1,19 +1,28 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.MyXStreamer;
 import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.YTErrorPageException;
 import br.ufmg.dcc.vod.ncrawler.stats.CompositeStatEvent;
 import br.ufmg.dcc.vod.ncrawler.stats.Display;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
@@ -34,8 +43,12 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 	private final Collection<String> initialUsers;
 	private final File savePath;
 	
+	private final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\"\\s*>\\s*Next.*)");
+	private final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
+	private final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
+	
 	private StatsPrinter sp;
-	private Tracker<String> bf;
+	private Tracker<String> tracker;
 	
 	public YoutubeAPIEvaluator(YouTubeService service, Collection<String> initialUsers, File savePath) {
 		this.service = service;
@@ -45,7 +58,7 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 	
 	@Override
 	public void setTrackerFactory(TrackerFactory factory) {
-		this.bf = factory.createTracker();
+		this.tracker = factory.createTracker();
 	}
 	
 	@Override
@@ -64,13 +77,77 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 			Map<String, Integer> incs = new HashMap<String, Integer>();
 			incs.put(COL, 1);
 			
-			//FIXME: Crawl HTML for other links!!!!
+			//Subscriptions
+			Set<String> followup = new HashSet<String>();
+			Set<String> subscriptions = collectContent.getSubscriptions();
+			for (String s : subscriptions) {
+				if (!tracker.contains(s)) {
+					tracker.add(s);
+					followup.add(s);
+				}
+			}
+			
+			//Subscribers
+			try {
+				Set<String> subscribers = discoverSubscribers(collectID);
+				for (String s : subscribers) {
+					if (!tracker.contains(s)) {
+						tracker.add(s);
+						followup.add(s);
+					}
+				}
+			} catch (Exception e) {
+				LOG.warn("Unable to discover subscribers for user: " + collectID, e);
+			}
+			
+			incs.put(DIS, followup.size());
 			sp.notify(new CompositeStatEvent(incs));
 			return createJobs(collectContent.getSubscriptions());
 		} catch (Exception e) {
 			errorOccurred(collectID, e);
 			return null;
 		}
+	}
+
+	private Set<String> discoverSubscribers(String collectID) throws Exception {
+		Set<String> rv = new HashSet<String>();
+		
+		String followLink = "http://www.youtube.com/profile?user=" + collectID + "&view=subscribers&gl=US&hl=en";
+		String lastLink = null;
+		
+		do {
+			lastLink = followLink;
+			BufferedReader in = null;
+			
+			try {
+				URL u = new URL(followLink);
+				URLConnection connection = u.openConnection();
+				connection.connect();
+				
+				in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+				String inputLine;
+				while ((inputLine = in.readLine()) != null) {
+					Matcher matcher = NEXT_PATTERN.matcher(inputLine);
+					if (matcher.matches() && inputLine.contains("subscribers")) {
+						followLink = matcher.group(2);
+					}
+					
+					matcher = RELATION_PATTERN.matcher(inputLine);
+					if (matcher.matches()) {
+						rv.add(matcher.group(2));
+					}
+					
+					matcher = ERROR_PATTERN.matcher(inputLine);
+					if (matcher.matches()) {
+						throw new YTErrorPageException();
+					}
+				}
+			} finally {
+				if (in != null) in.close();
+			}
+		} while (!followLink.equals(lastLink));
+		
+		return rv;
 	}
 
 	@Override
@@ -84,10 +161,10 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		incs.put(DIS, 0);
 		for (String u : users) {
-			if (!bf.contains(u)) {
+			if (!tracker.contains(u)) {
 				LOG.info("Found user: " + u);
 				rv.add(new YoutubeUserAPICrawlJob(service, u, savePath));
-				bf.add(u);
+				tracker.add(u);
 				incs.put(DIS, incs.get(DIS) + 1);
 			}
 		}

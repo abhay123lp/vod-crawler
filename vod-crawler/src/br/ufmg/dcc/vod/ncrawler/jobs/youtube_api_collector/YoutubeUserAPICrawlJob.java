@@ -23,7 +23,6 @@ import com.google.gdata.data.youtube.VideoEntry;
 import com.google.gdata.data.youtube.VideoFeed;
 import com.google.gdata.data.youtube.YtUserProfileStatistics;
 import com.google.gdata.util.ServiceException;
-import com.google.gdata.util.ServiceForbiddenException;
 
 public class YoutubeUserAPICrawlJob implements CrawlJob {
 
@@ -83,7 +82,7 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 					}
 					uploadsFeedLink = upsFeed.getLink("next", "application/atom+xml");
 				}
-			} catch (ServiceForbiddenException e) {
+			} catch (ServiceException e) {
 				LOG.warn("Unable to collect uploads for user " + userID, e);
 			}
 
@@ -98,7 +97,7 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 					}
 					friendsFeedLink = friendFeed.getLink("next", "application/atom+xml");
 				}
-			} catch (ServiceForbiddenException e) {
+			} catch (ServiceException e) {
 				LOG.warn("Unable to collect friends for user " + userID, e);
 			}
 
@@ -119,14 +118,11 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 					}
 					subscriptionsFeedLink = subscriptionFeed.getLink("next", "application/atom+xml");
 				}
-			} catch (ServiceForbiddenException e) {
+			} catch (ServiceException e) {
 				LOG.warn("Unable to collect subs for user " + userID, e);
 			}
 			
 			return e.evaluteAndSave(userID, new YoutubeUserDAO(userID, username, age, gender, aboutMe, relationship, books, company, hobbies, hometown, location, movies, music, occupation, school, channelType, uploads, subscriptions, friends, viewCount, videoWatchCount, lastWebAccess), savePath);
-		} catch (ServiceException se ) {
-			e.errorOccurred(userID, se);
-			return null;
 		} catch (Exception ec ) {
 			e.errorOccurred(userID, ec);
 			return null;
