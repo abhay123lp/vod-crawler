@@ -3,11 +3,11 @@ package br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector;
 import java.io.File;
 import java.util.List;
 
-import com.google.gdata.client.youtube.YouTubeService;
-
-import br.ufmg.dcc.vod.ncrawler.jobs.EvaluatorFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.jobs.EvaluatorFactory;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
+
+import com.google.gdata.client.youtube.YouTubeService;
 
 public class YTApiFactory implements EvaluatorFactory<String, YoutubeUserDAO, YoutubeUserAPICrawlJob> {
 

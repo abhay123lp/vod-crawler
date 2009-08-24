@@ -13,13 +13,12 @@ import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.MyXStreamer;
-import br.ufmg.dcc.vod.ncrawler.common.SimpleBloomFilter;
 import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.stats.CompositeStatEvent;
 import br.ufmg.dcc.vod.ncrawler.stats.Display;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
-import br.ufmg.dcc.vod.ncrawler.tracker.BFTracker;
-import br.ufmg.dcc.vod.ncrawler.tracker.ThreadSafeTracker;
+import br.ufmg.dcc.vod.ncrawler.tracker.Tracker;
+import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
 import com.google.gdata.client.youtube.YouTubeService;
 
@@ -36,14 +35,17 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 	private final File savePath;
 	
 	private StatsPrinter sp;
-	private ThreadSafeTracker<String> bf;
-	private static final int TEN_MILLION = 10000;
+	private Tracker<String> bf;
 	
 	public YoutubeAPIEvaluator(YouTubeService service, Collection<String> initialUsers, File savePath) {
 		this.service = service;
 		this.initialUsers = initialUsers;
 		this.savePath = savePath;
-		this.bf = new ThreadSafeTracker<String>(new BFTracker<String>(new SimpleBloomFilter<String>(5 * TEN_MILLION * 16, 5 * TEN_MILLION)));		
+	}
+	
+	@Override
+	public void setTrackerFactory(TrackerFactory factory) {
+		this.bf = factory.createTracker();
 	}
 	
 	@Override

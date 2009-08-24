@@ -4,14 +4,9 @@ import java.util.Collection;
 
 import net.roarsoftware.lastfm.Album;
 import net.roarsoftware.lastfm.Artist;
-import net.roarsoftware.lastfm.Chart;
-import net.roarsoftware.lastfm.Event;
-import net.roarsoftware.lastfm.PaginatedResult;
 import net.roarsoftware.lastfm.Playlist;
-import net.roarsoftware.lastfm.Session;
 import net.roarsoftware.lastfm.Track;
 import net.roarsoftware.lastfm.User;
-
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 
