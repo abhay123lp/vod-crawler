@@ -94,7 +94,7 @@ public class Launcher {
 			CommandLine cli = parser.parse(opts, args);
 			
 			int nThreads = Integer.parseInt(cli.getOptionValue(NTHREADS));
-			long sleepTime = Long.parseLong(cli.getOptionValue(SLEEP_TIME));
+			long sleepTime = Long.parseLong(cli.getOptionValue(SLEEP_TIME)) * 1000;
 			File saveFolder = new File(cli.getOptionValue(SAVE_FOLDER));
 			File workQueueFolder = new File(cli.getOptionValue(WORKQUEUE_FOLDER));
 			File seedFile = new File(cli.getOptionValue(SEED_FILE));
