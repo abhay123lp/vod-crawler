@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -75,36 +76,37 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 	@Override
 	public Collection<CrawlJob> evaluteAndSave(String collectID, YoutubeUserDAO collectContent, File savePath) {
 		Set<String> followup = new HashSet<String>();
+		Map<String, Integer> incs = new HashMap<String, Integer>();
+		incs.put(COL, 1);
 		
 		try {
 			MyXStreamer.getInstance().getStreamer().toXML(collectContent, new BufferedWriter(new FileWriter(savePath + File.separator + collectID)));
-			
-			Map<String, Integer> incs = new HashMap<String, Integer>();
-			incs.put(COL, 1);
-			
-			//Subscriptions
-			Set<String> subscriptions = collectContent.getSubscriptions();
-			for (String s : subscriptions) {
-				followup.add(s);
-			}
-			
-			//Subscribers
-			try {
-				Set<String> subscribers = discoverSubscribers(collectID);
-				for (String s : subscribers) {
-					followup.add(s);
-				}
-			} catch (Exception e) {
-				LOG.warn("Unable to discover every subscriber for user: " + collectID, e);
-			}
-			
-			incs.put(DIS, followup.size());
-			sp.notify(new CompositeStatEvent(incs));
-		} catch (Exception e) {
+		} catch (IOException e) {
 			errorOccurred(collectID, e);
+			return null;
 		}
 		
-		return createJobs(followup);
+		//Subscriptions
+		Set<String> subscriptions = collectContent.getSubscriptions();
+		for (String s : subscriptions) {
+			followup.add(s);
+		}
+		
+		//Subscribers
+		try {
+			Set<String> subscribers = discoverSubscribers(collectID);
+			for (String s : subscribers) {
+				followup.add(s);
+			}
+		} catch (Exception e) {
+			LOG.warn("Unable to discover every subscriber for user: " + collectID, e);
+		}
+		
+		ArrayList<CrawlJob> createJobs = createJobs(followup);
+		incs.put(DIS, createJobs.size());
+		sp.notify(new CompositeStatEvent(incs));
+		
+		return createJobs;
 	}
 
 	private Set<String> discoverSubscribers(String collectID) throws Exception {
