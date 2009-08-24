@@ -99,7 +99,8 @@ public class Launcher {
 			File workQueueFolder = new File(cli.getOptionValue(WORKQUEUE_FOLDER));
 			File seedFile = new File(cli.getOptionValue(SEED_FILE));
 			
-			EvaluatorFactory<?, ?, ?> crawlerFactory = crawlers.get(cli.getOptionValue(CRAWLER));
+			String crawlerName = cli.getOptionValue(CRAWLER);
+			EvaluatorFactory<?, ?, ?> crawlerFactory = crawlers.get(crawlerName);
 
 			if (crawlerFactory == null) {
 				throw new Exception("unknown crawler");
@@ -126,6 +127,11 @@ public class Launcher {
 			evaluator.setTrackerFactory(new ThreadSafeTrackerFactory());
 			
 			Serializer<?> serializer = crawlerFactory.getSerializer();
+			
+			System.out.println("Initiating crawl");
+			System.out.println("\t crawler: " + crawlerName);
+			System.out.println("\t numer of threads: " + nThreads);
+			System.out.println("\t sleep time: " + sleepTime);
 			
 			ThreadedCrawler tc = new ThreadedCrawler(nThreads, sleepTime, evaluator, pQueue, eQueue, serializer, 1024 * 1024 * 1024);
 			tc.crawl();
