@@ -11,6 +11,7 @@ import java.util.Map;
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
+import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
 public class TestEvaluator implements Evaluator<Integer, int[]> {
 
@@ -50,5 +51,9 @@ public class TestEvaluator implements Evaluator<Integer, int[]> {
 
 	@Override
 	public void errorOccurred(Integer collectID, Exception e) {
+	}
+
+	@Override
+	public void setTrackerFactory(TrackerFactory factory) {
 	}
 }

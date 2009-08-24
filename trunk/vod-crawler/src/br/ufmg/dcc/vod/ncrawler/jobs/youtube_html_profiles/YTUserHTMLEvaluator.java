@@ -28,15 +28,14 @@ import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
-import br.ufmg.dcc.vod.ncrawler.common.SimpleBloomFilter;
 import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 import br.ufmg.dcc.vod.ncrawler.stats.CompositeStatEvent;
 import br.ufmg.dcc.vod.ncrawler.stats.Display;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
-import br.ufmg.dcc.vod.ncrawler.tracker.BFTracker;
-import br.ufmg.dcc.vod.ncrawler.tracker.ThreadSafeTracker;
+import br.ufmg.dcc.vod.ncrawler.tracker.Tracker;
+import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
 /*
  * - Profile
@@ -72,8 +71,6 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 	private final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
 	private final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
 	
-	private static final int TEN_MILLION = 10000000;
-
 	private static final String VIEW = "&view=";
 	private static final String PROFILE_USER = "profile?user=";
 	private static final String GL_US_HL_EN = "&gl=US&hl=en";
@@ -91,9 +88,6 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 	private static final String ERR_VIDEOS = "ERR_VIDEOS";
 	private static final String ERR_USERS = "ERR_USERS";
 
-	private final ThreadSafeTracker<String> crawledUsers;
-	private final ThreadSafeTracker<String> crawledVideos;
-	
 	private final File videosFolder;
 	private final File usersFolder;
 	private final HttpClient httpClient;
@@ -101,29 +95,27 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 	private List<String> initialVideos;
 	private List<String> initialUsers;
 
+	private Tracker<String> crawledUsers;
+	private Tracker<String> crawledVideos;
+	
 	private StatsPrinter sp;
 
 	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, HttpClient client) {
-		this(videosFolder, usersFolder, initialUsers, new LinkedList<String>(), new HashSet<String>(), new HashSet<String>(), client);
+		this(videosFolder, usersFolder, initialUsers, new LinkedList<String>(), client);
 	}
 
-	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, List<String> initialVideos, HashSet<String> crawledVideos, HashSet<String> crawledUsers, HttpClient client) {
+	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, List<String> initialVideos, HttpClient client) {
 		this.videosFolder = videosFolder;
 		this.usersFolder = usersFolder;
 		this.initialUsers = initialUsers;
 		this.initialVideos = initialVideos;
-		
-		this.crawledUsers = new ThreadSafeTracker<String>(new BFTracker<String>(new SimpleBloomFilter<String>(5 * TEN_MILLION * 16, 5 * TEN_MILLION)));		
-		for (String u : crawledUsers) {
-			this.crawledUsers.add(u);
-		}
-		
-		this.crawledVideos = new ThreadSafeTracker<String>(new BFTracker<String>(new SimpleBloomFilter<String>(5 * TEN_MILLION * 16, 5 * TEN_MILLION)));
-		for (String v : crawledVideos) {
-			this.crawledVideos.add(v);
-		}
-		
 		this.httpClient = client;
+	}
+	
+	@Override
+	public void setTrackerFactory(TrackerFactory factory) {
+		this.crawledUsers = factory.createTracker();		
+		this.crawledVideos = factory.createTracker();
 	}
 	
 	@Override

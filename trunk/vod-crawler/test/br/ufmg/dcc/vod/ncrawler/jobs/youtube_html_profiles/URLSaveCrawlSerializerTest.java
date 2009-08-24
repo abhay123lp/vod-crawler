@@ -1,10 +1,10 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import static org.junit.Assert.*;
 
 import org.junit.Test;
 

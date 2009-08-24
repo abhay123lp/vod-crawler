@@ -17,6 +17,7 @@ import br.ufmg.dcc.vod.ncrawler.common.LoggerInitiator;
 import br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector.YTApiFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.YTHtmlFactory;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
+import br.ufmg.dcc.vod.ncrawler.tracker.ThreadSafeTrackerFactory;
 
 public class Launcher {
 	
@@ -113,6 +114,8 @@ public class Launcher {
 			
 			crawlerFactory.initiate(nThreads, saveFolder, sleepTime, seeds);
 			Evaluator<?, ?> evaluator = crawlerFactory.getEvaluator();
+			evaluator.setTrackerFactory(new ThreadSafeTrackerFactory());
+			
 			Serializer<?> serializer = crawlerFactory.getSerializer();
 			
 			ThreadedCrawler tc = new ThreadedCrawler(nThreads, sleepTime, evaluator, pQueue, eQueue, serializer, 1024 * 1024 * 1024);
