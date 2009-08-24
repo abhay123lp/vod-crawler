@@ -1,6 +1,7 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 public class YoutubeUserDAO {
@@ -23,6 +24,7 @@ public class YoutubeUserDAO {
 	private final long viewCount;
 	private final Date lastWebAccess;
 	private final Set<String> friends;
+	private Set<String> subscribers = new HashSet<String>();
 
 	public YoutubeUserDAO(String userID, String username, int age,
 			String gender, String aboutMe, String relationship, String books,
@@ -120,5 +122,13 @@ public class YoutubeUserDAO {
 	
 	public Set<String> getFriends() {
 		return friends;
+	}
+
+	public void setSubscribers(Set<String> subscribers) {
+		this.subscribers = subscribers;
+	}
+	
+	public Set<String> getSubscribers() {
+		return subscribers;
 	}
 }
