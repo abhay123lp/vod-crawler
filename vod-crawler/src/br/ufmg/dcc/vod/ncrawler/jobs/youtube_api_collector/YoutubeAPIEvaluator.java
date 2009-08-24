@@ -75,16 +75,11 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 
 	@Override
 	public Collection<CrawlJob> evaluteAndSave(String collectID, YoutubeUserDAO collectContent, File savePath) {
-		Set<String> followup = new HashSet<String>();
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		incs.put(COL, 1);
+		sp.notify(new CompositeStatEvent(incs));
 		
-		try {
-			MyXStreamer.getInstance().getStreamer().toXML(collectContent, new BufferedWriter(new FileWriter(savePath + File.separator + collectID)));
-		} catch (IOException e) {
-			errorOccurred(collectID, e);
-			return null;
-		}
+		Set<String> followup = new HashSet<String>();
 		
 		//Subscriptions
 		Set<String> subscriptions = collectContent.getSubscriptions();
@@ -93,8 +88,9 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 		}
 		
 		//Subscribers
+		Set<String> subscribers = new HashSet<String>();
 		try {
-			Set<String> subscribers = discoverSubscribers(collectID);
+			subscribers.addAll(discoverSubscribers(collectID));
 			for (String s : subscribers) {
 				followup.add(s);
 			}
@@ -102,10 +98,15 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 			LOG.warn("Unable to discover every subscriber for user: " + collectID, e);
 		}
 		
-		ArrayList<CrawlJob> createJobs = createJobs(followup);
-		incs.put(DIS, createJobs.size());
-		sp.notify(new CompositeStatEvent(incs));
+		try {
+			collectContent.setSubscribers(subscribers);
+			MyXStreamer.getInstance().getStreamer().toXML(collectContent, new BufferedWriter(new FileWriter(savePath + File.separator + collectID)));
+		} catch (IOException e) {
+			errorOccurred(collectID, e);
+			return null;
+		}
 		
+		ArrayList<CrawlJob> createJobs = createJobs(followup);
 		return createJobs;
 	}
 
