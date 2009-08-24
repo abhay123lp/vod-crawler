@@ -9,10 +9,12 @@ import com.google.gdata.client.youtube.YouTubeService;
 public class YoutubeUserApiSave extends AbstractArraySerializer<YoutubeUserAPICrawlJob> {
 
 	private final YouTubeService service;
+	private final long sleepTime;
 
-	public YoutubeUserApiSave(YouTubeService service) {
+	public YoutubeUserApiSave(YouTubeService service, long sleepTime) {
 		super(2);
 		this.service = service;
+		this.sleepTime = sleepTime;
 	}
 
 	@Override
@@ -27,7 +29,7 @@ public class YoutubeUserApiSave extends AbstractArraySerializer<YoutubeUserAPICr
 	public YoutubeUserAPICrawlJob setValueFromArrays(byte[][] bs) {
 		String id = new String(bs[0]);
 		String savePath = new String(bs[1]);
-		return new YoutubeUserAPICrawlJob(service, id, new File(savePath));
+		return new YoutubeUserAPICrawlJob(service, id, new File(savePath), sleepTime);
 	}
 
 }

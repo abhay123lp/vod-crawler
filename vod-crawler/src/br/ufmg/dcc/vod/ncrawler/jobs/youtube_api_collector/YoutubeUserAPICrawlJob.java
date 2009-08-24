@@ -31,11 +31,13 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 	private final YouTubeService service;
 	private final String userID;
 	private final File savePath;
+	private final long sleepTime;
 
-	public YoutubeUserAPICrawlJob(YouTubeService service, String userID, File savePath) {
+	public YoutubeUserAPICrawlJob(YouTubeService service, String userID, File savePath, long sleepTime) {
 		this.service = service;
 		this.userID = userID;
 		this.savePath = savePath;
+		this.sleepTime = sleepTime;
 	}
 	
 	@Override
@@ -69,6 +71,8 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 				viewCount = stats.getViewCount();
 			}
 	
+			Thread.sleep(sleepTime);
+			
 			Set<String> uploads = new HashSet<String>();
 			try {
 				Link uploadsFeedLink = profileEntry.getUploadsFeedLink();
@@ -81,6 +85,8 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 						uploads.add(id);
 					}
 					uploadsFeedLink = upsFeed.getLink("next", "application/atom+xml");
+					
+					Thread.sleep(sleepTime);
 				}
 			} catch (ServiceException e) {
 				LOG.warn("Unable to collect uploads for user " + userID, e);
@@ -96,6 +102,8 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 						friends.add(fe.getUsername());
 					}
 					friendsFeedLink = friendFeed.getLink("next", "application/atom+xml");
+					
+					Thread.sleep(sleepTime);
 				}
 			} catch (ServiceException e) {
 				LOG.warn("Unable to collect friends for user " + userID, e);
@@ -116,7 +124,10 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 								continue;
 						}
 					}
+					
 					subscriptionsFeedLink = subscriptionFeed.getLink("next", "application/atom+xml");
+					
+					Thread.sleep(sleepTime);
 				}
 			} catch (ServiceException e) {
 				LOG.warn("Unable to collect subs for user " + userID, e);
