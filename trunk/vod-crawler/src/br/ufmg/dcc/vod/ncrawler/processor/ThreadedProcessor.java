@@ -78,7 +78,7 @@ public class ThreadedProcessor implements Processor {
 
 		@Override
 		public void process(CrawlJob t) {
-			t.setvaluator(e);
+			t.setEvaluator(e);
 			Collection<CrawlJob> collect = t.collect();
 			if (collect != null) {
 				for (CrawlJob j : collect) {

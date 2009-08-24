@@ -15,6 +15,6 @@ public interface CrawlJob {
 
 	public Collection<CrawlJob> collect();
 
-	public void setvaluator(Evaluator e);
+	public void setEvaluator(Evaluator e);
 	
 }
