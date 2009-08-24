@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
@@ -21,6 +22,14 @@ import br.ufmg.dcc.vod.ncrawler.tracker.ThreadSafeTrackerFactory;
 
 public class Launcher {
 	
+	private static final String LOG_FILE = "l";
+	private static final String SEED_FILE = "e";
+	private static final String WORKQUEUE_FOLDER = "w";
+	private static final String SAVE_FOLDER = "o";
+	private static final String SLEEP_TIME = "s";
+	private static final String CRAWLER = "c";
+	private static final String NTHREADS = "t";
+	
 	private static final Map<String, EvaluatorFactory<?,?,?>> crawlers = new HashMap<String, EvaluatorFactory<?,?,?>>();
 	static {
 		crawlers.put("YTAPI", new YTApiFactory());
@@ -34,43 +43,43 @@ public class Launcher {
 		.hasArg()
 		.isRequired()
 		.withDescription("Crawler to Dispatch Option")
-		.create("crawlerToDispatch");
+		.create(CRAWLER);
 		
 		Option nThreadsOpt = OptionBuilder.withArgName("int value")
 		.hasArg()
 		.isRequired()
 		.withDescription("Number of Threads")
-		.create("nThreads");
+		.create(NTHREADS);
 		
 		Option sleepTimeOpt = OptionBuilder.withArgName("long value")
 		.hasArg()
 		.isRequired()
-		.withDescription("Sleep time")
-		.create("sleepTime");
+		.withDescription("Sleep time (seconds)")
+		.create(SLEEP_TIME);
 		
 		Option outFolderOpt = OptionBuilder.withArgName("folder")
 		.hasArg()
 		.isRequired()
 		.withDescription("Data save folder")
-		.create("outFolder");
+		.create(SAVE_FOLDER);
 		
 		Option workQueueFolderOpt = OptionBuilder.withArgName("folder")
 		.hasArg()
 		.isRequired()
 		.withDescription("Workqueue Folder")
-		.create("workQueueFolder");
+		.create(WORKQUEUE_FOLDER);
 		
 		Option seedFileOpt = OptionBuilder.withArgName("file")
 		.hasArg()
 		.isRequired()
 		.withDescription("Seed File")
-		.create("seedFile");
+		.create(SEED_FILE);
 		
 		Option logFileOpt = OptionBuilder.withArgName("file")
 		.hasArg()
 		.isRequired()
 		.withDescription("Log File")
-		.create("logFile");
+		.create(LOG_FILE);
 		
 		opts.addOption(crawlerToDispachOpt);
 		opts.addOption(nThreadsOpt);
@@ -79,18 +88,18 @@ public class Launcher {
 		opts.addOption(workQueueFolderOpt);
 		opts.addOption(seedFileOpt);
 		opts.addOption(logFileOpt);
-		opts.addOption("overwrite", false, "Overwrite any existing data.");
 		
 		try {
 			GnuParser parser = new GnuParser();
-			parser.parse(opts, args);
+			CommandLine cli = parser.parse(opts, args);
 			
-			int nThreads = Integer.parseInt(nThreadsOpt.getValue());
-			long sleepTime = Long.parseLong(sleepTimeOpt.getValue());
-			File saveFolder = new File(outFolderOpt.getValue());
-			File workQueueFolder = new File(workQueueFolderOpt.getValue());
-			File seedFile = new File(seedFileOpt.getValue());
-			EvaluatorFactory<?, ?, ?> crawlerFactory = crawlers.get(crawlerToDispachOpt.getValue());
+			int nThreads = Integer.parseInt(cli.getOptionValue(NTHREADS));
+			long sleepTime = Long.parseLong(cli.getOptionValue(SLEEP_TIME));
+			File saveFolder = new File(cli.getOptionValue(SAVE_FOLDER));
+			File workQueueFolder = new File(cli.getOptionValue(WORKQUEUE_FOLDER));
+			File seedFile = new File(cli.getOptionValue(SEED_FILE));
+			
+			EvaluatorFactory<?, ?, ?> crawlerFactory = crawlers.get(cli.getOptionValue(CRAWLER));
 
 			if (crawlerFactory == null) {
 				throw new Exception("unknown crawler");
@@ -109,7 +118,7 @@ public class Launcher {
 			pQueue.mkdirs();
 			eQueue.mkdirs();
 			
-			LoggerInitiator.initiateLog(logFileOpt.getValue());
+			LoggerInitiator.initiateLog(cli.getOptionValue(LOG_FILE));
 			List<String> seeds = FileUtil.readFileToList(seedFile);
 			
 			crawlerFactory.initiate(nThreads, saveFolder, sleepTime, seeds);
@@ -122,9 +131,12 @@ public class Launcher {
 			tc.crawl();
 			crawlerFactory.shutdown();
 		} catch (Exception e) {
-			System.out.println(e);
 			HelpFormatter hf = new HelpFormatter();
 			hf.printHelp("java " + Launcher.class, opts);
+			
+			System.out.println();
+			System.out.println();
+			e.printStackTrace();
 		}
 	}
 }

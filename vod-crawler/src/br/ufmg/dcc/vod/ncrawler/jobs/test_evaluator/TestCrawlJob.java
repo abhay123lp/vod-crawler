@@ -23,7 +23,7 @@ public class TestCrawlJob implements CrawlJob {
 	}
 
 	@Override
-	public void setvaluator(Evaluator e) {
+	public void setEvaluator(Evaluator e) {
 		this.e = e;
 	}
 }

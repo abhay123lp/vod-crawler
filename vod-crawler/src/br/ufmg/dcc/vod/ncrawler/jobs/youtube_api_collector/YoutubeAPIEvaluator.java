@@ -71,6 +71,8 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 
 	@Override
 	public Collection<CrawlJob> evaluteAndSave(String collectID, YoutubeUserDAO collectContent, File savePath) {
+		Set<String> followup = new HashSet<String>();
+		
 		try {
 			MyXStreamer.getInstance().getStreamer().toXML(collectContent, new BufferedWriter(new FileWriter(savePath + File.separator + collectID)));
 			
@@ -78,7 +80,6 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 			incs.put(COL, 1);
 			
 			//Subscriptions
-			Set<String> followup = new HashSet<String>();
 			Set<String> subscriptions = collectContent.getSubscriptions();
 			for (String s : subscriptions) {
 				if (!tracker.contains(s)) {
@@ -102,11 +103,11 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 			
 			incs.put(DIS, followup.size());
 			sp.notify(new CompositeStatEvent(incs));
-			return createJobs(collectContent.getSubscriptions());
 		} catch (Exception e) {
 			errorOccurred(collectID, e);
-			return null;
 		}
+		
+		return createJobs(followup);
 	}
 
 	private Set<String> discoverSubscribers(String collectID) throws Exception {
@@ -122,6 +123,8 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 			try {
 				URL u = new URL(followLink);
 				URLConnection connection = u.openConnection();
+				connection.setRequestProperty("User-Agent", "Research-Crawler-APIDEVKEY-AI39si59eqKb2OzKrx-4EkV1HkIRJcoYDf_VSKUXZ8AYPtJp-v9abtMYg760MJOqLZs5QIQwW4BpokfNyKKqk1gi52t0qMwJBg");
+				
 				connection.connect();
 				
 				in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -129,7 +132,7 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 				while ((inputLine = in.readLine()) != null) {
 					Matcher matcher = NEXT_PATTERN.matcher(inputLine);
 					if (matcher.matches() && inputLine.contains("subscribers")) {
-						followLink = matcher.group(2);
+						followLink = "http://www.youtube.com/" + matcher.group(2) + "&gl=US&hl=en";
 					}
 					
 					matcher = RELATION_PATTERN.matcher(inputLine);

@@ -42,7 +42,7 @@ public class LastFMApiCrawlJob  implements CrawlJob {
 	}
 
 	@Override
-	public void setvaluator(Evaluator e) {
+	public void setEvaluator(Evaluator e) {
 		// TODO Auto-generated method stub
 	}
 
