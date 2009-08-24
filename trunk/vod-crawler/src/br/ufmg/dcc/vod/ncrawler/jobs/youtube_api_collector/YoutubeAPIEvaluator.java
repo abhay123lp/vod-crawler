@@ -95,7 +95,7 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 					followup.add(s);
 				}
 			} catch (Exception e) {
-				LOG.warn("Unable to discover subscribers for user: " + collectID, e);
+				LOG.warn("Unable to discover every subscriber for user: " + collectID, e);
 			}
 			
 			incs.put(DIS, followup.size());
@@ -145,6 +145,8 @@ public class YoutubeAPIEvaluator implements Evaluator<String, YoutubeUserDAO> {
 			} finally {
 				if (in != null) in.close();
 			}
+			
+			Thread.sleep(sleepTime);
 		} while (!followLink.equals(lastLink));
 		
 		return rv;
