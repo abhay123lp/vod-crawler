@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
 
@@ -21,9 +23,11 @@ import com.google.gdata.data.youtube.VideoEntry;
 import com.google.gdata.data.youtube.VideoFeed;
 import com.google.gdata.data.youtube.YtUserProfileStatistics;
 import com.google.gdata.util.ServiceException;
+import com.google.gdata.util.ServiceForbiddenException;
 
 public class YoutubeUserAPICrawlJob implements CrawlJob {
 
+	private static final Logger LOG = Logger.getLogger(YoutubeAPIEvaluator.class);
 	private Evaluator e;
 	private final YouTubeService service;
 	private final String userID;
@@ -66,45 +70,57 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 				viewCount = stats.getViewCount();
 			}
 	
-			Link uploadsFeedLink = profileEntry.getUploadsFeedLink();
 			Set<String> uploads = new HashSet<String>();
-			while (uploadsFeedLink != null) {
-				String href = uploadsFeedLink.getHref();
-				VideoFeed upsFeed = service.getFeed(new URL(href), VideoFeed.class);
-				for (VideoEntry ve : upsFeed.getEntries()) {
-					String[] split = ve.getId().split("\\/");
-					String id = split[split.length - 1];
-					uploads.add(id);
-				}
-				uploadsFeedLink = upsFeed.getLink("next", "application/atom+xml");
-			}
-	
-			Link friendsFeedLink = profileEntry.getContactsFeedLink();
-			Set<String> friends = new HashSet<String>();
-			while (friendsFeedLink != null) {
-				String href = friendsFeedLink.getHref();
-				FriendFeed friendFeed = service.getFeed(new URL(href), FriendFeed.class);
-				for (FriendEntry fe : friendFeed.getEntries()) {
-					friends.add(fe.getUsername());
-				}
-				friendsFeedLink = friendFeed.getLink("next", "application/atom+xml");
-			}
-			
-			Link subscriptionsFeedLink = profileEntry.getSubscriptionsFeedLink();
-			Set<String> subscriptions = new HashSet<String>();
-			while (subscriptionsFeedLink != null) {
-				String href = subscriptionsFeedLink.getHref();
-				SubscriptionFeed subscriptionFeed = service.getFeed(new URL(href), SubscriptionFeed.class);
-				for (SubscriptionEntry se : subscriptionFeed.getEntries()) {
-					switch (se.getSubscriptionType()) {
-						case CHANNEL:
-							subscriptions.add(se.getUsername());
-							break;
-						default:
-							continue;
+			try {
+				Link uploadsFeedLink = profileEntry.getUploadsFeedLink();
+				while (uploadsFeedLink != null) {
+					String href = uploadsFeedLink.getHref();
+					VideoFeed upsFeed = service.getFeed(new URL(href), VideoFeed.class);
+					for (VideoEntry ve : upsFeed.getEntries()) {
+						String[] split = ve.getId().split("\\/");
+						String id = split[split.length - 1];
+						uploads.add(id);
 					}
+					uploadsFeedLink = upsFeed.getLink("next", "application/atom+xml");
 				}
-				subscriptionsFeedLink = subscriptionFeed.getLink("next", "application/atom+xml");
+			} catch (ServiceForbiddenException e) {
+				LOG.warn("Unable to collect uploads for user " + userID, e);
+			}
+
+			Set<String> friends = new HashSet<String>();
+			try {
+				Link friendsFeedLink = profileEntry.getContactsFeedLink();
+				while (friendsFeedLink != null) {
+					String href = friendsFeedLink.getHref();
+					FriendFeed friendFeed = service.getFeed(new URL(href), FriendFeed.class);
+					for (FriendEntry fe : friendFeed.getEntries()) {
+						friends.add(fe.getUsername());
+					}
+					friendsFeedLink = friendFeed.getLink("next", "application/atom+xml");
+				}
+			} catch (ServiceForbiddenException e) {
+				LOG.warn("Unable to collect friends for user " + userID, e);
+			}
+
+			Set<String> subscriptions = new HashSet<String>();
+			try {
+				Link subscriptionsFeedLink = profileEntry.getSubscriptionsFeedLink();
+				while (subscriptionsFeedLink != null) {
+					String href = subscriptionsFeedLink.getHref();
+					SubscriptionFeed subscriptionFeed = service.getFeed(new URL(href), SubscriptionFeed.class);
+					for (SubscriptionEntry se : subscriptionFeed.getEntries()) {
+						switch (se.getSubscriptionType()) {
+							case CHANNEL:
+								subscriptions.add(se.getUsername());
+								break;
+							default:
+								continue;
+						}
+					}
+					subscriptionsFeedLink = subscriptionFeed.getLink("next", "application/atom+xml");
+				}
+			} catch (ServiceForbiddenException e) {
+				LOG.warn("Unable to collect subs for user " + userID, e);
 			}
 			
 			return e.evaluteAndSave(userID, new YoutubeUserDAO(userID, username, age, gender, aboutMe, relationship, books, company, hobbies, hometown, location, movies, music, occupation, school, channelType, uploads, subscriptions, friends, viewCount, videoWatchCount, lastWebAccess), savePath);
