@@ -3,15 +3,10 @@ package br.ufmg.dcc.vod.ncrawler.distributed.client;
 import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.Collection;
 
-import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
-import br.ufmg.dcc.vod.ncrawler.processor.Processor;
-import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
-import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
-public class EvaluatorClientImpl<I, C> extends UnicastRemoteObject implements EvaluatorClient<I, C>, Evaluator<I, C>  {
+public class EvaluatorClientImpl<I, C> extends UnicastRemoteObject implements EvaluatorClient<I, C>  {
 
 	private static final long serialVersionUID = 1L;
 	
@@ -31,29 +26,5 @@ public class EvaluatorClientImpl<I, C> extends UnicastRemoteObject implements Ev
 	//Local methods
 	public void wrap(Evaluator<I, C> e) {
 		this.e = e;
-	}
-
-	public Evaluator<I, C> getWrapped() {
-		return e;
-	}
-	
-	@Override
-	public Collection<CrawlJob> getInitialCrawl() {
-		return e.getInitialCrawl();
-	}
-
-	@Override
-	public void setProcessor(Processor processor) {
-		e.setProcessor(processor);
-	}
-
-	@Override
-	public void setStatsKeeper(StatsPrinter sp) {
-		e.setStatsKeeper(sp);
-	}
-
-	@Override
-	public void setTrackerFactory(TrackerFactory factory) {
-		e.setTrackerFactory(factory);
 	}
 }
