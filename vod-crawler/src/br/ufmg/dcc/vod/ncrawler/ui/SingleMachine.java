@@ -1,9 +1,7 @@
 package br.ufmg.dcc.vod.ncrawler.ui;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -17,12 +15,10 @@ import br.ufmg.dcc.vod.ncrawler.common.FileUtil;
 import br.ufmg.dcc.vod.ncrawler.common.LoggerInitiator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.EvaluatorFactory;
-import br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector.YTApiFactory;
-import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.YTHtmlFactory;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 import br.ufmg.dcc.vod.ncrawler.tracker.ThreadSafeTrackerFactory;
 
-public class SingleMachineLauncher {
+public class SingleMachine {
 	
 	private static final String LOG_FILE = "l";
 	private static final String SEED_FILE = "e";
@@ -32,11 +28,6 @@ public class SingleMachineLauncher {
 	private static final String CRAWLER = "c";
 	private static final String NTHREADS = "t";
 	
-	private static final Map<String, EvaluatorFactory<?,?,?>> crawlers = new HashMap<String, EvaluatorFactory<?,?,?>>();
-	static {
-		crawlers.put("YTAPI", new YTApiFactory());
-		crawlers.put("YTHTML", new YTHtmlFactory());
-	}
 	
 	@SuppressWarnings("static-access")
 	public static void main(String[] args) {
@@ -102,7 +93,7 @@ public class SingleMachineLauncher {
 			File seedFile = new File(cli.getOptionValue(SEED_FILE));
 			
 			String crawlerName = cli.getOptionValue(CRAWLER);
-			EvaluatorFactory<?, ?, ?> crawlerFactory = crawlers.get(crawlerName);
+			EvaluatorFactory<?, ?, ?> crawlerFactory = CrawlerPool.get(crawlerName);
 
 			if (crawlerFactory == null) {
 				throw new Exception("unknown crawler");
@@ -135,7 +126,7 @@ public class SingleMachineLauncher {
 			crawlerFactory.shutdown();
 		} catch (Exception e) {
 			HelpFormatter hf = new HelpFormatter();
-			hf.printHelp("java " + SingleMachineLauncher.class, opts);
+			hf.printHelp("java " + SingleMachine.class, opts);
 			
 			System.out.println();
 			System.out.println();
