@@ -8,47 +8,27 @@ import java.util.Collection;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
-import br.ufmg.dcc.vod.ncrawler.queue.QueueHandle;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 
-public class ThreadedProcessor implements Processor {
+public class ThreadedProcessor extends AbstractProcessor {
 	
 	private static final Logger LOG = Logger.getLogger(ThreadedProcessor.class);
 	
-	private final long sleepTimePerExecution;
-	private final int nThreads;
-	private final QueueHandle myHandle;
-	private final QueueService service;
-	private final Evaluator e;
-
 	public <S, I, C> ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service,
-			Serializer<S> serializer, File queueFile, int queueSize, Evaluator<I, C> e) 
+			Serializer<S> serializer, File queueFile, int queueSize, Evaluator<I, C> eval) 
 			throws FileNotFoundException, IOException {
-		
-		this.nThreads = nThreads;
-		this.sleepTimePerExecution = sleepTimePerExecution;
-		this.service = service;
-		this.e = e;
-		this.myHandle = service.createPersistentMessageQueue("Workers", queueFile, serializer, queueSize);
+		super(nThreads, sleepTimePerExecution, service, serializer, queueFile, queueSize, eval);
 	}
 	
-	public <I, C> ThreadedProcessor(int nThreads, long sleepTimePerExecution, QueueService service, Evaluator<I, C> e) {
-		this.nThreads = nThreads;
-		this.sleepTimePerExecution = sleepTimePerExecution;
-		this.service = service;
-		this.e = e;
-		this.myHandle = service.createMessageQueue("Workers");
-	}
-
 	public void start() {
 		for (int i = 0; i < nThreads; i++) {
 			service.startProcessor(myHandle, new CrawlProcessor(i));
 		}
 		
-		Collection<CrawlJob> initialCrawl = e.getInitialCrawl();
+		Collection<CrawlJob> initialCrawl = eval.getInitialCrawl();
 		for (CrawlJob j : initialCrawl) {
 			dispatch(j);
 		}
@@ -64,7 +44,6 @@ public class ThreadedProcessor implements Processor {
 	}
 
 	private class CrawlProcessor implements QueueProcessor<CrawlJob> {
-		
 		private final int i;
 
 		public CrawlProcessor(int i) {
@@ -78,13 +57,9 @@ public class ThreadedProcessor implements Processor {
 
 		@Override
 		public void process(CrawlJob t) {
-			t.setEvaluator(e);
-			Collection<CrawlJob> collect = t.collect();
-			if (collect != null) {
-				for (CrawlJob j : collect) {
-					ThreadedProcessor.this.dispatch(j);
-				}
-			}
+			t.setEvaluator(eval);
+			t.collect();
+			
 			try {
 				Thread.sleep(sleepTimePerExecution);
 			} catch (InterruptedException e) {

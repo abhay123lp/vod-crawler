@@ -9,11 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.AbstractEvaluator;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
-public class TestEvaluator implements Evaluator<Integer, int[]> {
+public class TestEvaluator extends AbstractEvaluator<Integer, int[]> {
 
 	private final Map<Integer, int[]> crawled;
 	private final RandomizedSyncGraph g;
@@ -27,17 +27,15 @@ public class TestEvaluator implements Evaluator<Integer, int[]> {
 		return crawled;
 	}
 
-	@Override
-	public Collection<CrawlJob> evaluteAndSave(Integer collectID, int[] collectContent, File savePath) {
-		ArrayList<CrawlJob> rv = new ArrayList<CrawlJob>();
+	public boolean evalResult(Integer collectID, int[] collectContent, File savePath) {
 		this.crawled.put(collectID, collectContent);
 		for (int i : collectContent) {
 			if (!crawled.containsKey(i)) {
-				rv.add(new TestCrawlJob(i, g));
+				super.dispatch(new TestCrawlJob(i, g));
 			}
 		}
 		
-		return rv;
+		return true;
 	}
 
 	@Override
@@ -50,10 +48,10 @@ public class TestEvaluator implements Evaluator<Integer, int[]> {
 	}
 
 	@Override
-	public void errorOccurred(Integer collectID, Exception e) {
+	public void setTrackerFactory(TrackerFactory factory) {
 	}
 
 	@Override
-	public void setTrackerFactory(TrackerFactory factory) {
+	public void evalError(Integer collectID) {
 	}
 }

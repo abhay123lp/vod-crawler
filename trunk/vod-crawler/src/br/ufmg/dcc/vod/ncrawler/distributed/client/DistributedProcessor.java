@@ -1,0 +1,132 @@
+package br.ufmg.dcc.vod.ncrawler.distributed.client;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.log4j.Logger;
+
+import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import br.ufmg.dcc.vod.ncrawler.distributed.server.EvaluatorFake;
+import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutor;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.processor.AbstractProcessor;
+import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;
+import br.ufmg.dcc.vod.ncrawler.queue.QueueService;
+import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
+
+public class DistributedProcessor extends AbstractProcessor {
+
+	private static final Logger LOG = Logger.getLogger(DistributedProcessor.class);
+	
+	private Scheduler scheduler;
+	private EvaluatorFake toSend;
+
+	public <S, I, C> DistributedProcessor(long sleepTimePerExecution, QueueService service,
+			Serializer<S> serializer, File queueFile, int queueSize, Set<ServerID> workers,
+			Evaluator<I, C> evaluator, EvaluatorClient<I, C> client) 
+			throws FileNotFoundException, IOException {
+		super(workers.size(), sleepTimePerExecution, service, serializer, queueFile, queueSize, evaluator);
+
+		this.scheduler = new Scheduler(workers);
+		this.toSend = new EvaluatorFake<I, C>(client);
+	}
+	
+	public void start() {
+		for (int i = 0; i < nThreads; i++) {
+			service.startProcessor(myHandle, new DCrawlProcessor(i));
+		}
+		
+		Collection<CrawlJob> initialCrawl = eval.getInitialCrawl();
+		for (CrawlJob j : initialCrawl) {
+			dispatch(j);
+		}
+	}
+
+	@Override
+	public void dispatch(CrawlJob c) {
+		try {
+			service.sendObjectToQueue(myHandle, c);
+		} catch (InterruptedException e) {
+			LOG.error(e);
+		}
+	}
+
+	private class DCrawlProcessor implements QueueProcessor<CrawlJob> {
+		private final int i;
+
+		public DCrawlProcessor(int i) {
+			this.i = i;
+		}
+
+		@Override
+		public String getName() {
+			return getClass().getName() + " " + i;
+		}
+
+		@Override
+		public void process(CrawlJob t) {
+			t.setEvaluator(toSend);
+			
+			/*
+			 * Since there is one thread per server, and each thread releases the server
+			 * after a crawl, there will always be an available executor.
+			 */
+			ServerID eid = scheduler.getNextAvailableExecutor();
+			try {
+				JobExecutor resolve = eid.resolve();
+				resolve.collect(t);
+			} catch (Exception e) {
+				System.err.println(eid + " apparently failed " + e);
+				e.printStackTrace();
+				
+				//Resending to queue
+				eid.reset();
+				t.setEvaluator(null);
+				DistributedProcessor.this.dispatch(t);
+				
+				LOG.error("Unable to contact executor: ", e);
+			} finally {
+				scheduler.releaseExecutor(eid);
+			}
+			
+			try {
+				Thread.sleep(sleepTimePerExecution);
+			} catch (InterruptedException e) {
+			}
+		}
+	}
+	
+	private enum State {IDLE, BUSY}
+	private class Scheduler {
+		private Map<State, Collection<ServerID>> scheduleMap;
+		
+		public Scheduler(Set<ServerID> workers) {
+			this.scheduleMap = new HashMap<State, Collection<ServerID>>();
+			
+			this.scheduleMap.put(State.IDLE, new LinkedList<ServerID>());
+			this.scheduleMap.put(State.BUSY, new HashSet<ServerID>());
+			
+			for (ServerID e : workers) {
+				this.scheduleMap.get(State.IDLE).add(e);
+			}
+		}
+		
+		public synchronized ServerID getNextAvailableExecutor() {
+			ServerID eid = ((LinkedList<ServerID>)this.scheduleMap.get(State.IDLE)).removeFirst();
+			this.scheduleMap.get(State.BUSY).add(eid);
+			return eid;
+		}
+		
+		public synchronized void releaseExecutor(ServerID eid) {
+			this.scheduleMap.get(State.BUSY).remove(eid);
+			this.scheduleMap.get(State.IDLE).add(eid);
+		}
+	}
+}

@@ -1,4 +1,4 @@
-package br.ufmg.dcc.vod.ncrawler.jobs;
+package br.ufmg.dcc.vod.ncrawler.ui;
 
 import java.io.File;
 import java.util.HashMap;
@@ -15,12 +15,14 @@ import org.apache.commons.cli.Options;
 import br.ufmg.dcc.vod.ncrawler.ThreadedCrawler;
 import br.ufmg.dcc.vod.ncrawler.common.FileUtil;
 import br.ufmg.dcc.vod.ncrawler.common.LoggerInitiator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.EvaluatorFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector.YTApiFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.YTHtmlFactory;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 import br.ufmg.dcc.vod.ncrawler.tracker.ThreadSafeTrackerFactory;
 
-public class Launcher {
+public class SingleMachineLauncher {
 	
 	private static final String LOG_FILE = "l";
 	private static final String SEED_FILE = "e";
@@ -114,11 +116,6 @@ public class Launcher {
 				throw new Exception("work queue folder exists and is not empty");
 			}
 			
-			File pQueue = new File(workQueueFolder.getAbsolutePath() + File.separator + "processor");
-			File eQueue = new File(workQueueFolder.getAbsolutePath() + File.separator + "eval");
-			pQueue.mkdirs();
-			eQueue.mkdirs();
-			
 			LoggerInitiator.initiateLog(cli.getOptionValue(LOG_FILE));
 			List<String> seeds = FileUtil.readFileToList(seedFile);
 			
@@ -133,12 +130,12 @@ public class Launcher {
 			System.out.println("\t numer of threads: " + nThreads);
 			System.out.println("\t sleep time: " + sleepTime);
 			
-			ThreadedCrawler tc = new ThreadedCrawler(nThreads, sleepTime, evaluator, pQueue, eQueue, serializer, 1024 * 1024 * 1024);
+			ThreadedCrawler tc = new ThreadedCrawler(nThreads, sleepTime, evaluator, workQueueFolder, serializer, 1024 * 1024 * 1024);
 			tc.crawl();
 			crawlerFactory.shutdown();
 		} catch (Exception e) {
 			HelpFormatter hf = new HelpFormatter();
-			hf.printHelp("java " + Launcher.class, opts);
+			hf.printHelp("java " + SingleMachineLauncher.class, opts);
 			
 			System.out.println();
 			System.out.println();

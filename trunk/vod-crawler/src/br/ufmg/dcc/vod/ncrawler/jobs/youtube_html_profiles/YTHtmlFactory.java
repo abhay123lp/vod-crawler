@@ -17,8 +17,8 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpProtocolParams;
 
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
-import br.ufmg.dcc.vod.ncrawler.jobs.EvaluatorFactory;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.EvaluatorFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLTypeFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;

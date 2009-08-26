@@ -1,9 +1,7 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator;
 
-import java.util.Collection;
-
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 
 public class TestCrawlJob implements CrawlJob {
 
@@ -18,12 +16,16 @@ public class TestCrawlJob implements CrawlJob {
 	}
 
 	@Override
-	public Collection<CrawlJob> collect() {
-		return e.evaluteAndSave(vertex, g.getNeighbours(vertex), null);
+	public void collect() {
+		e.evaluteAndSave(vertex, g.getNeighbours(vertex), null, false);
 	}
 
 	@Override
 	public void setEvaluator(Evaluator e) {
 		this.e = e;
+	}
+
+	public int vertex() {
+		return vertex;
 	}
 }
