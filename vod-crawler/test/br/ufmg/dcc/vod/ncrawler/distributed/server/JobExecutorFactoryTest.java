@@ -11,7 +11,6 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-
 public class JobExecutorFactoryTest {
 
 	@Test
@@ -22,7 +21,7 @@ public class JobExecutorFactoryTest {
 		System.out.println(Arrays.toString(list));
 		
 		assertTrue(list.length == 0);
-		f.createAndBindExecutorServer();
+		f.createAndBind();
 
 		list = Naming.list("rmi://localhost:9090");
 		

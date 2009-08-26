@@ -22,7 +22,6 @@ import br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator.RandomizedSyncGraph;
 import br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator.TestEvaluator;
 import br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator.TestSerializer;
 
-
 public class DistributedCrawlerTest  extends TestCase {
 
 	private File myTempDir;
@@ -42,7 +41,7 @@ public class DistributedCrawlerTest  extends TestCase {
 		serverFactories = new HashSet<JobExecutorFactory>();
 		ids = new HashSet<ServerID>();
 		clientFactory = new EvaluatorClientFactory<Integer, int[]>(6060);
-		clientImpl = clientFactory.createAndBindEvalServer();
+		clientImpl = clientFactory.createAndBind();
 	}
 
 	@After
@@ -64,7 +63,7 @@ public class DistributedCrawlerTest  extends TestCase {
 	public void initiateServers(int numServers) throws RemoteException, AlreadyBoundException {
 		for (int i = 0; i < numServers; i++) {
 			JobExecutorFactory jef = new JobExecutorFactory(5000 + i);
-			jef.createAndBindExecutorServer();
+			jef.createAndBind();
 			ids.add(new ServerID("localhost", 5000+i));
 			serverFactories.add(jef);
 		}

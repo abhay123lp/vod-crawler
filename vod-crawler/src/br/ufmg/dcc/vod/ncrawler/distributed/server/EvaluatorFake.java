@@ -14,6 +14,8 @@ import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
 public class EvaluatorFake<I, C> implements Evaluator<I, C>, Serializable {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final EvaluatorClient<I, C> client;
 
 	public EvaluatorFake(EvaluatorClient<I, C> client) {
