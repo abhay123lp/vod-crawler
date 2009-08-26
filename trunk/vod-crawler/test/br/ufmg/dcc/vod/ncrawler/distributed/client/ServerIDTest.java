@@ -27,7 +27,7 @@ public class ServerIDTest {
 		}
 		
 		JobExecutorFactory f = new JobExecutorFactory(9090);
-		f.createAndBindExecutorServer();
+		f.createAndBind();
 
 		resolve = sid.resolve();
 		assertTrue(resolve != null);

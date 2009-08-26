@@ -25,8 +25,10 @@ public class DistributedProcessor extends AbstractProcessor {
 
 	private static final Logger LOG = Logger.getLogger(DistributedProcessor.class);
 	
-	private Scheduler scheduler;
+	@SuppressWarnings("unchecked")
 	private EvaluatorFake toSend;
+	
+	private Scheduler scheduler;
 
 	public <S, I, C> DistributedProcessor(long sleepTimePerExecution, QueueService service,
 			Serializer<S> serializer, File queueFile, int queueSize, Set<ServerID> workers,
@@ -38,26 +40,11 @@ public class DistributedProcessor extends AbstractProcessor {
 		this.toSend = new EvaluatorFake<I, C>(client);
 	}
 	
-	public void start() {
-		for (int i = 0; i < nThreads; i++) {
-			service.startProcessor(myHandle, new DCrawlProcessor(i));
-		}
-		
-		Collection<CrawlJob> initialCrawl = eval.getInitialCrawl();
-		for (CrawlJob j : initialCrawl) {
-			dispatch(j);
-		}
-	}
-
 	@Override
-	public void dispatch(CrawlJob c) {
-		try {
-			service.sendObjectToQueue(myHandle, c);
-		} catch (InterruptedException e) {
-			LOG.error(e);
-		}
+	public QueueProcessor<?> newQueueProcessor(int i) {
+		return new DCrawlProcessor(i);
 	}
-
+	
 	private class DCrawlProcessor implements QueueProcessor<CrawlJob> {
 		private final int i;
 
