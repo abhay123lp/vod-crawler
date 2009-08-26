@@ -1,9 +1,8 @@
 package br.ufmg.dcc.vod.ncrawler;
 
-import java.util.Collection;
+import java.io.Serializable;
 
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
-
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 
 /**
  * Collects an object and returns the result of this crawl.
@@ -11,9 +10,9 @@ import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
  * @param <R> Result from a crawl
  * @param <T> Type of object crawled
  */
-public interface CrawlJob {
+public interface CrawlJob extends Serializable {
 
-	public Collection<CrawlJob> collect();
+	public void collect();
 
 	public void setEvaluator(Evaluator e);
 	

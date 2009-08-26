@@ -1,11 +1,13 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector;
 
+import java.io.Serializable;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
-public class YoutubeUserDAO {
+public class YoutubeUserDAO implements Serializable {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final String userID;
 	private final String username;
 	private final int age;
@@ -24,14 +26,14 @@ public class YoutubeUserDAO {
 	private final long viewCount;
 	private final Date lastWebAccess;
 	private final Set<String> friends;
-	private Set<String> subscribers = new HashSet<String>();
+	private final Set<String> subscribers;
 
 	public YoutubeUserDAO(String userID, String username, int age,
 			String gender, String aboutMe, String relationship, String books,
 			String company, String hobbies, String hometown, String location,
 			String movies, String music, String occupation, String school,
 			String channelType, Set<String> uploads,
-			Set<String> subscriptions, Set<String> friends, long viewCount, long videoWatchCount, Date lastWebAccess) {
+			Set<String> subscriptions, Set<String> subscribers, Set<String> friends, long viewCount, long videoWatchCount, Date lastWebAccess) {
 				this.userID = userID;
 				this.username = username;
 				this.age = age;
@@ -46,6 +48,7 @@ public class YoutubeUserDAO {
 				this.channelType = channelType;
 				this.uploads = uploads;
 				this.subscriptions = subscriptions;
+				this.subscribers = subscribers;
 				this.friends = friends;
 				this.viewCount = viewCount;
 				this.videoWatchCount = videoWatchCount;
@@ -124,10 +127,6 @@ public class YoutubeUserDAO {
 		return friends;
 	}
 
-	public void setSubscribers(Set<String> subscribers) {
-		this.subscribers = subscribers;
-	}
-	
 	public Set<String> getSubscribers() {
 		return subscribers;
 	}

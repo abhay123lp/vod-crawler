@@ -1,4 +1,4 @@
-package br.ufmg.dcc.vod.ncrawler.jobs;
+package br.ufmg.dcc.vod.ncrawler.evaluator;
 
 import java.io.File;
 import java.util.List;

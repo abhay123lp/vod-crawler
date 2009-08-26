@@ -1,16 +1,21 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.Collection;
+import java.net.URLConnection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.YTErrorPageException;
 
 import com.google.gdata.client.youtube.YouTubeService;
 import com.google.gdata.data.Link;
@@ -33,6 +38,10 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 	private final File savePath;
 	private final long sleepTime;
 
+	private final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\"\\s*>\\s*Next.*)");
+	private final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
+	private final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
+	
 	public YoutubeUserAPICrawlJob(YouTubeService service, String userID, File savePath, long sleepTime) {
 		this.service = service;
 		this.userID = userID;
@@ -41,7 +50,7 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 	}
 	
 	@Override
-	public Collection<CrawlJob> collect() {
+	public void collect() {
 		try {
 			UserProfileEntry profileEntry = service.getEntry(new URL("http://gdata.youtube.com/feeds/api/users/" + userID), UserProfileEntry.class);
 			
@@ -133,13 +142,65 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 				LOG.warn("Unable to collect every subscriptions for user " + userID, e);
 			}
 			
-			return e.evaluteAndSave(userID, new YoutubeUserDAO(userID, username, age, gender, aboutMe, relationship, books, company, hobbies, hometown, location, movies, music, occupation, school, channelType, uploads, subscriptions, friends, viewCount, videoWatchCount, lastWebAccess), savePath);
+			Set<String> subscribers = new HashSet<String>();
+			try {
+				subscribers.addAll(discoverSubscribers(userID));
+			} catch (Exception e) {
+				LOG.warn("Unable to collect every subscriber for user " + userID, e);
+			}
+			
+			YoutubeUserDAO collectContent = new YoutubeUserDAO(userID, username, age, gender, aboutMe, relationship, books, company, hobbies, hometown, location, movies, music, occupation, school, channelType, uploads, subscriptions, subscribers, friends, viewCount, videoWatchCount, lastWebAccess);
+			e.evaluteAndSave(userID, collectContent, savePath, false);
 		} catch (Exception ec ) {
-			e.errorOccurred(userID, ec);
-			return null;
+			e.evaluteAndSave(userID, null, null, true);
 		}
 	}
 
+	private Set<String> discoverSubscribers(String collectID) throws Exception {
+		Set<String> rv = new HashSet<String>();
+		
+		String followLink = "http://www.youtube.com/profile?user=" + collectID + "&view=subscribers&gl=US&hl=en";
+		String lastLink = null;
+		
+		do {
+			lastLink = followLink;
+			BufferedReader in = null;
+			
+			try {
+				URL u = new URL(followLink);
+				URLConnection connection = u.openConnection();
+				connection.setRequestProperty("User-Agent", "Research-Crawler-APIDEVKEY-AI39si59eqKb2OzKrx-4EkV1HkIRJcoYDf_VSKUXZ8AYPtJp-v9abtMYg760MJOqLZs5QIQwW4BpokfNyKKqk1gi52t0qMwJBg");
+				
+				connection.connect();
+				
+				in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+				String inputLine;
+				while ((inputLine = in.readLine()) != null) {
+					Matcher matcher = NEXT_PATTERN.matcher(inputLine);
+					if (matcher.matches() && inputLine.contains("subscribers")) {
+						followLink = "http://www.youtube.com/" + matcher.group(2) + "&gl=US&hl=en";
+					}
+					
+					matcher = RELATION_PATTERN.matcher(inputLine);
+					if (matcher.matches()) {
+						rv.add(matcher.group(2));
+					}
+					
+					matcher = ERROR_PATTERN.matcher(inputLine);
+					if (matcher.matches()) {
+						throw new YTErrorPageException();
+					}
+				}
+			} finally {
+				if (in != null) in.close();
+			}
+			
+			Thread.sleep(sleepTime);
+		} while (!followLink.equals(lastLink));
+		
+		return rv;
+	}
+	
 	@Override
 	public void setEvaluator(Evaluator e) {
 		this.e = e;

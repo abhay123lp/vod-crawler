@@ -1,9 +1,10 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 
-public class RandomizedSyncGraph {
+public class RandomizedSyncGraph implements Serializable {
 
 	private final int numVertex;
 	private int[][] graph;

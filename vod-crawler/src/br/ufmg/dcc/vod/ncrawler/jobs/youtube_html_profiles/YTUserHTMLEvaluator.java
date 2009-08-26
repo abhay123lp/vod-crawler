@@ -28,7 +28,7 @@ import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.AbstractEvaluator;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 import br.ufmg.dcc.vod.ncrawler.stats.CompositeStatEvent;
@@ -62,7 +62,7 @@ import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
  * Procurar por next em cada página!!!!!
  * <a href="/profile?user=USER&amp;view=QUE_BUSCO&amp;start=##">Next</a>
  */
-public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, InputStream> {
+public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType>, InputStream> {
 
 	private static final Logger LOG = Logger.getLogger(YTUserHTMLEvaluator.class);
 	
@@ -189,7 +189,7 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 	}
 
 	@Override
-	public Collection<CrawlJob> evaluteAndSave(Pair<String, HTMLType> collectID, InputStream collectContent, File savePath) {
+	public boolean evalResult(Pair<String, HTMLType> collectID, InputStream collectContent, File savePath) {
 		String nextLink = null;
 		BufferedReader in = null;
 		PrintStream out = null;
@@ -272,8 +272,10 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 				incs.put(COL_USERS, 1);
 			
 			LOG.info("File saved, found an additional " + urls + " urls to collect.");
+			
+			return true;
 		} catch (Exception e) {
-			errorOccurred(collectID, e);
+			return false;
 		} finally {
 			if (in != null)
 				try {
@@ -286,8 +288,6 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 			
 			if (sp != null && incs.size() > 0) sp.notify(new CompositeStatEvent(incs));
 		}
-		
-		return rv;
 	}
 
 	@Override
@@ -327,7 +327,7 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 	}
 
 	@Override
-	public void errorOccurred(Pair<String, HTMLType> collectID, Exception e) {
+	public void evalError(Pair<String, HTMLType> collectID) {
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		if (collectID.second == YTHTMLType.SINGLE_VIDEO)
 			incs.put(ERR_VIDEOS, 1);
@@ -335,6 +335,6 @@ public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, In
 			incs.put(ERR_USERS, 1);
 		incs.put(ERR_URLS, 1);
 		sp.notify(new CompositeStatEvent(incs));
-		LOG.error("Error collecting: " + collectID.first, e);
+		LOG.error("Error collecting: " + collectID.first);
 	}
 }

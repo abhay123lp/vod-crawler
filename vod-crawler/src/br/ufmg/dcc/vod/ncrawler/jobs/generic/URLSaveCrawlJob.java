@@ -7,8 +7,6 @@ import java.io.PrintStream;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.Collection;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -21,7 +19,7 @@ import org.apache.http.params.HttpParams;
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.NetIFRoundRobin;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 
 public class URLSaveCrawlJob implements CrawlJob {
 
@@ -40,13 +38,12 @@ public class URLSaveCrawlJob implements CrawlJob {
 	}
 	
 	@Override
-	public Collection<CrawlJob> collect() {
+	public void collect() {
 		InputStream content = null;
 		BufferedReader in = null;
 		PrintStream out = null;
 		HttpEntity entity = null;
 		
-		Collection<CrawlJob> nextCrawl = new ArrayList<CrawlJob>();
 		try {
 			String encode = URLEncoder.encode(url.toString(), "UTF-8");
 			File resultFile = new File(savePath + File.separator + encode);
@@ -65,9 +62,9 @@ public class URLSaveCrawlJob implements CrawlJob {
 				content = entity.getContent();
 			}
 			
-			nextCrawl.addAll(e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), content, resultFile));
-	    } catch (Exception e) {
-	    	this.e.errorOccurred(new Pair<String, HTMLType>(url.toString(), t), e);
+			e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), content, resultFile, false);
+	    } catch (Exception ex) {
+	    	e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), null, null, true);
 	    } finally {
 	    	try {
 				if (in != null) in.close();
@@ -76,8 +73,6 @@ public class URLSaveCrawlJob implements CrawlJob {
 				if (entity != null) entity.consumeContent();
 	    	} catch (Exception e) {}
 	    }
-	    
-	    return nextCrawl;
 	}
 
 	@Override

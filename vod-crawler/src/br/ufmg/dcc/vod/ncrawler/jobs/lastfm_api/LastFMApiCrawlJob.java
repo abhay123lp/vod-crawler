@@ -8,7 +8,7 @@ import net.roarsoftware.lastfm.Playlist;
 import net.roarsoftware.lastfm.Track;
 import net.roarsoftware.lastfm.User;
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 
 public class LastFMApiCrawlJob  implements CrawlJob {
 
@@ -24,7 +24,7 @@ public class LastFMApiCrawlJob  implements CrawlJob {
 	}
 	
 	@Override
-	public Collection<CrawlJob> collect() {
+	public void collect() {
 		String userID = user.getName();
 		
 		Collection<User> friends = User.getFriends(userID, API_KEY);
@@ -37,8 +37,6 @@ public class LastFMApiCrawlJob  implements CrawlJob {
 		Collection<Artist> topArtists = User.getTopArtists(userID, API_KEY);
 		Collection<String> topTags = User.getTopTags(userID, LIMIT, API_KEY);
 		Collection<Track> topTracks = User.getTopTracks(userID, API_KEY);
-		
-		return null;
 	}
 
 	@Override

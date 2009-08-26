@@ -3,8 +3,8 @@ package br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector;
 import java.io.File;
 import java.util.List;
 
-import br.ufmg.dcc.vod.ncrawler.jobs.Evaluator;
-import br.ufmg.dcc.vod.ncrawler.jobs.EvaluatorFactory;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.EvaluatorFactory;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 
 import com.google.gdata.client.youtube.YouTubeService;
