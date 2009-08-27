@@ -17,7 +17,7 @@ public class TestCrawlJob implements CrawlJob {
 
 	@Override
 	public void collect() {
-		e.evaluteAndSave(vertex, g.getNeighbours(vertex), null, false);
+		e.evaluteAndSave(vertex, g.getNeighbours(vertex), null, false, null);
 	}
 
 	@Override

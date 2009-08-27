@@ -19,8 +19,8 @@ public class EvaluatorClientImpl<I, C> extends UnicastRemoteObject implements Ev
 
 	//Remote method
 	@Override
-	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred) {
-		e.evaluteAndSave(collectID, collectContent, savePath, errorOcurred);
+	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred, Exception ex) {
+		e.evaluteAndSave(collectID, collectContent, savePath, errorOcurred, ex);
 	}
 	
 	//Local methods

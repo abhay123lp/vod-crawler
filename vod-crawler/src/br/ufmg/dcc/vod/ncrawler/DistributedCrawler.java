@@ -18,7 +18,7 @@ import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 
 public class DistributedCrawler {
 
-	private static final Logger LOG = Logger.getLogger(ThreadedCrawler.class);
+	private static final Logger LOG = Logger.getLogger(DistributedCrawler.class);
 	
 	private final DistributedProcessor processor;
 	private final QueueService service;

@@ -40,9 +40,9 @@ public class ThreadSafeEvaluator<I, C> implements Evaluator<I, C> {
 	}
 
 	@Override
-	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean error) {
+	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean error, Exception er) {
 		try {
-			service.sendObjectToQueue(myHandle, new QueueObj(collectID, collectContent, savePath, error));
+			service.sendObjectToQueue(myHandle, new QueueObj(collectID, collectContent, savePath, error, er));
 		} catch (Exception e) {
 			LOG.error(e);
 		}
@@ -73,7 +73,7 @@ public class ThreadSafeEvaluator<I, C> implements Evaluator<I, C> {
 
 		@Override
 		public void process(QueueObj qo) {
-			e.evaluteAndSave(qo.id, qo.content, qo.path, qo.error);
+			e.evaluteAndSave(qo.id, qo.content, qo.path, qo.error, qo.er);
 		}
 	}
 	
@@ -82,12 +82,14 @@ public class ThreadSafeEvaluator<I, C> implements Evaluator<I, C> {
 		private final C content;
 		private final File path;
 		private final boolean error;
+		private final Exception er;
 		
-		public QueueObj(I id, C content, File path, boolean error) {
+		public QueueObj(I id, C content, File path, boolean error, Exception er) {
 			this.id = id;
 			this.content = content;
 			this.path = path;
 			this.error = error;
+			this.er = er;
 		}
 	}
 }

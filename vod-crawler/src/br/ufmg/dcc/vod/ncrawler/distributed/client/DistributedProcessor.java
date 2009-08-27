@@ -70,15 +70,10 @@ public class DistributedProcessor extends AbstractProcessor {
 				JobExecutor resolve = eid.resolve();
 				resolve.collect(t);
 			} catch (Exception e) {
-				System.err.println(eid + " apparently failed " + e);
-				e.printStackTrace();
-				
-				//Resending to queue
+				LOG.error("Unable to contact executor: ", e);
 				eid.reset();
 				t.setEvaluator(null);
 				DistributedProcessor.this.dispatch(t);
-				
-				LOG.error("Unable to contact executor: ", e);
 			} finally {
 				scheduler.releaseExecutor(eid);
 			}

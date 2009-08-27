@@ -8,6 +8,6 @@ public interface EvaluatorClient<I, C> extends Remote {
 
 	public static final String NAME = "EVAL_CLIENT";
 
-	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred) throws RemoteException;
+	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred, Exception e) throws RemoteException;
 
 }

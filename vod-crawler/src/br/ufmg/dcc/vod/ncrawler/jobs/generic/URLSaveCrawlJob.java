@@ -62,9 +62,9 @@ public class URLSaveCrawlJob implements CrawlJob {
 				content = entity.getContent();
 			}
 			
-			e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), content, resultFile, false);
+			e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), content, resultFile, false, null);
 	    } catch (Exception ex) {
-	    	e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), null, null, true);
+	    	e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), null, null, true, ex);
 	    } finally {
 	    	try {
 				if (in != null) in.close();

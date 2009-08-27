@@ -327,7 +327,7 @@ public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType
 	}
 
 	@Override
-	public void evalError(Pair<String, HTMLType> collectID) {
+	public void evalError(Pair<String, HTMLType> collectID, Exception e) {
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		if (collectID.second == YTHTMLType.SINGLE_VIDEO)
 			incs.put(ERR_VIDEOS, 1);
@@ -335,6 +335,6 @@ public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType
 			incs.put(ERR_USERS, 1);
 		incs.put(ERR_URLS, 1);
 		sp.notify(new CompositeStatEvent(incs));
-		LOG.error("Error collecting: " + collectID.first);
+		LOG.error("Error collecting: " + collectID.first, e);
 	}
 }

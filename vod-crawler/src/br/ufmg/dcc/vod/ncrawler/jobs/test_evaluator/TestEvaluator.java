@@ -52,6 +52,6 @@ public class TestEvaluator extends AbstractEvaluator<Integer, int[]> {
 	}
 
 	@Override
-	public void evalError(Integer collectID) {
+	public void evalError(Integer collectID, Exception e) {
 	}
 }
