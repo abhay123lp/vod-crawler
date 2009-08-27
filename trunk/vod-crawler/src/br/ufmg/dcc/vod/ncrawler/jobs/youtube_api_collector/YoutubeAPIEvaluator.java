@@ -51,11 +51,11 @@ public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDA
 	}
 	
 	@Override
-	public void evalError(String collectID) {
+	public void evalError(String collectID, Exception e) {
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		incs.put(ERR, 1);
 		sp.notify(new CompositeStatEvent(incs));
-		LOG.error("Error collecting: " + collectID);
+		LOG.error("Error collecting: " + collectID, e);
 	}
 
 	@Override

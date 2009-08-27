@@ -10,17 +10,17 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 	private Processor processor;
 
 	@Override
-	public final void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred) {
+	public final void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred, Exception e) {
 		if (errorOcurred) {
-			evalError(collectID);
+			evalError(collectID, e);
 		} else if (!evalResult(collectID, collectContent, savePath)) {
-			evalError(collectID);
+			evalError(collectID, e);
 		}
 	}
 
 	public abstract boolean evalResult(I collectID, C collectContent, File savePath);
 
-	public abstract void evalError(I collectID);
+	public abstract void evalError(I collectID, Exception e);
 
 	public final void dispatch(CrawlJob j) {
 		this.processor.dispatch(j);

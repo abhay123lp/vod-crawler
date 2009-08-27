@@ -7,11 +7,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
+import br.ufmg.dcc.vod.ncrawler.common.LoggerInitiator;
 import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutorFactory;
 
 public class CollectServer {
 
 	private static final String PORT = "p";
+	private static final String LOG_FILE = "l";
 
 	@SuppressWarnings("static-access")
 	public static void main(String[] args) {
@@ -22,13 +24,21 @@ public class CollectServer {
 		.withDescription("Port to Bind")
 		.create(PORT);
 		
+		Option logFileOpt = OptionBuilder.withArgName("file")
+		.hasArg()
+		.isRequired()
+		.withDescription("Log File")
+		.create(LOG_FILE);
+		
 		opts.addOption(portOpt);
+		opts.addOption(logFileOpt);
 		
 		int port = -1;
 		try {
 			GnuParser parser = new GnuParser();
 			CommandLine cli = parser.parse(opts, args);
 			port = Integer.parseInt(cli.getOptionValue(PORT));
+			LoggerInitiator.initiateLog(cli.getOptionValue(LOG_FILE));
 		} catch (Exception e) {
 			HelpFormatter hf = new HelpFormatter();
 			hf.printHelp("java " + CollectServer.class, opts);
@@ -38,6 +48,7 @@ public class CollectServer {
 			e.printStackTrace();
 			System.exit(EXIT_CODES.ERROR);
 		}
+		
 		
 		try {
 			JobExecutorFactory jef = new JobExecutorFactory(port);

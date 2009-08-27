@@ -25,10 +25,10 @@ public class EvaluatorFake<I, C> implements Evaluator<I, C>, Serializable {
 	// Remote Methods
 	@Override
 	public void evaluteAndSave(I collectID, C collectContent, File savePath,
-			boolean errorOcurred) {
+			boolean errorOcurred, Exception e) {
 		try {
-			this.client.evaluteAndSave(collectID, collectContent, savePath, errorOcurred);
-		} catch (RemoteException e) {
+			this.client.evaluteAndSave(collectID, collectContent, savePath, errorOcurred, e);
+		} catch (RemoteException re) {
 			e.printStackTrace();
 		}
 	}

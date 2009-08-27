@@ -150,9 +150,9 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 			}
 			
 			YoutubeUserDAO collectContent = new YoutubeUserDAO(userID, username, age, gender, aboutMe, relationship, books, company, hobbies, hometown, location, movies, music, occupation, school, channelType, uploads, subscriptions, subscribers, friends, viewCount, videoWatchCount, lastWebAccess);
-			e.evaluteAndSave(userID, collectContent, savePath, false);
+			e.evaluteAndSave(userID, collectContent, savePath, false, null);
 		} catch (Exception ec ) {
-			e.evaluteAndSave(userID, null, null, true);
+			e.evaluteAndSave(userID, null, null, true, ec);
 		}
 	}
 
