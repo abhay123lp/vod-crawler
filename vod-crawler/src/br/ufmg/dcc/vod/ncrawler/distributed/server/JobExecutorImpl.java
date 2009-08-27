@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import br.ufmg.dcc.vod.ncrawler.ui.EXIT_CODES;
 
 public class JobExecutorImpl extends UnicastRemoteObject implements JobExecutor {
 
@@ -16,5 +17,10 @@ public class JobExecutorImpl extends UnicastRemoteObject implements JobExecutor 
 	@Override
 	public void collect(CrawlJob c) {
 		c.collect();
+	}
+
+	@Override
+	public void kill() throws RemoteException {
+		System.exit(EXIT_CODES.OK);
 	}
 }
