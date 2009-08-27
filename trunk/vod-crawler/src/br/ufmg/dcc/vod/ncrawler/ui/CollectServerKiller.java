@@ -1,6 +1,8 @@
 package br.ufmg.dcc.vod.ncrawler.ui;
 
 import java.net.InetAddress;
+import java.rmi.RemoteException;
+import java.rmi.UnmarshalException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -25,13 +27,13 @@ public class CollectServerKiller {
 		.hasArg()
 		.isRequired()
 		.withDescription("Host to check")
-		.create(PORT);
+		.create(HOST);
 		
 		Option portOpt = OptionBuilder.withArgName("port")
 		.hasArg()
 		.isRequired()
 		.withDescription("Port to check")
-		.create(HOST);
+		.create(PORT);
 		
 		opts.addOption(hostOpt);
 		opts.addOption(portOpt);
@@ -47,7 +49,7 @@ public class CollectServerKiller {
 			port = Integer.parseInt(cli.getOptionValue(PORT));
 		} catch (Exception e) {
 			HelpFormatter hf = new HelpFormatter();
-			hf.printHelp("java " + CollectServer.class, opts);
+			hf.printHelp("java " + CollectServerKiller.class, opts);
 			
 			System.out.println();
 			System.out.println();
@@ -60,7 +62,6 @@ public class CollectServerKiller {
 		
 		try {
 			resolve = sid.resolve();
-			System.exit(EXIT_CODES.OK);
 		} catch (Exception e) {
 			System.out.println("Already offline");
 			System.exit(EXIT_CODES.STATE_UNCHANGED);
@@ -68,9 +69,13 @@ public class CollectServerKiller {
 		
 		try {
 			resolve.kill();
-			System.out.println("Stopped server!");
-		} catch (Exception e) {
+			System.out.println("Stopped!");
+			System.exit(EXIT_CODES.OK);
+		} catch (UnmarshalException e) {
+		} catch (RemoteException e) {
+			e.printStackTrace();
+			System.out.println("Unable to stop!");
+			System.exit(EXIT_CODES.ERROR);
 		}
-		System.exit(EXIT_CODES.OK);
 	}	
 }

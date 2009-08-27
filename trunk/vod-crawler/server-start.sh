@@ -5,4 +5,5 @@ findself() {
 }
 findself
 
-$SELF/dist-crawl-server.sh $* > out.log 2> err.log
+shopt -s huponexit
+bash $SELF/dist-crawl-server.sh $* > $SELF/out.log 2> $SELF/err.log &
