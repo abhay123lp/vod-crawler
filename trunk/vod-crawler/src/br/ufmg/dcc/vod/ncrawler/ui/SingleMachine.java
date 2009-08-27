@@ -131,6 +131,7 @@ public class SingleMachine {
 			System.out.println();
 			System.out.println();
 			e.printStackTrace();
+			System.exit(EXIT_CODES.ERROR);
 		}
 	}
 }

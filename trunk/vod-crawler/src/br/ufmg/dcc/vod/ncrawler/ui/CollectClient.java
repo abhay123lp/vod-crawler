@@ -123,6 +123,15 @@ public class CollectClient {
 				throw new Exception("work queue folder exists and is not empty");
 			}
 			
+			EvaluatorClientImpl<?, ?> eci = null;
+			try {
+				EvaluatorClientFactory<?, ?> ecf = new EvaluatorClientFactory(port);
+				eci = ecf.createAndBind();
+			} catch (Exception e) {
+				System.out.println("Already UP!");
+				System.exit(EXIT_CODES.STATE_UNCHANGED);
+			}
+			
 			LoggerInitiator.initiateLog(cli.getOptionValue(LOG_FILE));
 			List<String> seeds = FileUtil.readFileToList(seedFile);
 			LinkedHashSet<String> servers = FileUtil.readFileToSet(serverFile);
@@ -135,8 +144,6 @@ public class CollectClient {
 			
 			Serializer<?> serializer = crawlerFactory.getSerializer();
 			
-			EvaluatorClientFactory<?, ?> ecf = new EvaluatorClientFactory(port);
-			EvaluatorClientImpl<?, ?> eci = ecf.createAndBind();
 			
 			System.out.println("Initiating crawl");
 			System.out.println("\t crawler: " + crawlerName);
@@ -153,6 +160,7 @@ public class CollectClient {
 			System.out.println();
 			System.out.println();
 			e.printStackTrace();
+			System.exit(EXIT_CODES.ERROR);
 		}
 	}
 
