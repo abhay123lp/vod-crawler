@@ -1,0 +1,3 @@
+cavernoso:5001
+cabuloso:5001
+granizo:5001
