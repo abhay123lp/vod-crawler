@@ -32,8 +32,8 @@ import com.google.gdata.util.ServiceException;
 public class YoutubeUserAPICrawlJob implements CrawlJob {
 
 	private static final Logger LOG = Logger.getLogger(YoutubeAPIEvaluator.class);
+	
 	private Evaluator e;
-	private final YouTubeService service;
 	private final String userID;
 	private final File savePath;
 	private final long sleepTime;
@@ -42,8 +42,7 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 	private final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
 	private final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
 	
-	public YoutubeUserAPICrawlJob(YouTubeService service, String userID, File savePath, long sleepTime) {
-		this.service = service;
+	public YoutubeUserAPICrawlJob(String userID, File savePath, long sleepTime) {
 		this.userID = userID;
 		this.savePath = savePath;
 		this.sleepTime = sleepTime;
@@ -52,6 +51,7 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 	@Override
 	public void collect() {
 		try {
+			YouTubeService service = new YouTubeService("ytapi-FlavioVinicius-DataCollector-si5mgkd4-0", "AI39si59eqKb2OzKrx-4EkV1HkIRJcoYDf_VSKUXZ8AYPtJp-v9abtMYg760MJOqLZs5QIQwW4BpokfNyKKqk1gi52t0qMwJBg");
 			UserProfileEntry profileEntry = service.getEntry(new URL("http://gdata.youtube.com/feeds/api/users/" + userID), UserProfileEntry.class);
 			
 			String username = profileEntry.getUsername();

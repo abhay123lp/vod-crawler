@@ -23,8 +23,6 @@ import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 import br.ufmg.dcc.vod.ncrawler.tracker.Tracker;
 import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
-import com.google.gdata.client.youtube.YouTubeService;
-
 public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDAO> {
 
 	private static final Logger LOG = Logger.getLogger(YoutubeAPIEvaluator.class);
@@ -33,7 +31,6 @@ public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDA
 	private static final String COL = "COL";
 	private static final String ERR = "ERR";
 	
-	private final YouTubeService service;
 	private final Collection<String> initialUsers;
 	private final File savePath;
 	
@@ -42,8 +39,7 @@ public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDA
 
 	private final long sleepTime;
 	
-	public YoutubeAPIEvaluator(YouTubeService service, Collection<String> initialUsers, File savePath, long sleepTime) {
-		this.service = service;
+	public YoutubeAPIEvaluator(Collection<String> initialUsers, File savePath, long sleepTime) {
 		this.initialUsers = initialUsers;
 		this.savePath = savePath;
 		this.sleepTime = sleepTime;
@@ -107,7 +103,7 @@ public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDA
 		for (String u : users) {
 			if (!tracker.contains(u)) {
 				LOG.info("Found user: " + u);
-				rv.add(new YoutubeUserAPICrawlJob(service, u, savePath, sleepTime));
+				rv.add(new YoutubeUserAPICrawlJob(u, savePath, sleepTime));
 				tracker.add(u);
 				incs.put(DIS, incs.get(DIS) + 1);
 			}
