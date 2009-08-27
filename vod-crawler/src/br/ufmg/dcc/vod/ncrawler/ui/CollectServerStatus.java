@@ -46,7 +46,7 @@ public class CollectServerStatus {
 			port = Integer.parseInt(cli.getOptionValue(PORT));
 		} catch (Exception e) {
 			HelpFormatter hf = new HelpFormatter();
-			hf.printHelp("java " + CollectServer.class, opts);
+			hf.printHelp("java " + CollectServerStatus.class, opts);
 			
 			System.out.println();
 			System.out.println();

@@ -155,7 +155,7 @@ public class CollectClient {
 			crawlerFactory.shutdown();
 		} catch (Exception e) {
 			HelpFormatter hf = new HelpFormatter();
-			hf.printHelp("java " + SingleMachine.class, opts);
+			hf.printHelp("java " + CollectClient.class, opts);
 			
 			System.out.println();
 			System.out.println();

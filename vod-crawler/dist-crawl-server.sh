@@ -5,4 +5,4 @@ findself() {
 }
 findself
 
-java -cp $SELF/out/'*':$SELF/lib/'*' br.ufmg.dcc.vod.ncrawler.ui.CollectServer $*
+java -cp $SELF/out/'*':$SELF/lib/'*' -Djava.rmi.server.hostname=`hostname` br.ufmg.dcc.vod.ncrawler.ui.CollectServer $*
