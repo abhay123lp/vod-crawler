@@ -8,6 +8,7 @@ import java.util.Collection;
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.distributed.client.EvaluatorClient;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 import br.ufmg.dcc.vod.ncrawler.processor.Processor;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
@@ -25,11 +26,11 @@ public class EvaluatorFake<I, C> implements Evaluator<I, C>, Serializable {
 	// Remote Methods
 	@Override
 	public void evaluteAndSave(I collectID, C collectContent, File savePath,
-			boolean errorOcurred, Exception e) {
+			boolean errorOcurred, UnableToCollectException utce) {
 		try {
-			this.client.evaluteAndSave(collectID, collectContent, savePath, errorOcurred, e);
+			this.client.evaluteAndSave(collectID, collectContent, savePath, errorOcurred, utce);
 		} catch (RemoteException re) {
-			e.printStackTrace();
+			throw new RuntimeException(re);
 		}
 	}
 

@@ -15,6 +15,7 @@ import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.YTErrorPageException;
 
 import com.google.gdata.client.youtube.YouTubeService;
@@ -30,6 +31,8 @@ import com.google.gdata.data.youtube.YtUserProfileStatistics;
 import com.google.gdata.util.ServiceException;
 
 public class YoutubeUserAPICrawlJob implements CrawlJob {
+
+	private static final long serialVersionUID = 1L;
 
 	private static final Logger LOG = Logger.getLogger(YoutubeAPIEvaluator.class);
 	
@@ -51,6 +54,8 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 	@Override
 	public void collect() {
 		try {
+			LOG.info("Collecting: " + userID);
+			
 			YouTubeService service = new YouTubeService("ytapi-FlavioVinicius-DataCollector-si5mgkd4-0", "AI39si59eqKb2OzKrx-4EkV1HkIRJcoYDf_VSKUXZ8AYPtJp-v9abtMYg760MJOqLZs5QIQwW4BpokfNyKKqk1gi52t0qMwJBg");
 			UserProfileEntry profileEntry = service.getEntry(new URL("http://gdata.youtube.com/feeds/api/users/" + userID), UserProfileEntry.class);
 			
@@ -150,9 +155,11 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 			}
 			
 			YoutubeUserDAO collectContent = new YoutubeUserDAO(userID, username, age, gender, aboutMe, relationship, books, company, hobbies, hometown, location, movies, music, occupation, school, channelType, uploads, subscriptions, subscribers, friends, viewCount, videoWatchCount, lastWebAccess);
+			LOG.info("Done, sending... " + userID);
 			e.evaluteAndSave(userID, collectContent, savePath, false, null);
 		} catch (Exception ec ) {
-			e.evaluteAndSave(userID, null, null, true, ec);
+			LOG.error("Done with errors, sending... " + userID, ec);
+			e.evaluteAndSave(userID, null, null, true, new UnableToCollectException(ec.getMessage()));
 		}
 	}
 

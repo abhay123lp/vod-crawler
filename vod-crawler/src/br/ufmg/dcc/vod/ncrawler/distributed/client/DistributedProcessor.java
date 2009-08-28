@@ -66,11 +66,12 @@ public class DistributedProcessor extends AbstractProcessor {
 			 * after a crawl, there will always be an available executor.
 			 */
 			ServerID eid = scheduler.getNextAvailableExecutor();
+			LOG.info("Dispatching job to " + eid);
 			try {
 				JobExecutor resolve = eid.resolve();
 				resolve.collect(t);
 			} catch (Exception e) {
-				LOG.error("Unable to contact executor: ", e);
+				LOG.error("Unable to contact executor " + eid + ": ", e);
 				eid.reset();
 				t.setEvaluator(null);
 				DistributedProcessor.this.dispatch(t);

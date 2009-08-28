@@ -1,6 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.distributed.client;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;

@@ -6,4 +6,4 @@ findself() {
 findself
 
 shopt -s huponexit
-bash $SELF/dist-crawl-server.sh -l $SELF/worker.log $* &
+bash $SELF/dist-crawl-server.sh -l $SELF/worker.log $* > $SELF/out.txt 2> $SELF/err.txt &

@@ -7,7 +7,10 @@ import java.net.MalformedURLException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.util.HashSet;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutor;
@@ -15,6 +18,23 @@ import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutorFactory;
 
 public class ServerIDTest {
 
+	private HashSet<JobExecutorFactory> serverFactories;
+	private EvaluatorClientFactory<Integer, int[]> clientFactory;
+	private HashSet<ServerID> ids;
+
+	@Before
+	public void setUp() throws Exception {
+		serverFactories = new HashSet<JobExecutorFactory>();
+		ids = new HashSet<ServerID>();
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		for (JobExecutorFactory f : serverFactories) {
+			f.shutdown();
+		}
+	}
+	
 	@Test
 	public void testAll() throws RemoteException, AlreadyBoundException, MalformedURLException, NotBoundException {
 		ServerID sid = new ServerID("localhost", 9090);
