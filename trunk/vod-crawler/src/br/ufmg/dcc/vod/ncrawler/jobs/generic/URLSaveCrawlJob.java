@@ -20,6 +20,7 @@ import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.NetIFRoundRobin;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 
 public class URLSaveCrawlJob implements CrawlJob {
 
@@ -64,7 +65,7 @@ public class URLSaveCrawlJob implements CrawlJob {
 			
 			e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), content, resultFile, false, null);
 	    } catch (Exception ex) {
-	    	e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), null, null, true, ex);
+	    	e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), null, null, true, new UnableToCollectException(ex.getMessage()));
 	    } finally {
 	    	try {
 				if (in != null) in.close();

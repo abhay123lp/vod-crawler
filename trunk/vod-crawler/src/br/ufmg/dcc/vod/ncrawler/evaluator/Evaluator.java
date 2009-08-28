@@ -16,6 +16,6 @@ public interface Evaluator<I, C> {
 	
 	public Collection<CrawlJob> getInitialCrawl();
 	
-	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred, Exception e);
+	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred, UnableToCollectException utc);
 	
 }

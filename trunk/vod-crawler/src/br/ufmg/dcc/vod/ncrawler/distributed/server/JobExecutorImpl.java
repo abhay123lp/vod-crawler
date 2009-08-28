@@ -22,6 +22,7 @@ public class JobExecutorImpl extends UnicastRemoteObject implements JobExecutor 
 	public void collect(CrawlJob c) {
 		LOG.info("Received JOB");
 		c.collect();
+		LOG.info("Finished JOB");
 	}
 
 	@Override

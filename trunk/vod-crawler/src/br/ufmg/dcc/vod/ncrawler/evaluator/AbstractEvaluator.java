@@ -10,11 +10,11 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 	private Processor processor;
 
 	@Override
-	public final void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred, Exception e) {
+	public final void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred, UnableToCollectException utce) {
 		if (errorOcurred) {
-			evalError(collectID, e);
+			evalError(collectID, utce);
 		} else if (!evalResult(collectID, collectContent, savePath)) {
-			evalError(collectID, e);
+			evalError(collectID, utce);
 		}
 	}
 
