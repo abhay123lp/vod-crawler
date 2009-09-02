@@ -1,6 +1,5 @@
 package br.ufmg.dcc.vod.ncrawler.evaluator;
 
-import java.io.File;
 import java.util.Collection;
 
 import org.apache.log4j.Logger;
@@ -40,14 +39,23 @@ public class ThreadSafeEvaluator<I, C> implements Evaluator<I, C> {
 	}
 
 	@Override
-	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean error, UnableToCollectException utce) {
+	public void evaluteAndSave(I collectID, C collectContent) {
 		try {
-			service.sendObjectToQueue(myHandle, new QueueObj(collectID, collectContent, savePath, error, utce));
+			service.sendObjectToQueue(myHandle, new QueueObj(collectID, collectContent, false, null));
 		} catch (Exception e) {
 			LOG.error(e);
 		}
 	}
 
+	@Override
+	public void error(I collectID, UnableToCollectException utc) {
+		try {
+			service.sendObjectToQueue(myHandle, new QueueObj(collectID, null, true, utc));
+		} catch (Exception e) {
+			LOG.error(e);
+		}
+	}
+	
 	@Override
 	public void setStatsKeeper(StatsPrinter sp) {
 		e.setStatsKeeper(sp);
@@ -73,21 +81,22 @@ public class ThreadSafeEvaluator<I, C> implements Evaluator<I, C> {
 
 		@Override
 		public void process(QueueObj qo) {
-			e.evaluteAndSave(qo.id, qo.content, qo.path, qo.error, qo.utce);
+			if (!qo.error)
+				e.evaluteAndSave(qo.id, qo.content);
+			else
+				e.error(qo.id, qo.utce);
 		}
 	}
 	
 	private class QueueObj {
 		private final I id;
 		private final C content;
-		private final File path;
 		private final boolean error;
 		private final UnableToCollectException utce;
 		
-		public QueueObj(I id, C content, File path, boolean error, UnableToCollectException utce) {
+		public QueueObj(I id, C content, boolean error, UnableToCollectException utce) {
 			this.id = id;
 			this.content = content;
-			this.path = path;
 			this.error = error;
 			this.utce = utce;
 		}

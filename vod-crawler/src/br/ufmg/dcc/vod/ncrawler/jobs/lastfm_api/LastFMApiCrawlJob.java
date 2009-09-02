@@ -1,6 +1,5 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,12 +14,11 @@ import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 
-public class LastFMApiCrawlJob  implements CrawlJob {
+public class LastFMApiCrawlJob implements CrawlJob {
 
-	/*
-	 *<a href="/music/Nada+Surf" class="primary">Nada Surf</a> – <a href="/music/Nada+Surf/_/If+You+Leave" class="primary">If You Leave</a>        </td>
-	 */
-	private final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\"\\s*>\\s*Next.*)");
+	private static final long serialVersionUID = 1L;
+
+	private final Pattern SONG_PATTERN = Pattern.compile("(\\s+<a href=\"/music/)(.*?)(class=\"primary\">)(.*?)(</a>.*class=\"primary\">)(.*?)(</a>.*)");
 	
 	public static final String API_KEY     = "c86a6f99618d3dbfcf167366be991f3b";
 	public static final String API_SECRET  = "6fb4fdae8ddcfa6d7a70024aec7a0e42";
@@ -29,12 +27,10 @@ public class LastFMApiCrawlJob  implements CrawlJob {
 	private static final int LIMIT = 1000000000;
 	private String userID;
 	private Evaluator e;
-	private final File savePath;
 	private final long sleepTime;
 	
-	public LastFMApiCrawlJob(String userID, File savePath, long sleepTime) {
+	public LastFMApiCrawlJob(String userID, long sleepTime) {
 		this.userID = userID;
-		this.savePath = savePath;
 		this.sleepTime = sleepTime;
 	}
 	
@@ -98,9 +94,9 @@ public class LastFMApiCrawlJob  implements CrawlJob {
 		if (!allFailed) {
 			LastFMUserDAO lfmu = new LastFMUserDAO(userID, friendNames, playlistsDAO, lovedTracksDAO,
 					recentTracksDAO, topTags);
-			e.evaluteAndSave(userID, lfmu, savePath, false, null);
+			e.evaluteAndSave(userID, lfmu);
 		} else {
-			e.evaluteAndSave(userID, null, savePath, false, new UnableToCollectException("Unable to collect user"));
+			e.error(userID, new UnableToCollectException("Unable to collect user"));
 		}
 	}
 
@@ -128,9 +124,5 @@ public class LastFMApiCrawlJob  implements CrawlJob {
 
 	public String getUserID() {
 		return userID;
-	}
-
-	public String getSavePath() {
-		return savePath.getAbsolutePath();
 	}
 }

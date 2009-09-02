@@ -1,7 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
@@ -38,16 +37,14 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 	
 	private Evaluator e;
 	private final String userID;
-	private final File savePath;
 	private final long sleepTime;
 
 	private final Pattern NEXT_PATTERN = Pattern.compile("(\\s+&nbsp;<a href=\")(.*?)(\"\\s*>\\s*Next.*)");
 	private final Pattern RELATION_PATTERN = Pattern.compile("(\\s*<a href=\"/user/)(.*?)(\"\\s+onmousedown=\"trackEvent\\('ChannelPage'.*)");
 	private final Pattern ERROR_PATTERN = Pattern.compile("\\s*<input type=\"hidden\" name=\"challenge_enc\" value=\".*");
 	
-	public YoutubeUserAPICrawlJob(String userID, File savePath, long sleepTime) {
+	public YoutubeUserAPICrawlJob(String userID, long sleepTime) {
 		this.userID = userID;
-		this.savePath = savePath;
 		this.sleepTime = sleepTime;
 	}
 	
@@ -156,10 +153,10 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 			
 			YoutubeUserDAO collectContent = new YoutubeUserDAO(userID, username, age, gender, aboutMe, relationship, books, company, hobbies, hometown, location, movies, music, occupation, school, channelType, uploads, subscriptions, subscribers, friends, viewCount, videoWatchCount, lastWebAccess);
 			LOG.info("Done, sending... " + userID);
-			e.evaluteAndSave(userID, collectContent, savePath, false, null);
+			e.evaluteAndSave(userID, collectContent);
 		} catch (Exception ec ) {
 			LOG.error("Done with errors, sending... " + userID, ec);
-			e.evaluteAndSave(userID, null, null, true, new UnableToCollectException(ec.getMessage()));
+			e.error(userID, new UnableToCollectException(ec.getMessage()));
 		}
 	}
 
@@ -215,9 +212,5 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 
 	public String getUserID() {
 		return userID;
-	}
-
-	public String getSavePath() {
-		return savePath.getAbsolutePath().toString();
 	}
 }

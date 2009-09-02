@@ -1,6 +1,5 @@
 package br.ufmg.dcc.vod.ncrawler.distributed.client;
 
-import java.io.File;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
@@ -24,13 +23,20 @@ public class EvaluatorClientImpl<I, C> extends UnicastRemoteObject implements Ev
 
 	//Remote method
 	@Override
-	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred, UnableToCollectException utce) {
+	public void evaluteAndSave(I collectID, C collectContent) {
 		LOG.info("Result received: "+ collectID);
-		e.evaluteAndSave(collectID, collectContent, savePath, errorOcurred, utce);
+		e.evaluteAndSave(collectID, collectContent);
 	}
 	
 	//Local methods
 	public void wrap(Evaluator<I, C> e) {
 		this.e = e;
+	}
+
+	@Override
+	public void error(I collectID, UnableToCollectException utce)
+			throws RemoteException {
+		LOG.info("Result with error received"+ collectID);
+		e.error(collectID, utce);
 	}
 }

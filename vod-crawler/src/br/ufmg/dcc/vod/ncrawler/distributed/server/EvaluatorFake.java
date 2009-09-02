@@ -1,6 +1,5 @@
 package br.ufmg.dcc.vod.ncrawler.distributed.server;
 
-import java.io.File;
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.Collection;
@@ -25,15 +24,23 @@ public class EvaluatorFake<I, C> implements Evaluator<I, C>, Serializable {
 	
 	// Remote Methods
 	@Override
-	public void evaluteAndSave(I collectID, C collectContent, File savePath,
-			boolean errorOcurred, UnableToCollectException utce) {
+	public void evaluteAndSave(I collectID, C collectContent) {
 		try {
-			this.client.evaluteAndSave(collectID, collectContent, savePath, errorOcurred, utce);
+			this.client.evaluteAndSave(collectID, collectContent);
 		} catch (RemoteException re) {
 			throw new RuntimeException(re);
 		}
 	}
 
+	@Override
+	public void error(I collectID, UnableToCollectException utc) {
+		try {
+			this.client.error(collectID, utc);
+		} catch (RemoteException re) {
+			throw new RuntimeException(re);
+		}
+	}
+	
 	// Local Methods
 	@Override
 	public Collection<CrawlJob> getInitialCrawl() {

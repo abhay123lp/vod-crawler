@@ -1,6 +1,5 @@
 package br.ufmg.dcc.vod.ncrawler.evaluator;
 
-import java.io.File;
 import java.util.Collection;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
@@ -16,6 +15,7 @@ public interface Evaluator<I, C> {
 	
 	public Collection<CrawlJob> getInitialCrawl();
 	
-	public void evaluteAndSave(I collectID, C collectContent, File savePath, boolean errorOcurred, UnableToCollectException utc);
+	public void evaluteAndSave(I collectID, C collectContent);
+	public void error(I collectID, UnableToCollectException utc);
 	
 }
