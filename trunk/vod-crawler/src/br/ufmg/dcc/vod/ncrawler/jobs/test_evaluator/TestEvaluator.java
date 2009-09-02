@@ -1,6 +1,5 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -10,6 +9,7 @@ import java.util.Map;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.evaluator.AbstractEvaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
@@ -27,17 +27,6 @@ public class TestEvaluator extends AbstractEvaluator<Integer, int[]> {
 		return crawled;
 	}
 
-	public boolean evalResult(Integer collectID, int[] collectContent, File savePath) {
-		this.crawled.put(collectID, collectContent);
-		for (int i : collectContent) {
-			if (!crawled.containsKey(i)) {
-				super.dispatch(new TestCrawlJob(i, g));
-			}
-		}
-		
-		return true;
-	}
-
 	@Override
 	public Collection<CrawlJob> getInitialCrawl()  {
 		return new ArrayList<CrawlJob>(Arrays.asList(new TestCrawlJob(0, g)));
@@ -52,6 +41,16 @@ public class TestEvaluator extends AbstractEvaluator<Integer, int[]> {
 	}
 
 	@Override
-	public void evalError(Integer collectID, Exception e) {
+	public void error(Integer collectID, UnableToCollectException utc) {
+	}
+
+	@Override
+	public void evaluteAndSave(Integer collectID, int[] collectContent) {
+		this.crawled.put(collectID, collectContent);
+		for (int i : collectContent) {
+			if (!crawled.containsKey(i)) {
+				super.dispatch(new TestCrawlJob(i, g));
+			}
+		}		
 	}
 }

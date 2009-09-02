@@ -29,6 +29,7 @@ import org.apache.log4j.Logger;
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
 import br.ufmg.dcc.vod.ncrawler.evaluator.AbstractEvaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 import br.ufmg.dcc.vod.ncrawler.stats.CompositeStatEvent;
@@ -62,7 +63,7 @@ import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
  * Procurar por next em cada página!!!!!
  * <a href="/profile?user=USER&amp;view=QUE_BUSCO&amp;start=##">Next</a>
  */
-public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType>, InputStream> {
+public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType>, Pair<InputStream, File>> {
 
 	private static final Logger LOG = Logger.getLogger(YTUserHTMLEvaluator.class);
 	
@@ -189,7 +190,7 @@ public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType
 	}
 
 	@Override
-	public boolean evalResult(Pair<String, HTMLType> collectID, InputStream collectContent, File savePath) {
+	public void evaluteAndSave(Pair<String, HTMLType> collectID, Pair<InputStream, File> collectContent) {
 		String nextLink = null;
 		BufferedReader in = null;
 		PrintStream out = null;
@@ -203,8 +204,8 @@ public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType
 		try {
 			LOG.info("Flushing " + collectID.first + " to disk");
 			
-			in = new BufferedReader(new InputStreamReader(collectContent));
-			out = new PrintStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(savePath))));
+			in = new BufferedReader(new InputStreamReader(collectContent.first));
+			out = new PrintStream(new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(collectContent.second))));
 			
 			String inputLine;
 			while ((inputLine = in.readLine()) != null) {
@@ -241,7 +242,7 @@ public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType
 			
 			String followUp = BASE_URL + nextLink + GL_US_HL_EN;
 			if (nextLink != null && t.hasFollowUp() && !nextLink.equals(collectID.first)) {
-				File folder = new File(savePath.getParent());
+				File folder = new File(collectContent.second.getParent());
 				rv.add(new URLSaveCrawlJob(new URL(followUp), folder, t, httpClient));
 				userUrls++;
 				urls++;
@@ -272,10 +273,8 @@ public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType
 				incs.put(COL_USERS, 1);
 			
 			LOG.info("File saved, found an additional " + urls + " urls to collect.");
-			
-			return true;
 		} catch (Exception e) {
-			return false;
+			error(collectID, new UnableToCollectException(e.getMessage()));
 		} finally {
 			if (in != null)
 				try {
@@ -327,7 +326,7 @@ public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType
 	}
 
 	@Override
-	public void evalError(Pair<String, HTMLType> collectID, Exception e) {
+	public void error(Pair<String, HTMLType> collectID, UnableToCollectException e) {
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		if (collectID.second == YTHTMLType.SINGLE_VIDEO)
 			incs.put(ERR_VIDEOS, 1);

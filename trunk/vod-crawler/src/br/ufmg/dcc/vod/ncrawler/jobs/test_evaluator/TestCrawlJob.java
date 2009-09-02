@@ -5,6 +5,8 @@ import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 
 public class TestCrawlJob implements CrawlJob {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final int vertex;
 	private final RandomizedSyncGraph g;
 	private int[] neighbours;
@@ -17,7 +19,7 @@ public class TestCrawlJob implements CrawlJob {
 
 	@Override
 	public void collect() {
-		e.evaluteAndSave(vertex, g.getNeighbours(vertex), null, false, null);
+		e.evaluteAndSave(vertex, g.getNeighbours(vertex));
 	}
 
 	@Override

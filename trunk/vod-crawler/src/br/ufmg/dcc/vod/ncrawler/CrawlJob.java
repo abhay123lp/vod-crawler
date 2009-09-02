@@ -14,7 +14,6 @@ public interface CrawlJob extends Serializable {
 
 	public void collect();
 
-	@SuppressWarnings("unchecked")
 	public void setEvaluator(Evaluator e);
 	
 }

@@ -1,8 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +15,7 @@ import org.apache.log4j.Logger;
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.MyXStreamer;
 import br.ufmg.dcc.vod.ncrawler.evaluator.AbstractEvaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 import br.ufmg.dcc.vod.ncrawler.stats.CompositeStatEvent;
 import br.ufmg.dcc.vod.ncrawler.stats.Display;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
@@ -51,7 +50,7 @@ public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDA
 	}
 	
 	@Override
-	public void evalError(String collectID, Exception e) {
+	public void error(String collectID, UnableToCollectException e) {
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		incs.put(ERR, 1);
 		sp.notify(new CompositeStatEvent(incs));
@@ -59,9 +58,9 @@ public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDA
 	}
 
 	@Override
-	public boolean evalResult(String collectID, YoutubeUserDAO collectContent, File savePath) {
+	public void evaluteAndSave(String collectID, YoutubeUserDAO collectContent) {
 		try {
-			MyXStreamer.getInstance().getStreamer().toXML(collectContent, new BufferedWriter(new FileWriter(savePath + File.separator + collectID)));
+			MyXStreamer.getInstance().toXML(collectContent, new File(savePath + File.separator + collectID));
 			
 			Map<String, Integer> incs = new HashMap<String, Integer>();
 			incs.put(COL, 1);
@@ -84,9 +83,8 @@ public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDA
 			for (CrawlJob j : createJobs) {
 				dispatch(j);
 			}
-			return true;
 		} catch (IOException e) {
-			return false;
+			error(collectID, new UnableToCollectException(e.getMessage()));
 		}
 	}
 
@@ -103,7 +101,7 @@ public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDA
 		for (String u : users) {
 			if (!tracker.contains(u)) {
 				LOG.info("Found user: " + u);
-				rv.add(new YoutubeUserAPICrawlJob(u, savePath, sleepTime));
+				rv.add(new YoutubeUserAPICrawlJob(u, sleepTime));
 				tracker.add(u);
 				incs.put(DIS, incs.get(DIS) + 1);
 			}

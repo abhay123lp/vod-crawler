@@ -1,8 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,11 +26,8 @@ public class Level {
 			for (String u : check) {
 				try {
 					File f = new File(saveFolder.getAbsolutePath() + File.separator + u);
-					BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
 					YoutubeUserDAO udata = 
-						(YoutubeUserDAO) MyXStreamer.getInstance().getStreamer().fromXML(
-								bufferedReader);
-					bufferedReader.close();
+						(YoutubeUserDAO) MyXStreamer.getInstance().fromXML(f);
 					
 					next.addAll(udata.getSubscribers());
 					next.addAll(udata.getSubscriptions());

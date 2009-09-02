@@ -25,7 +25,7 @@ import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlSerializer;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 
-public class YTHtmlFactory implements EvaluatorFactory<Pair<String, HTMLType>, InputStream, URLSaveCrawlJob> {
+public class YTHtmlFactory implements EvaluatorFactory<Pair<String, HTMLType>, Pair<InputStream, File>, URLSaveCrawlJob> {
 
 	private YTUserHTMLEvaluator e;
 	private DefaultHttpClient httpClient;
@@ -72,7 +72,7 @@ public class YTHtmlFactory implements EvaluatorFactory<Pair<String, HTMLType>, I
 	}
 
 	@Override
-	public Evaluator<Pair<String, HTMLType>, InputStream> getEvaluator() {
+	public Evaluator<Pair<String, HTMLType>, Pair<InputStream, File>> getEvaluator() {
 		return e;
 	}
 

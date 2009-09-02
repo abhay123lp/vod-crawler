@@ -22,14 +22,18 @@ import br.ufmg.dcc.vod.ncrawler.common.Pair;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 
+//This class will not work in distributed mode!
+
 public class URLSaveCrawlJob implements CrawlJob {
 
+	private static final long serialVersionUID = 1L;
+	
 	private final URL url;
 	private final File savePath;
 	private final HttpClient httpClient;
 	private final HTMLType t;
 	
-	private Evaluator<Pair<String, HTMLType>, InputStream> e;
+	private Evaluator<Pair<String, HTMLType>, Pair<InputStream, File>> e;
 	
 	public URLSaveCrawlJob(URL url, File savePath, HTMLType t, HttpClient httpClient) {
 		this.url = url;
@@ -63,9 +67,9 @@ public class URLSaveCrawlJob implements CrawlJob {
 				content = entity.getContent();
 			}
 			
-			e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), content, resultFile, false, null);
+			e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), new Pair<InputStream, File>(content, resultFile));
 	    } catch (Exception ex) {
-	    	e.evaluteAndSave(new Pair<String, HTMLType>(url.toString(), t), null, null, true, new UnableToCollectException(ex.getMessage()));
+	    	e.error(new Pair<String, HTMLType>(url.toString(), t), new UnableToCollectException(ex.getMessage()));
 	    } finally {
 	    	try {
 				if (in != null) in.close();
