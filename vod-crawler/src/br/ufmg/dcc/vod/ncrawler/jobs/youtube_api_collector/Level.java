@@ -21,15 +21,18 @@ public class Level {
 			layer += 1;
 			
 			Set<String> next = new HashSet<String>();
-			
 			double total = check.size();
+			
+			System.out.println(layer + " camada tem " + total + " usuarios");
 			double found = 0;
 			for (String u : check) {
 				try {
 					File f = new File(saveFolder.getAbsolutePath() + File.separator + u);
+					BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
 					YoutubeUserDAO udata = 
 						(YoutubeUserDAO) MyXStreamer.getInstance().getStreamer().fromXML(
-								new BufferedReader(new FileReader(f)));
+								bufferedReader);
+					bufferedReader.close();
 					
 					next.addAll(udata.getSubscribers());
 					next.addAll(udata.getSubscriptions());
@@ -38,10 +41,10 @@ public class Level {
 				} catch (Exception e) {
 				}
 			}
+			double perc = found/total;
+			System.out.println(layer + " camada " + perc + " coletada (next layer has " + next.size() + " users)");
 			
 			check = next;
-			double perc = found/total;
-			System.out.println(layer + " camada " + perc + "% coletada");
 		}
 	}
 }

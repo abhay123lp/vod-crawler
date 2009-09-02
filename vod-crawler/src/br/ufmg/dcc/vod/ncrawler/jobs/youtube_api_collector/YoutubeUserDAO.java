@@ -130,4 +130,36 @@ public class YoutubeUserDAO implements Serializable {
 	public Set<String> getSubscribers() {
 		return subscribers;
 	}
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((userID == null) ? 0 : userID.hashCode());
+		result = prime * result
+				+ ((username == null) ? 0 : username.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		YoutubeUserDAO other = (YoutubeUserDAO) obj;
+		if (userID == null) {
+			if (other.userID != null)
+				return false;
+		} else if (!userID.equals(other.userID))
+			return false;
+		if (username == null) {
+			if (other.username != null)
+				return false;
+		} else if (!username.equals(other.username))
+			return false;
+		return true;
+	}
 }
