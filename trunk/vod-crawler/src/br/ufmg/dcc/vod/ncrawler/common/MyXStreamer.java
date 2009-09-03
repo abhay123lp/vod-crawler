@@ -3,9 +3,12 @@ package br.ufmg.dcc.vod.ncrawler.common;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+
+import br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api.LastFMUserDAO;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.reflection.CGLIBEnhancedConverter;
@@ -49,6 +52,16 @@ public class MyXStreamer {
 			return this.stream.fromXML(r);
 		} finally {
 			if (r != null) r.close();
+		}
+	}
+
+	public void toXML(Object o, FileDescriptor out) throws IOException {
+		BufferedWriter w = null;
+		try {
+			w = new BufferedWriter(new FileWriter(out));
+			this.stream.toXML(o, w);
+		} finally {
+			if (w != null) w.close();
 		}
 	}
 }
