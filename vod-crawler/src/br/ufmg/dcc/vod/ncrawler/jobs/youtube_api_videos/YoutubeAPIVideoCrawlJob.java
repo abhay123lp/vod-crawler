@@ -5,9 +5,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
+import br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector.YoutubeAPIEvaluator;
 
 import com.google.gdata.client.youtube.YouTubeService;
 import com.google.gdata.data.extensions.Rating;
@@ -20,6 +23,8 @@ import com.google.gdata.data.youtube.YtStatistics;
 
 public class YoutubeAPIVideoCrawlJob implements CrawlJob {
 
+	private static final Logger LOG = Logger.getLogger(YoutubeAPIVideoCrawlJob.class);
+	
 	private static final long serialVersionUID = 1L;
 	private Evaluator e;
 	private String videoID;
@@ -30,6 +35,8 @@ public class YoutubeAPIVideoCrawlJob implements CrawlJob {
 	
 	@Override
 	public void collect() {
+		LOG.info("Collecting " + videoID);
+		
 		YouTubeService service = new YouTubeService("ytapi-FlavioVinicius-DataCollector-si5mgkd4-0", "AI39si59eqKb2OzKrx-4EkV1HkIRJcoYDf_VSKUXZ8AYPtJp-v9abtMYg760MJOqLZs5QIQwW4BpokfNyKKqk1gi52t0qMwJBg");
 		VideoEntry videoEntry;
 		try {
@@ -81,8 +88,10 @@ public class YoutubeAPIVideoCrawlJob implements CrawlJob {
 			}
 			
 			YoutubeVideoDAO videoDAO = new YoutubeVideoDAO(videoID, author, title, tags, description, category, duration, latitude, longitude, avgRating, minRating, maxRating, ratingCount, viewCount, favCount);
+			LOG.info("Done " + videoID);
 			e.evaluteAndSave(videoID, videoDAO);
 		} catch (Exception ex) {
+			LOG.warn("Done with error" + videoID, ex);
 			e.error(videoID, new UnableToCollectException(ex.getMessage()));
 		}
 	}

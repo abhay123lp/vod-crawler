@@ -10,20 +10,15 @@ public class LastFMUserDAO implements Serializable {
 	
 	private final String userID;
 	private final Set<String> friendNames;
-	private final Set<LastFMPlayListDAO> playlistsDAO;
-	private final Set<LastFMTrackDAO> lovedTracksDAO;
-	private final Set<LastFMTrackDAO> recentTracksDAO;
-	private final Collection<String> topTags;
+	private final Collection<LastFMTagDAO> topTags;
+	private final Set<String> loved;
 
 	public LastFMUserDAO(String userID, Set<String> friendNames,
-			Set<LastFMPlayListDAO> playlistsDAO, Set<LastFMTrackDAO> lovedTracksDAO,
-			Set<LastFMTrackDAO> recentTracksDAO, Collection<String> topTags) {
+			Set<String> loved, Collection<LastFMTagDAO> discoverTagDAO) {
 				this.userID = userID;
 				this.friendNames = friendNames;
-				this.playlistsDAO = playlistsDAO;
-				this.lovedTracksDAO = lovedTracksDAO;
-				this.recentTracksDAO = recentTracksDAO;
-				this.topTags = topTags;
+				this.loved = loved;
+				this.topTags = discoverTagDAO;
 	}
 
 	public String getUserID() {
@@ -34,22 +29,14 @@ public class LastFMUserDAO implements Serializable {
 		return friendNames;
 	}
 
-	public Set<LastFMPlayListDAO> getPlaylistsDAO() {
-		return playlistsDAO;
-	}
-
-	public Set<LastFMTrackDAO> getLovedTracksDAO() {
-		return lovedTracksDAO;
-	}
-
-	public Set<LastFMTrackDAO> getRecentTracksDAO() {
-		return recentTracksDAO;
-	}
-
-	public Collection<String> getTopTags() {
+	public Collection<LastFMTagDAO> getTopTags() {
 		return topTags;
 	}
 
+	public Set<String> getLoved() {
+		return loved;
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
