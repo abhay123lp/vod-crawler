@@ -22,7 +22,6 @@ public class LastFMArtistDAO implements Serializable {
 		return playcount;
 	}
 	
-	
 	@Override
 	public String toString() {
 		return url + ":" + playcount;
