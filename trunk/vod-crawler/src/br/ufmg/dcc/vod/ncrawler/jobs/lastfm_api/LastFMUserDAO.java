@@ -2,39 +2,44 @@ package br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Set;
 
 public class LastFMUserDAO implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	
 	private final String userID;
-	private final Set<String> friendNames;
-	private final Collection<LastFMTagDAO> topTags;
-	private final Set<String> loved;
+	private final Collection<String> friends;
+	private final Collection<LastFMTagDAO> toptags;
+	private final Collection<String> loved;
+	private final Collection<LastFMArtistDAO> artists;
 
-	public LastFMUserDAO(String userID, Set<String> friendNames,
-			Set<String> loved, Collection<LastFMTagDAO> discoverTagDAO) {
+	public LastFMUserDAO(String userID, Collection<String> friendNames,
+			Collection<LastFMArtistDAO> artists, Collection<String> loved, Collection<LastFMTagDAO> discoverTagDAO) {
 				this.userID = userID;
-				this.friendNames = friendNames;
+				this.friends = friendNames;
+				this.artists = artists;
 				this.loved = loved;
-				this.topTags = discoverTagDAO;
+				this.toptags = discoverTagDAO;
 	}
 
 	public String getUserID() {
 		return userID;
 	}
 
-	public Set<String> getFriendNames() {
-		return friendNames;
+	public Collection<String> getFriendNames() {
+		return friends;
 	}
 
 	public Collection<LastFMTagDAO> getTopTags() {
-		return topTags;
+		return toptags;
 	}
 
-	public Set<String> getLoved() {
+	public Collection<String> getLoved() {
 		return loved;
+	}
+
+	public Collection<LastFMArtistDAO> getArtists() {
+		return artists;
 	}
 	
 	@Override

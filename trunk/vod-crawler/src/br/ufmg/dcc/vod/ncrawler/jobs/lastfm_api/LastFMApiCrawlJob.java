@@ -6,8 +6,8 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,7 +19,6 @@ import net.roarsoftware.lastfm.Result;
 import net.roarsoftware.lastfm.Track;
 import net.roarsoftware.lastfm.User;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
@@ -29,26 +28,33 @@ import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 public class LastFMApiCrawlJob implements CrawlJob {
 
 	private static final Logger LOG = Logger.getLogger(LastFMApiCrawlJob.class);
-	
 	private static final long serialVersionUID = 1L;
-
-	//Patterns for tags
-	private static final Pattern SONG_PATTERN_FOR_TAG = Pattern.compile("(\\s+<a href=\"/music/)(.*?)(class=\"primary\">)(.*?)(</a>.*class=\"primary\">)(.*?)(</a>.*)");
-	private static final Pattern SONG_WITH_PIC_PATTERN_FOR_TAG = Pattern.compile("(\\s+<a href=\"/music/)(.*?)(/)(.*)(class=\"primary\">\\s+<span class=\"albumCover coverSmall resImage\">)(.*?)");
-	private static final Pattern ARTIST_PATTERN_FOR_TAG = Pattern.compile("(\\s+<a href=\"/music/)(.*?)(class=\"primary\".*?)(</a>.*)");
 	
-	//Patterns for plays
-    private static final Pattern ARTIST_PATTERN_FOR_PLAYS = Pattern.compile("(\\s+<a href=\"/music/)(.*?)(span class=\"pictureFrame\".*)");
+	//For HTML Requests
+	private static final String USER_AGENT_VALUE = "Research-Crawler-APIDEVKEY-c86a6f99618d3dbfcf167366be991f3b";
+	private static final String USER_AGENT = "User-Agent";
 	
+	//For APT Limits
+	private static final int LIMIT = 1000000000;
+	
+	//API Stuff
 	public static final String API_KEY     = "c86a6f99618d3dbfcf167366be991f3b";
 	public static final String API_SECRET  = "6fb4fdae8ddcfa6d7a70024aec7a0e42";
 	public static final String SESSION_KEY = "fe1acda9911e017979532610a88c0db8";
 	
-	private static final int LIMIT = 1000000000;
-	private String userID;
-	private Evaluator e;
-	private final long sleepTime;
+	//Patterns for tags
+	private static final Pattern SONG_PATTERN_FOR_TAG = Pattern.compile("(\\s+<a href=\")(.*?)(</a> – <a href=\")(/music/.*?/_/.*?)(\")(\"*.*?\"*)( class=\"primary\">.*)");
+	private static final Pattern ALBUM_PATTERN_FOR_TAG = Pattern.compile("(\\s+<a href=\")(/music/.*?)(\")(\"*.*?\"*)( class=\"primary\">\\s+<span class=\"albumCover coverSmall resImage\">.*)");
+	private static final Pattern ARTIST_PATTERN_FOR_TAG = Pattern.compile("(\\s+<a href=\")(/music/.*?)(\")(\"*.*?\"*)( class=\"primary\".*?)(</a>.*)");
 	
+	//Patterns for plays
+    private static final Pattern ARTIST_PATTERN_FOR_PLAYS = Pattern.compile("(\\s+<a href=\")(/music/.*?)(\")(\"*.*?\"*)(><span class=\"pictureFrame\"><span class=\"image\">.*class=\"plays\" rel=\"nofollow\">\\()(.*)(\\&nbsp;.*)");
+    private static final Pattern NUM_PAGES_FOR_PLAYS = Pattern.compile("(\\s+Page <span class=\"pagenumber\">\\d+</span> of )(\\d+)");
+    
+	private final String userID;
+	private final long sleepTime;
+	private Evaluator e;
+
 	public LastFMApiCrawlJob(String userID, long sleepTime) {
 		this.userID = userID;
 		this.sleepTime = sleepTime;
@@ -59,10 +65,12 @@ public class LastFMApiCrawlJob implements CrawlJob {
 		LOG.info("Collecting user: " + userID);
 		boolean allFailed = true;
 		
+		//Friends
+		
 		Collection<User> friends = User.getFriends(userID, false, LIMIT, API_KEY);
 		Result lastResult = Caller.getInstance().getLastResult();
 
-		Set<String> friendNames = new HashSet<String>();
+		ArrayList<String> friendNames = new ArrayList<String>();
 		if (lastResult.isSuccessful()) {
 			allFailed = false;
 			
@@ -77,27 +85,35 @@ public class LastFMApiCrawlJob implements CrawlJob {
 		} catch (InterruptedException e1) {
 		}
 
+		//Loved Tracks
+		
 		Collection<Track> lovedTracks = User.getLovedTracks(userID, API_KEY);
 		lastResult = Caller.getInstance().getLastResult();
 		
-		Set<String> loved = new HashSet<String>();
+		ArrayList<String> loved = new ArrayList<String>();
 		if (lastResult.isSuccessful()) {
 			allFailed = false;
 			
 			for (Track t : lovedTracks) {
-				String artist;
-				try {
-					artist = unescape(t.getArtist());
-					String songName = unescape(t.getName());
-					
-					loved.add(createSongPair(artist, songName));
-				} catch (UnsupportedEncodingException e) {
-				}
+				String url = t.getUrl().replaceAll("www\\.last\\.fm", "");
+				loved.add(url);
 			}
 			
 		} else {
 			LOG.warn("Unable to collect loved tracks for user " + userID);
 		}
+		
+		//Artists Listened
+		
+		Collection<LastFMArtistDAO> artists = new HashSet<LastFMArtistDAO>();
+		try {
+			artists = discoverArtists();
+			allFailed = false;
+		} catch (Exception ioe) {
+			LOG.warn("Unable to collected artist data for user " + userID, ioe);
+		}
+		
+		//Tags
 		
 		Collection<String> topTags = new HashSet<String>();
 		lastResult = Caller.getInstance().getLastResult();
@@ -108,16 +124,16 @@ public class LastFMApiCrawlJob implements CrawlJob {
 			LOG.warn("Unable to collect tags for user " + userID);
 		}
 		
-		Collection<LastFMTagDAO> discoverTagDAO = new HashSet<LastFMTagDAO>();
+		Collection<LastFMTagDAO> discoverTagDAO = new ArrayList<LastFMTagDAO>();
 		try {
 			discoverTagDAO = discoverTagDAO(topTags);
-		} catch (IOException ioe) {
+			allFailed = false;
+		} catch (Exception ioe) {
 			LOG.warn("Unable to collected specific tag data for user " + userID, ioe);
 		}
 		
 		if (!allFailed) {
-			LastFMUserDAO lfmu = new LastFMUserDAO(userID, friendNames, loved, discoverTagDAO);
-			LOG.info("Done collecting user: " + userID);
+			LastFMUserDAO lfmu = new LastFMUserDAO(userID, friendNames, artists, loved, discoverTagDAO);
 			e.evaluteAndSave(userID, lfmu);
 		} else {
 			LOG.warn("Unable to collect user: " + userID);
@@ -125,23 +141,19 @@ public class LastFMApiCrawlJob implements CrawlJob {
 		}
 	}
 
-	private String createSongPair(String artist, String songName) {
-		return artist + " - " + songName;
-	}
-
-	private Collection<String> discoverArtists() throws IOException {
-		Set<String> rv = new HashSet<String>();
+	private Collection<LastFMArtistDAO> discoverArtists() throws IOException {
+		ArrayList<LastFMArtistDAO> rv = new ArrayList<LastFMArtistDAO>();
 		
 		int pNum = 1;
+		int limit = 1;
 		boolean continueCollecting = true;
-		while (continueCollecting) {
-			int previousSize = rv.size();
+		do {
 			
-			String u = "http://www.last.fm/user/"+ URLEncoder.encode(userID, "UTF8") +"/library?page=" + pNum + "&sortOrder=desc&sortBy=plays";
+			String u = getPlaylistURL(pNum);
 			URL url = new URL(u);
 			
 			URLConnection connection = url.openConnection();
-			connection.setRequestProperty("User-Agent", "Research-Crawler-APIDEVKEY-c86a6f99618d3dbfcf167366be991f3b");
+			connection.setRequestProperty(USER_AGENT, USER_AGENT_VALUE);
 			
 			connection.connect();
 			
@@ -150,15 +162,19 @@ public class LastFMApiCrawlJob implements CrawlJob {
 				in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 				String inputLine;
 				while ((inputLine = in.readLine()) != null) {
-					Matcher artistMatcher = ARTIST_PATTERN_FOR_TAG.matcher(inputLine);
-					Matcher songMatcher = SONG_PATTERN_FOR_TAG.matcher(inputLine);
-					Matcher songPicMatcher = SONG_WITH_PIC_PATTERN_FOR_TAG.matcher(inputLine);
+					Matcher artistMatcher = ARTIST_PATTERN_FOR_PLAYS.matcher(inputLine);
+					
+					if (limit == 1) {
+						Matcher limitMatcher = NUM_PAGES_FOR_PLAYS.matcher(inputLine);
+						if (limitMatcher.matches()) {
+							limit = Integer.parseInt(limitMatcher.group(2));
+						}
+					}
 					
 					if (artistMatcher.matches()) {
-						String aux = artistMatcher.group(2);
-						String artist = unescape(aux.substring(0, aux.length() - 2));
-						
-						rv.add(artist);
+						String artistUrl = artistMatcher.group(2);
+						Integer playCount = Integer.parseInt(artistMatcher.group(6).replace(",", ""));
+						rv.add(new LastFMArtistDAO(artistUrl, playCount));
 					}
 				}
 			} finally {
@@ -169,32 +185,42 @@ public class LastFMApiCrawlJob implements CrawlJob {
 					}
 			}
 			
-			int newSize = rv.size();
-			continueCollecting = previousSize != newSize;
 			pNum++;
-		}
+			continueCollecting = pNum <= limit;
+		} while (continueCollecting);
 		
 		return rv;
 	}
+
+	private String getPlaylistURL(int pNum) throws UnsupportedEncodingException {
+		StringBuffer playListURL = new StringBuffer("http://www.last.fm/user/");
+		playListURL.append(URLEncoder.encode(userID, "UTF8"));
+		playListURL.append("/library?sortOrder=desc&sortBy=plays");
+		playListURL.append("&page=");
+		playListURL.append(pNum);
+		
+		return playListURL.toString();
+	}
 	
 	private Collection<LastFMTagDAO> discoverTagDAO(Collection<String> topTags) throws IOException {
-		Set<LastFMTagDAO> rv = new HashSet<LastFMTagDAO>();
+		ArrayList<LastFMTagDAO> rv = new ArrayList<LastFMTagDAO>();
 		
 		for (String tag : topTags) {
 			boolean continueCollecting = true;
 			
 			Set<String> artists = new HashSet<String>();
 			Set<String> songs = new HashSet<String>();
+			Set<String> albums = new HashSet<String>();
 			
 			int pNum = 1;
 			while (continueCollecting) {
-				int previousSize = artists.size() + songs.size();
+				int previousSize = artists.size() + songs.size() + albums.size();
 				
-				String u = "http://www.last.fm/user/"+ URLEncoder.encode(userID, "UTF8") +"/library/tags?tag="+ URLEncoder.encode(tag, "UTF8") +"&page="+ pNum;
+				String u = getTagURL(pNum, tag);
 				URL url = new URL(u);
 				
 				URLConnection connection = url.openConnection();
-				connection.setRequestProperty("User-Agent", "Research-Crawler-APIDEVKEY-c86a6f99618d3dbfcf167366be991f3b");
+				connection.setRequestProperty(USER_AGENT, USER_AGENT_VALUE);
 				
 				connection.connect();
 				
@@ -205,25 +231,16 @@ public class LastFMApiCrawlJob implements CrawlJob {
 					while ((inputLine = in.readLine()) != null) {
 						Matcher artistMatcher = ARTIST_PATTERN_FOR_TAG.matcher(inputLine);
 						Matcher songMatcher = SONG_PATTERN_FOR_TAG.matcher(inputLine);
-						Matcher songPicMatcher = SONG_WITH_PIC_PATTERN_FOR_TAG.matcher(inputLine);
+						Matcher albumMatcher = ALBUM_PATTERN_FOR_TAG.matcher(inputLine);
 						
 						if (songMatcher.matches()) {
-							String artist = unescape(songMatcher.group(4));
-							String songTitle = unescape(songMatcher.group(6));
-							String artistSong = createSongPair(artist, songTitle);
-							
-							songs.add(artistSong);
-						} else if (songPicMatcher.matches()) {
-							String artist = unescape(songPicMatcher.group(2));
-							String songTitle = unescape(songPicMatcher.group(4));
-							
-							String artistSong = createSongPair(artist, songTitle);
-							
-							songs.add(artistSong);
+							String song = songMatcher.group(4);
+							songs.add(song);
+						} else if (albumMatcher.matches()) {
+							String album = albumMatcher.group(2);
+							albums.add(album);
 						} else if (artistMatcher.matches()) {
-							String aux = artistMatcher.group(2);
-							String artist = unescape(aux.substring(0, aux.length() - 2));
-							
+							String artist = artistMatcher.group(2);
 							artists.add(artist);
 						}
 					}
@@ -235,19 +252,26 @@ public class LastFMApiCrawlJob implements CrawlJob {
 						}
 				}
 				
-				int newSize = artists.size() + songs.size();
+				int newSize = artists.size() + songs.size() + albums.size();
 				continueCollecting = previousSize != newSize;
 				pNum++;
 			}
 			
-			rv.add(new LastFMTagDAO(userID, tag, artists, songs));
+			rv.add(new LastFMTagDAO(tag, artists, albums, songs));
 		}
 		
 		return rv;
 	}
 
-	public static String unescape(String s) throws UnsupportedEncodingException {
-		return StringEscapeUtils.unescapeHtml(URLDecoder.decode(s, "UTF-8"));
+	private String getTagURL(int pNum, String tag) throws UnsupportedEncodingException {
+		StringBuffer tagURL = new StringBuffer("http://www.last.fm/user/");
+		tagURL.append(URLEncoder.encode(userID, "UTF8"));
+		tagURL.append("/library/tags?tag=");
+		tagURL.append(URLEncoder.encode(tag, "UTF8"));
+		tagURL.append("&page=");
+		tagURL.append(pNum);
+		
+		return tagURL.toString();
 	}
 	
 	@Override
@@ -260,50 +284,6 @@ public class LastFMApiCrawlJob implements CrawlJob {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		String userID = "tawhaki";
-		
-		Set<String> rv = new HashSet<String>();
-		
-		int pNum = 1;
-		boolean continueCollecting = true;
-		while (continueCollecting) {
-			int previousSize = rv.size();
-			
-			String u = "http://www.last.fm/user/"+ URLEncoder.encode(userID, "UTF8") +"/library?page=" + pNum + "&sortOrder=desc&sortBy=plays";
-			URL url = new URL(u);
-			
-			URLConnection connection = url.openConnection();
-			connection.setRequestProperty("User-Agent", "Research-Crawler-APIDEVKEY-c86a6f99618d3dbfcf167366be991f3b");
-			
-			connection.connect();
-			
-			BufferedReader in = null;
-			try {
-				in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-				String inputLine;
-				while ((inputLine = in.readLine()) != null) {
-					Matcher artistMatcher = ARTIST_PATTERN_FOR_PLAYS.matcher(inputLine);
-					
-					if (artistMatcher.matches()) {
-						String aux = artistMatcher.group(2);
-						String artist = unescape(aux.substring(0, aux.length() - 2));
-						
-						rv.add(artist);
-						
-						System.out.println(artist);
-					}
-				}
-			} finally {
-				if (in != null)
-					try {
-						in.close();
-					} catch (IOException e) {
-					}
-			}
-			
-			int newSize = rv.size();
-			continueCollecting = previousSize != newSize;
-			pNum++;
-		}
+		new LastFMApiCrawlJob("tawhaki", 1).collect();
 	}
 }

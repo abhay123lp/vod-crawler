@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Iterator;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
@@ -52,6 +52,7 @@ public class YoutubeVideoAPIEvaluator extends AbstractEvaluator<String, YoutubeV
 			Map<String, Integer> incs = new HashMap<String, Integer>();
 			incs.put(COL, 1);
 			sp.notify(new CompositeStatEvent(incs));
+            LOG.info("Collected " + collectID);
 		} catch (IOException e) {
 			error(collectID, new UnableToCollectException(e.getMessage()));
 		}
@@ -60,13 +61,17 @@ public class YoutubeVideoAPIEvaluator extends AbstractEvaluator<String, YoutubeV
 	@Override
 	public Collection<CrawlJob> getInitialCrawl() {
 		List<CrawlJob> rv = new ArrayList<CrawlJob>();
-		for (String v : initialVideos) {
+        Iterator<String> it = initialVideos.iterator();
+        while(it.hasNext()) {
+            String v = it.next();
 			rv.add(new YoutubeAPIVideoCrawlJob(v));
-		}
+            it.remove();
+        }
 		
 		Map<String, Integer> incs = new HashMap<String, Integer>();
-		incs.put(DIS, initialVideos.size());
+		incs.put(DIS, rv.size());
 		sp.notify(new CompositeStatEvent(incs));
+        LOG.info("Dispached " + rv.size() + " videos");
 		return rv;
 	}
 
