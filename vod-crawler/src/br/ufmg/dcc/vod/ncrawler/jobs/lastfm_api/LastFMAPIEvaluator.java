@@ -1,6 +1,8 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -10,6 +12,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
+import br.ufmg.dcc.vod.ncrawler.common.MyXStreamer;
 import br.ufmg.dcc.vod.ncrawler.evaluator.AbstractEvaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 import br.ufmg.dcc.vod.ncrawler.stats.CompositeStatEvent;
@@ -48,13 +51,40 @@ public class LastFMAPIEvaluator extends AbstractEvaluator<String, LastFMUserDAO>
 
 	@Override
 	public void evaluteAndSave(String collectID, LastFMUserDAO collectContent) {
-		
+		try {
+			MyXStreamer.getInstance().toXML(collectContent, new File(saveFolder.getAbsolutePath() + File.separator + collectID));
+			Map<String, Integer> incs = new HashMap<String, Integer>();
+			incs.put(COL, 1);
+			sp.notify(new CompositeStatEvent(incs));
+			
+			ArrayList<CrawlJob> jobs = createJobs(collectContent.getFriendNames());
+			for (CrawlJob j : jobs) {
+				dispatch(j);
+			}
+		} catch (IOException e) {
+			error(collectID, new UnableToCollectException(e.getMessage()));
+		}
+	}
+
+	private ArrayList<CrawlJob> createJobs(Collection<String> users) {
+		ArrayList<CrawlJob> rv = new ArrayList<CrawlJob>();
+		Map<String, Integer> incs = new HashMap<String, Integer>();
+		incs.put(DIS, 0);
+		for (String u : users) {
+			if (!tracker.contains(u)) {
+				LOG.info("Found user: " + u);
+				rv.add(new LastFMApiCrawlJob(u, sleepTime));
+				tracker.add(u);
+				incs.put(DIS, incs.get(DIS) + 1);
+			}
+		}
+		sp.notify(new CompositeStatEvent(incs));
+		return rv;
 	}
 	
 	@Override
 	public Collection<CrawlJob> getInitialCrawl() {
-		// TODO Auto-generated method stub
-		return null;
+		return createJobs(seeds);
 	}
 
 	@Override

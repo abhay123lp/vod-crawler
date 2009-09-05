@@ -8,7 +8,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api.LastFMUserDAO;
+import br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api.LastFMArtistDAO;
+import br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api.LastFMTagDAO;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.reflection.CGLIBEnhancedConverter;
@@ -28,6 +29,8 @@ public class MyXStreamer {
 		};
 		xstream.registerConverter(new CGLIBEnhancedConverter(xstream.getMapper(), xstream.getReflectionProvider()));
 		this.stream = xstream;
+		this.stream.alias("lf-tag", LastFMTagDAO.class);
+		this.stream.alias("lf-artist", LastFMArtistDAO.class);
 	}
 	
 	public static MyXStreamer getInstance() {
@@ -45,16 +48,6 @@ public class MyXStreamer {
 		}
 	}
 
-	public Object fromXML(File file) throws IOException {
-		BufferedReader r = null;
-		try {
-			r = new BufferedReader(new FileReader(file));
-			return this.stream.fromXML(r);
-		} finally {
-			if (r != null) r.close();
-		}
-	}
-
 	public void toXML(Object o, FileDescriptor out) throws IOException {
 		BufferedWriter w = null;
 		try {
@@ -62,6 +55,16 @@ public class MyXStreamer {
 			this.stream.toXML(o, w);
 		} finally {
 			if (w != null) w.close();
+		}
+	}
+	
+	public Object fromXML(File file) throws IOException {
+		BufferedReader r = null;
+		try {
+			r = new BufferedReader(new FileReader(file));
+			return this.stream.fromXML(r);
+		} finally {
+			if (r != null) r.close();
 		}
 	}
 }
