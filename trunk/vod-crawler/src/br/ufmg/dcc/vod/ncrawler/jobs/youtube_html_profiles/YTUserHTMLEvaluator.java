@@ -28,10 +28,11 @@ import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
-import br.ufmg.dcc.vod.ncrawler.evaluator.AbstractEvaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.HTMLType;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.URLSaveCrawlJob;
+import br.ufmg.dcc.vod.ncrawler.processor.Processor;
 import br.ufmg.dcc.vod.ncrawler.stats.CompositeStatEvent;
 import br.ufmg.dcc.vod.ncrawler.stats.Display;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
@@ -62,8 +63,10 @@ import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
  * 
  * Procurar por next em cada página!!!!!
  * <a href="/profile?user=USER&amp;view=QUE_BUSCO&amp;start=##">Next</a>
+ * 
+ * CODIGO possivelmente quebrado!!
  */
-public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType>, Pair<InputStream, File>> {
+public class YTUserHTMLEvaluator implements Evaluator<Pair<String, HTMLType>, Pair<InputStream, File>> {
 
 	private static final Logger LOG = Logger.getLogger(YTUserHTMLEvaluator.class);
 	
@@ -100,6 +103,8 @@ public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType
 	private Tracker<String> crawledVideos;
 	
 	private StatsPrinter sp;
+
+	private Processor processor;
 
 	public YTUserHTMLEvaluator(File videosFolder, File usersFolder, List<String> initialUsers, HttpClient client) {
 		this(videosFolder, usersFolder, initialUsers, new LinkedList<String>(), client);
@@ -335,5 +340,10 @@ public class YTUserHTMLEvaluator extends AbstractEvaluator<Pair<String, HTMLType
 		incs.put(ERR_URLS, 1);
 		sp.notify(new CompositeStatEvent(incs));
 		LOG.error("Error collecting: " + collectID.first, e);
+	}
+
+	@Override
+	public void setProcessor(Processor processor) {
+		this.processor = processor;
 	}
 }
