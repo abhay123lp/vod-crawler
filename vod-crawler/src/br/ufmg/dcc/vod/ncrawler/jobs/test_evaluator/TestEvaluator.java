@@ -8,15 +8,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.evaluator.AbstractEvaluator;
+import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
+import br.ufmg.dcc.vod.ncrawler.processor.Processor;
 import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
-public class TestEvaluator extends AbstractEvaluator<Integer, int[]> {
+public class TestEvaluator implements Evaluator<Integer, int[]> {
 
 	private final Map<Integer, int[]> crawled;
 	private final RandomizedSyncGraph g;
+	private Processor processor;
 
 	public TestEvaluator(RandomizedSyncGraph g) {
 		this.g = g;
@@ -49,8 +51,13 @@ public class TestEvaluator extends AbstractEvaluator<Integer, int[]> {
 		this.crawled.put(collectID, collectContent);
 		for (int i : collectContent) {
 			if (!crawled.containsKey(i)) {
-				super.dispatch(new TestCrawlJob(i, g));
+				processor.dispatch(new TestCrawlJob(i, g));
 			}
 		}		
+	}
+
+	@Override
+	public void setProcessor(Processor processor) {
+		this.processor = processor;
 	}
 }
