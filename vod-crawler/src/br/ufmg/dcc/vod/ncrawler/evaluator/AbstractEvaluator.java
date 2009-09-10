@@ -46,7 +46,7 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 			LOG.info("Collected " + collectID);
 
 			if (next != null) {
-				Collection<CrawlJob> dispatch = dispatch(next);
+				Collection<CrawlJob> dispatch = createJobs(next);
 				for (CrawlJob j : dispatch) {
 					this.processor.dispatch(j);
 				}
@@ -70,14 +70,13 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 		this.tracker = factory.createTracker();
 	}
 	
-	public Collection<CrawlJob> dispatch(Collection<String> next) {
+	public Collection<CrawlJob> createJobs(Collection<String> next) {
 		Collection<CrawlJob> rv = new ArrayList<CrawlJob>();
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		incs.put(DIS, 0);
 		for (String n : next) {
 			if (!tracker.contains(n)) {
 				CrawlJob createJob = createJob(n);
-				this.processor.dispatch(createJob);
 				tracker.add(n);
 				incs.put(DIS, incs.get(DIS) + 1);
 				rv.add(createJob);
@@ -91,7 +90,7 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 	public final Collection<CrawlJob> getInitialCrawl() {
 		Collection<String> seeds = getSeeds();
 		if (seeds != null) {
-			Collection<CrawlJob> dispatch = dispatch(seeds);
+			Collection<CrawlJob> dispatch = createJobs(seeds);
 			return dispatch;
 		} else {
 			return new ArrayList<CrawlJob>();
