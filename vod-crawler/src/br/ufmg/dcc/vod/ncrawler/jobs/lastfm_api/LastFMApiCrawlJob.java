@@ -9,7 +9,9 @@ import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,6 +53,11 @@ public class LastFMApiCrawlJob implements CrawlJob {
     private static final Pattern ARTIST_PATTERN_FOR_PLAYS = Pattern.compile("(\\s+<a href=\")(/music/.*?)(\")(\"*.*?\"*)(><span class=\"pictureFrame\"><span class=\"image\">.*class=\"plays\" rel=\"nofollow\">\\()(.*)(\\&nbsp;.*)");
     private static final Pattern NUM_PAGES_FOR_PLAYS = Pattern.compile("(\\s+Page <span class=\"pagenumber\">\\d+</span> of )(\\d+)");
     
+    //Patterns for user data
+    private static final Pattern BASIC_INFO = Pattern.compile("(\\s+<p class=\"userInfo adr\"><strong class=\"fn\">)(.*?)(</strong>)(.*?)(<span class=\"country-name\">)(.*?)(</span>.*?<small class=\"userLastseen\">\\s*Last seen:\\s*)(.*)(</small></p>.*)");
+    private static final Pattern ACCOUNT_AGE = Pattern.compile("(.*?<small>since )(.*)(</small>.*)");
+
+    
 	private final String userID;
 	private final long sleepTime;
 	private Evaluator e;
@@ -64,9 +71,30 @@ public class LastFMApiCrawlJob implements CrawlJob {
 	public void collect() {
 		LOG.info("Collecting user: " + userID);
 		boolean allFailed = true;
+
+		//Basic Data
+		String fullName = "";
+		int age = -1;
+		String gender = "";
+		String country = "";
+		String lastSeen = "";
+		String accountAge = "";
+		
+		try {
+			List basicData = getBasicData();
+			fullName = (String) basicData.get(0);
+			age = (Integer) basicData.get(1);
+			gender = (String) basicData.get(2);
+			country = (String) basicData.get(3);
+			lastSeen = (String) basicData.get(4);
+			accountAge = (String) basicData.get(5);
+			
+			allFailed = false;
+		} catch (Exception ioe) {
+			LOG.warn("Unable to collect basic info for user " + userID, ioe);
+		}
 		
 		//Friends
-		
 		Collection<User> friends = User.getFriends(userID, false, LIMIT, API_KEY);
 		Result lastResult = Caller.getInstance().getLastResult();
 
@@ -133,12 +161,71 @@ public class LastFMApiCrawlJob implements CrawlJob {
 		}
 		
 		if (!allFailed) {
-			LastFMUserDAO lfmu = new LastFMUserDAO(userID, friendNames, artists, loved, discoverTagDAO);
+			LastFMUserDAO lfmu = new LastFMUserDAO(userID, friendNames, artists, loved, discoverTagDAO,
+					fullName, age, gender, country, lastSeen, accountAge, new Date().toString());
+			
+			LOG.info("Info collected user: " + userID);
 			e.evaluteAndSave(userID, lfmu);
 		} else {
 			LOG.warn("Unable to collect user: " + userID);
 			e.error(userID, new UnableToCollectException("Unable to collect user"));
 		}
+	}
+
+	private List getBasicData() throws IOException {
+		List rv = new ArrayList();
+		
+		String u = getUserURL();
+		URL url = new URL(u);
+		
+		URLConnection connection = url.openConnection();
+		connection.setRequestProperty(USER_AGENT, USER_AGENT_VALUE);
+		
+		connection.connect();
+		
+		BufferedReader in = null;
+		try {
+			in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+			String inputLine;
+			while ((inputLine = in.readLine()) != null) {
+				Matcher infoMatcher = BASIC_INFO.matcher(inputLine);
+				Matcher ageMatcher = ACCOUNT_AGE.matcher(inputLine);
+				
+				if (infoMatcher.matches()) {
+					String fullName = (infoMatcher.group(2));
+					String[] split = infoMatcher.group(4).split(",");
+					int age = Integer.parseInt(split[1].trim());
+					String gender = split[2].trim();
+					String country = (infoMatcher.group(6));
+					String lastSeen = (infoMatcher.group(8));
+					
+					rv.add(fullName);
+					rv.add(age);
+					rv.add(gender);
+					rv.add(country);
+					rv.add(lastSeen);
+				}
+				
+				if (ageMatcher.matches()) {
+					String accountAge = ageMatcher.group(2);
+					rv.add(accountAge);
+				}
+			}
+		} finally {
+			if (in != null)
+				try {
+					in.close();
+				} catch (IOException e) {
+				}
+		}
+		
+		return rv;
+	}
+
+	private String getUserURL() throws UnsupportedEncodingException {
+		StringBuffer userURL = new StringBuffer("http://www.last.fm/user/");
+		userURL.append(URLEncoder.encode(userID, "UTF8"));
+		return userURL.toString();
 	}
 
 	private Collection<LastFMArtistDAO> discoverArtists() throws IOException {

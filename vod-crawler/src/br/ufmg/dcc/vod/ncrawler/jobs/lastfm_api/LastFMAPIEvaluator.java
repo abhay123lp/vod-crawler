@@ -61,6 +61,7 @@ public class LastFMAPIEvaluator extends AbstractEvaluator<String, LastFMUserDAO>
 			for (CrawlJob j : jobs) {
 				dispatch(j);
 			}
+			LOG.error("Collected: " + collectID);
 		} catch (IOException e) {
 			error(collectID, new UnableToCollectException(e.getMessage()));
 		}
