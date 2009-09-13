@@ -4,11 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import br.ufmg.dcc.vod.ncrawler.evaluator.EvaluatorFactory;
-import br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api.LFMApiFactory;
-import br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_collector.YTApiFactory;
-import br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_video_response.YoutubeResponseFactory;
-import br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_videos.YTVideoApiFactory;
-import br.ufmg.dcc.vod.ncrawler.jobs.youtube_html_profiles.YTHtmlFactory;
+import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.user_apihtml.LFMApiFactory;
+import br.ufmg.dcc.vod.ncrawler.jobs.youtube.user_api.YTApiFactory;
+import br.ufmg.dcc.vod.ncrawler.jobs.youtube.video_api.YTVideoApiFactory;
+import br.ufmg.dcc.vod.ncrawler.jobs.youtube.videoresp_api.YoutubeResponseFactory;
 
 public class CrawlerPool {
 
@@ -16,7 +15,6 @@ public class CrawlerPool {
 	static {
 		crawlers.put("YTAPI", new YTApiFactory());
 		crawlers.put("YTVIDAPI", new YTVideoApiFactory());
-		crawlers.put("YTHTML", new YTHtmlFactory());
 		crawlers.put("LFM", new LFMApiFactory());
 		crawlers.put("YOUTUBE_RESPONSE", new YoutubeResponseFactory());
 	}

@@ -8,8 +8,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api.LastFMArtistDAO;
-import br.ufmg.dcc.vod.ncrawler.jobs.lastfm_api.LastFMTagDAO;
+import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.user_apihtml.LastFMArtistDAO;
+import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.user_apihtml.LastFMTagDAO;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.reflection.CGLIBEnhancedConverter;
