@@ -30,4 +30,9 @@ public class TestCrawlJob implements CrawlJob {
 	public int vertex() {
 		return vertex;
 	}
+
+	@Override
+	public String getID() {
+		return null;
+	}
 }

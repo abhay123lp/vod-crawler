@@ -209,7 +209,8 @@ public class YoutubeUserAPICrawlJob implements CrawlJob {
 		this.e = e;
 	}
 
-	public String getUserID() {
+	@Override
+	public String getID() {
 		return userID;
 	}
 }

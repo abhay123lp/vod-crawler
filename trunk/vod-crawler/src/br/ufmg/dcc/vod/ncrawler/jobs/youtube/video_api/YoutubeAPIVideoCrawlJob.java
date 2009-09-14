@@ -10,7 +10,6 @@ import org.apache.log4j.Logger;
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
-import br.ufmg.dcc.vod.ncrawler.jobs.youtube.user_api.YoutubeAPIEvaluator;
 
 import com.google.gdata.client.youtube.YouTubeService;
 import com.google.gdata.data.extensions.Rating;

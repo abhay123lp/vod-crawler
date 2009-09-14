@@ -15,5 +15,7 @@ public interface CrawlJob extends Serializable {
 	public void collect();
 
 	public void setEvaluator(Evaluator e);
+
+	public String getID();
 	
 }
