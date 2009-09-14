@@ -366,11 +366,8 @@ public class LastFMApiCrawlJob implements CrawlJob {
 		this.e = e;
 	}
 
-	public String getUserID() {
+	@Override
+	public String getID() {
 		return userID;
-	}
-	
-	public static void main(String[] args) throws Exception {
-		new LastFMApiCrawlJob("tawhaki", 1).collect();
 	}
 }

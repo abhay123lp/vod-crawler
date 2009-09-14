@@ -3,24 +3,26 @@ package br.ufmg.dcc.vod.ncrawler.jobs.youtube.user_api;
 import java.io.File;
 import java.util.List;
 
+import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.EvaluatorFactory;
+import br.ufmg.dcc.vod.ncrawler.jobs.generic.CrawlJobStringSerializer;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 
-public class YTApiFactory implements EvaluatorFactory<String, YoutubeUserDAO, YoutubeUserAPICrawlJob> {
+public class YTApiFactory implements EvaluatorFactory<String, YoutubeUserDAO, CrawlJob> {
 
 	private YoutubeAPIEvaluator e;
-	private YoutubeUserApiSave serializer;
+	private CrawlJobStringSerializer serializer;
 
 	@Override
-	public Serializer<YoutubeUserAPICrawlJob> getSerializer() {
+	public Serializer<CrawlJob> getSerializer() {
 		return serializer;
 	}
 
 	@Override
 	public void initiate(int nThreads, File saveFolder, long sleepTime, List<String> seeds) {
 		this.e = new YoutubeAPIEvaluator(seeds, saveFolder, sleepTime);
-		this.serializer = new YoutubeUserApiSave(sleepTime);
+		this.serializer = new CrawlJobStringSerializer(e);
 		
 		System.setProperty("http.keepAlive", "true");
 		System.setProperty("http.maxConnections", ""+nThreads);

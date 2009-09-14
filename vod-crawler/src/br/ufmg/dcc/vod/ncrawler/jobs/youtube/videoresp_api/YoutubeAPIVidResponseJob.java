@@ -115,7 +115,8 @@ public class YoutubeAPIVidResponseJob implements CrawlJob {
 		this.e = e;
 	}
 
-	public String getVideoID() {
+	@Override
+	public String getID() {
 		return videoID;
 	}
 }

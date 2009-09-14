@@ -3,14 +3,16 @@ package br.ufmg.dcc.vod.ncrawler.jobs.lastfm.user_apihtml;
 import java.io.File;
 import java.util.List;
 
+import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.EvaluatorFactory;
+import br.ufmg.dcc.vod.ncrawler.jobs.generic.CrawlJobStringSerializer;
 import br.ufmg.dcc.vod.ncrawler.queue.Serializer;
 
-public class LFMApiFactory implements EvaluatorFactory<String, LastFMUserDAO, LastFMApiCrawlJob> {
+public class LFMApiFactory implements EvaluatorFactory<String, LastFMUserDAO, CrawlJob> {
 
 	private LastFMAPIEvaluator e;
-	private LastFMApiSave serializer;
+	private CrawlJobStringSerializer serializer;
 
 	@Override
 	public Evaluator<String, LastFMUserDAO> getEvaluator() {
@@ -18,7 +20,7 @@ public class LFMApiFactory implements EvaluatorFactory<String, LastFMUserDAO, La
 	}
 
 	@Override
-	public Serializer<LastFMApiCrawlJob> getSerializer() {
+	public Serializer<CrawlJob> getSerializer() {
 		return serializer;
 	}
 
@@ -26,7 +28,7 @@ public class LFMApiFactory implements EvaluatorFactory<String, LastFMUserDAO, La
 	public void initiate(int threads, File saveFolder, long sleepTime,
 			List<String> seeds) {
 		this.e = new LastFMAPIEvaluator(seeds, saveFolder, sleepTime);
-		this.serializer = new LastFMApiSave(sleepTime);
+		this.serializer = new CrawlJobStringSerializer(e);
 
 		System.setProperty("http.keepAlive", "true");
 		System.setProperty("http.maxConnections", ""+threads);

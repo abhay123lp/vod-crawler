@@ -7,7 +7,7 @@ import java.util.Set;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.MyXStreamer;
-import br.ufmg.dcc.vod.ncrawler.evaluator.AbstractEvaluator;
+import br.ufmg.dcc.vod.ncrawler.jobs.generic.AbstractEvaluator;
 
 public class YoutubeAPIEvaluator extends AbstractEvaluator<String, YoutubeUserDAO> {
 
