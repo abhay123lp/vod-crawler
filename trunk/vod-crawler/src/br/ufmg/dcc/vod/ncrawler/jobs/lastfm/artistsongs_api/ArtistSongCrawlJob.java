@@ -1,5 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.lastfm.artistsongs_api;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
@@ -8,6 +9,7 @@ import net.roarsoftware.lastfm.Album;
 import net.roarsoftware.lastfm.Artist;
 import net.roarsoftware.lastfm.Caller;
 import net.roarsoftware.lastfm.Track;
+import net.roarsoftware.lastfm.cache.FileSystemCache;
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
@@ -27,6 +29,9 @@ public class ArtistSongCrawlJob implements CrawlJob {
 	
 	@Override
 	public void collect() {
+		File cacheDir = new File("/tmp/lastfm-cache/");
+		Caller.getInstance().setCache(new FileSystemCache(cacheDir));
+		
 		try {
 			Pair<Type, Pair<String, String>> parse = 
 				ArtistSongUtils.parseCollectString(toCollect);
