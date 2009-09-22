@@ -31,6 +31,7 @@ public class LastFMCategoryCrawlJob implements CrawlJob {
 		try {
 			URL u = new URL(getURL());
 			URLConnection c = u.openConnection();
+            c.setRequestProperty("User-Agent", "ResearchCrawler-contact-flaviov_at_dcc.ufmg.br");
 			c.connect();
 			InputStream content = c.getInputStream();
 			
@@ -56,6 +57,8 @@ public class LastFMCategoryCrawlJob implements CrawlJob {
 					break;
 				}
 			}
+//            System.out.println(u);
+//           System.out.println(rv);
 			eval.evaluteAndSave(id, rv);
 		} catch (IOException e) {
 			eval.error(id, new UnableToCollectException(e.getLocalizedMessage()));
@@ -82,7 +85,11 @@ public class LastFMCategoryCrawlJob implements CrawlJob {
 	public void setEvaluator(Evaluator e) {
 		this.eval = e;
 	}
-	
+
+    public static void main(String[] args) {
+        new LastFMCategoryCrawlJob("Radiohead").collect();    
+    }
+
 //	private static void extractAlbum(String albumUrl) throws IOException {
 //		Pattern p = Pattern.compile("\\d\\d\\d\\d");
 //		

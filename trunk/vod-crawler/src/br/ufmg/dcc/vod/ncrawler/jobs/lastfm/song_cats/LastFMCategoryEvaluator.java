@@ -32,9 +32,11 @@ public class LastFMCategoryEvaluator  extends AbstractEvaluator<String, List<Pai
 
 	@Override
 	public Collection<String> realEvaluateAndSave(String collectID, List<Pair<String, String>> collectContent) throws Exception {
-		String encode = ArtistSongUtils.encode(collectID);
-		File f = new File(outDir.getAbsoluteFile() + encode);
-		MyXStreamer.getInstance().toXML(collectContent, f);
+        if (!collectContent.isEmpty()) {
+    		String encode = ArtistSongUtils.encode(collectID);
+	    	File f = new File(outDir.getAbsoluteFile() + File.separator + encode);
+		    MyXStreamer.getInstance().toXML(collectContent, f);
+        }
 		
 		return null;
 	}
