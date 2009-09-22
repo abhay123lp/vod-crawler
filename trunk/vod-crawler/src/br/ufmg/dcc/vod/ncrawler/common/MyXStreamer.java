@@ -10,6 +10,7 @@ import java.io.IOException;
 
 import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.user_apihtml.LastFMArtistDAO;
 import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.user_apihtml.LastFMTagDAO;
+import br.ufmg.dcc.vod.ncrawler.jobs.youtube.video_api.YoutubeVideoDAO;
 
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.converters.reflection.CGLIBEnhancedConverter;
@@ -31,6 +32,8 @@ public class MyXStreamer {
 		this.stream = xstream;
 		this.stream.alias("lf-tag", LastFMTagDAO.class);
 		this.stream.alias("lf-artist", LastFMArtistDAO.class);
+		this.stream.alias("br.ufmg.dcc.vod.ncrawler.jobs.youtube_api_videos.YoutubeVideoDAO", 
+				YoutubeVideoDAO.class);
 	}
 	
 	public static MyXStreamer getInstance() {
