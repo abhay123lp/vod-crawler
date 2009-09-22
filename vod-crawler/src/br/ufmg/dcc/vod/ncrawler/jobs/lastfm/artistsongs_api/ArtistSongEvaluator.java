@@ -1,7 +1,6 @@
 package br.ufmg.dcc.vod.ncrawler.jobs.lastfm.artistsongs_api;
 
 import java.io.File;
-import java.net.URLEncoder;
 import java.util.Collection;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;

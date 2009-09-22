@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
 import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.artistsongs_api.GenericMusicDAO.Type;
@@ -93,5 +94,9 @@ public class ArtistSongUtils {
 				br.close();
 			}
 		}
+	}
+
+	public static String encode(String s) throws UnsupportedEncodingException {
+		return URLEncoder.encode(s, "UTF-8");
 	}
 }
