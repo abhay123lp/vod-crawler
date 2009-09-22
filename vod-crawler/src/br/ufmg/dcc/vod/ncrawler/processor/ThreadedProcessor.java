@@ -41,7 +41,8 @@ public class ThreadedProcessor extends AbstractProcessor {
 			t.collect();
 			
 			try {
-				Thread.sleep(sleepTimePerExecution);
+                if (sleepTimePerExecution > 0)
+    				Thread.sleep(sleepTimePerExecution);
 			} catch (InterruptedException e) {
 			}
 		}

@@ -80,7 +80,8 @@ public class DistributedProcessor extends AbstractProcessor {
 			}
 			
 			try {
-				Thread.sleep(sleepTimePerExecution);
+                if (sleepTimePerExecution > 0)
+    				Thread.sleep(sleepTimePerExecution);
 			} catch (InterruptedException e) {
 			}
 		}
