@@ -8,7 +8,7 @@ import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.MyXStreamer;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.AbstractEvaluator;
 
-public class VideoResponseEvaluator extends AbstractEvaluator<String, YoutubeVideoDAOWResponse> {
+public class VideoResponseEvaluator extends AbstractEvaluator<YoutubeVideoDAOWResponse> {
 
 	private final List<String> seeds;
 	private final File saveFolder;

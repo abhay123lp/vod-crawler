@@ -39,6 +39,11 @@ public class ThreadSafeEvaluator<I, C> implements Evaluator<I, C> {
 	}
 
 	@Override
+	public void ignore(Collection<I> ignore) {
+		e.ignore(ignore);
+	}
+	
+	@Override
 	public void evaluteAndSave(I collectID, C collectContent) {
 		try {
 			service.sendObjectToQueue(myHandle, new QueueObj(collectID, collectContent, false, null));

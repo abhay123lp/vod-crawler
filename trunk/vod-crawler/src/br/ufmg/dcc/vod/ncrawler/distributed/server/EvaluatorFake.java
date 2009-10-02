@@ -61,4 +61,9 @@ public class EvaluatorFake<I, C> implements Evaluator<I, C>, Serializable {
 	public void setTrackerFactory(TrackerFactory factory) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void ignore(Collection<I> ignore) {
+		throw new UnsupportedOperationException();
+	}
 }

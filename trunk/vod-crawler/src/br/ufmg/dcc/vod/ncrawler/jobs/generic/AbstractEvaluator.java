@@ -18,7 +18,7 @@ import br.ufmg.dcc.vod.ncrawler.stats.StatsPrinter;
 import br.ufmg.dcc.vod.ncrawler.tracker.Tracker;
 import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 
-public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
+public abstract class AbstractEvaluator<C> implements Evaluator<String, C> {
 
 	private static final Logger LOG = Logger.getLogger(AbstractEvaluator.class);
 	
@@ -31,7 +31,7 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 	private Tracker<String> tracker;
 
 	@Override
-	public final void error(I collectID, UnableToCollectException e) {
+	public final void error(String collectID, UnableToCollectException e) {
 		Map<String, Integer> incs = new HashMap<String, Integer>();
 		incs.put(ERR, 1);
 		sp.notify(new CompositeStatEvent(incs));
@@ -39,7 +39,7 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 	}
 
 	@Override
-	public final void evaluteAndSave(I collectID, C collectContent) {
+	public final void evaluteAndSave(String collectID, C collectContent) {
 		try {
 			Collection<String> next = realEvaluateAndSave(collectID, collectContent);
 			Map<String, Integer> incs = new HashMap<String, Integer>();
@@ -58,7 +58,7 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 		}
 	}
 	
-	public abstract Collection<String> realEvaluateAndSave(I collectID, C collectContent) throws Exception;
+	public abstract Collection<String> realEvaluateAndSave(String collectID, C collectContent) throws Exception;
 
 	public abstract CrawlJob createJob(String next);
 	
@@ -78,6 +78,8 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 		incs.put(DIS, 0);
 		for (String n : next) {
 			if (!tracker.contains(n)) {
+				LOG.info("Discovered new ID " + n);
+				
 				CrawlJob createJob = createJob(n);
 				tracker.add(n);
 				incs.put(DIS, incs.get(DIS) + 1);
@@ -118,5 +120,12 @@ public abstract class AbstractEvaluator<I,C> implements Evaluator<I, C> {
 			}
 			}
 		);
+	}
+	
+	@Override
+	public void ignore(Collection<String> ignore) {
+		for (String i : ignore) {
+			this.tracker.add(i);
+		}
 	}
 }

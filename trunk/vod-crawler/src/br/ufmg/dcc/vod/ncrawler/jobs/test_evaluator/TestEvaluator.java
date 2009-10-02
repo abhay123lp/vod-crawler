@@ -60,4 +60,8 @@ public class TestEvaluator implements Evaluator<Integer, int[]> {
 	public void setProcessor(Processor processor) {
 		this.processor = processor;
 	}
+
+	@Override
+	public void ignore(Collection<Integer> ignore) {
+	}
 }

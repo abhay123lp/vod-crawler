@@ -35,6 +35,7 @@ public class CollectClient {
 	private static final String CRAWLER = "c";
 	private static final String SERVER_FILE = "r";
 	private static final String PORT = "p";
+	private static final String IGNORE = "i";
 
 	@SuppressWarnings({ "static-access", "unchecked" })
 	public static void main(String[] args) {
@@ -88,6 +89,12 @@ public class CollectClient {
 		.withDescription("Log File")
 		.create(LOG_FILE);
 		
+		Option ignoreOpt = OptionBuilder.withArgName("ignore")
+		.hasArg()
+		.isRequired(false)
+		.withDescription("IDs to ignore")
+		.create(IGNORE);
+		
 		opts.addOption(crawlerToDispachOpt);
 		opts.addOption(serverFileOpts);
 		opts.addOption(portOpt);
@@ -96,6 +103,7 @@ public class CollectClient {
 		opts.addOption(workQueueFolderOpt);
 		opts.addOption(seedFileOpt);
 		opts.addOption(logFileOpt);
+		opts.addOption(ignoreOpt);
 		
 		try {
 			GnuParser parser = new GnuParser();
@@ -115,8 +123,16 @@ public class CollectClient {
 				throw new Exception("unknown crawler");
 			}
 			
-			if (saveFolder.exists() && (!saveFolder.isDirectory() || saveFolder.list().length != 0)) {
-				throw new Exception("save folder exists and is not empty");
+			//Testing ignore
+			Set ignoreIDs = null;
+			boolean ignore = cli.hasOption(IGNORE);
+			if (!ignore) {
+				if (saveFolder.exists() && (!saveFolder.isDirectory() || saveFolder.list().length != 0)) {
+					throw new Exception("save folder exists and is not empty");
+				}
+			} else {
+				File ignoreFile = new File(cli.getOptionValue(IGNORE));
+				ignoreIDs = FileUtil.readFileToSet(ignoreFile);
 			}
 			
 			if (workQueueFolder.exists() && (!workQueueFolder.isDirectory() || workQueueFolder.list().length != 0)) {
@@ -142,8 +158,10 @@ public class CollectClient {
 			Evaluator<?, ?> evaluator = crawlerFactory.getEvaluator();
 			evaluator.setTrackerFactory(new ThreadSafeTrackerFactory());
 			
-			Serializer<?> serializer = crawlerFactory.getSerializer();
+			if (ignoreIDs != null)
+				evaluator.ignore(ignoreIDs);
 			
+			Serializer<?> serializer = crawlerFactory.getSerializer();
 			
 			System.out.println("Initiating crawl");
 			System.out.println("\t crawler: " + crawlerName);
