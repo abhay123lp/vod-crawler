@@ -5,9 +5,9 @@ import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 public class CrawlJobStringSerializer extends
 	AbstractArraySerializer<CrawlJob>{
 
-	private final AbstractEvaluator<?, ?> e;
+	private final AbstractEvaluator<?> e;
 
-	public CrawlJobStringSerializer(AbstractEvaluator<?, ?> e) {
+	public CrawlJobStringSerializer(AbstractEvaluator<?> e) {
 		super(1);
 		this.e = e;
 	}

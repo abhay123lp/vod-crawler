@@ -10,6 +10,8 @@ import br.ufmg.dcc.vod.ncrawler.tracker.TrackerFactory;
 public interface Evaluator<I, C> {
 	
 	public void setTrackerFactory(TrackerFactory factory);
+	public void ignore(Collection<I> ignore);
+	
 	public void setStatsKeeper(StatsPrinter sp);
 	public void setProcessor(Processor processor);
 	

@@ -8,7 +8,7 @@ import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.MyXStreamer;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.AbstractEvaluator;
 
-public class LastFMAPIEvaluator extends AbstractEvaluator<String, LastFMUserDAO> {
+public class LastFMAPIEvaluator extends AbstractEvaluator<LastFMUserDAO> {
 
 	private final List<String> seeds;
 	private final File saveFolder;

@@ -9,7 +9,7 @@ import br.ufmg.dcc.vod.ncrawler.common.Pair;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.AbstractEvaluator;
 import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.artistsongs_api.GenericMusicDAO.Type;
 
-public class ArtistSongEvaluator extends AbstractEvaluator<String, GenericMusicDAO> {
+public class ArtistSongEvaluator extends AbstractEvaluator<GenericMusicDAO> {
 
 	private Collection<String> toCollect;
 	private File savePath;

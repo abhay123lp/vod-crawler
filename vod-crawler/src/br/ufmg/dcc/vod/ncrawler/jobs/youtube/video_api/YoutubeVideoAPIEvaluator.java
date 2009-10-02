@@ -7,7 +7,7 @@ import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.MyXStreamer;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.AbstractEvaluator;
 
-public class YoutubeVideoAPIEvaluator extends AbstractEvaluator<String, YoutubeVideoDAO> {
+public class YoutubeVideoAPIEvaluator extends AbstractEvaluator<YoutubeVideoDAO> {
 
 	private Collection<String> initialVideos;
 	private File savePath;

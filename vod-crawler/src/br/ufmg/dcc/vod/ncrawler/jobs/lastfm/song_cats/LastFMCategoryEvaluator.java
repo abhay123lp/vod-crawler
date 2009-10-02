@@ -10,7 +10,7 @@ import br.ufmg.dcc.vod.ncrawler.common.Pair;
 import br.ufmg.dcc.vod.ncrawler.jobs.generic.AbstractEvaluator;
 import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.artistsongs_api.ArtistSongUtils;
 
-public class LastFMCategoryEvaluator  extends AbstractEvaluator<String, List<Pair<String, String>>> {
+public class LastFMCategoryEvaluator  extends AbstractEvaluator<List<Pair<String, String>>> {
 
 	private final Collection<String> seeds;
 	private final File outDir;
