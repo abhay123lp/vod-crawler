@@ -23,9 +23,6 @@ public class YTApiFactory implements EvaluatorFactory<String, YoutubeUserDAO, Cr
 	public void initiate(int nThreads, File saveFolder, long sleepTime, List<String> seeds) {
 		this.e = new YoutubeAPIEvaluator(seeds, saveFolder, sleepTime);
 		this.serializer = new CrawlJobStringSerializer(e);
-		
-		System.setProperty("http.keepAlive", "true");
-		System.setProperty("http.maxConnections", ""+nThreads);
 	}
 
 	@Override

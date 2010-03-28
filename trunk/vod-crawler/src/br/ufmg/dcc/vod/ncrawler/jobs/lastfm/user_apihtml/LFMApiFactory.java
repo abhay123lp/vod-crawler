@@ -29,9 +29,6 @@ public class LFMApiFactory implements EvaluatorFactory<String, LastFMUserDAO, Cr
 			List<String> seeds) {
 		this.e = new LastFMAPIEvaluator(seeds, saveFolder, sleepTime);
 		this.serializer = new CrawlJobStringSerializer(e);
-
-		System.setProperty("http.keepAlive", "true");
-		System.setProperty("http.maxConnections", ""+threads);
 	}
 
 	@Override
