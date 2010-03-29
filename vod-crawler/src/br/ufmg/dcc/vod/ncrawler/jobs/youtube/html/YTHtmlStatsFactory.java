@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.zip.GZIPOutputStream;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.common.Pair;
@@ -44,14 +43,12 @@ public class YTHtmlStatsFactory implements EvaluatorFactory<String, Pair<byte[],
 		
 		
 		this.htmlFile = new BufferedOutputStream(
-				new GZIPOutputStream(
-						new FileOutputStream(
-								new File(saveFolder + File.separator + htmlFileName))));
+					new FileOutputStream(
+							new File(saveFolder + File.separator + htmlFileName)));
 		
 		this.statsFile = new BufferedOutputStream(
-				new GZIPOutputStream(
-						new FileOutputStream(
-								new File(saveFolder + File.separator + statsFileName))));
+					new FileOutputStream(
+							new File(saveFolder + File.separator + statsFileName)));
 		
 		this.eval = new YTHtmlAndStatsEvaluator(seeds, htmlFile, statsFile);
 		this.serial = new CrawlJobStringSerializer(this.eval);
