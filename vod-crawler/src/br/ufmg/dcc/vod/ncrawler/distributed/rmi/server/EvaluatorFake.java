@@ -1,11 +1,11 @@
-package br.ufmg.dcc.vod.ncrawler.distributed.server;
+package br.ufmg.dcc.vod.ncrawler.distributed.rmi.server;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.Collection;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.distributed.client.EvaluatorClient;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.EvaluatorClient;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 import br.ufmg.dcc.vod.ncrawler.processor.Processor;

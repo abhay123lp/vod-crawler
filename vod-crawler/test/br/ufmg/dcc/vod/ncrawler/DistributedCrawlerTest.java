@@ -14,10 +14,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import br.ufmg.dcc.vod.ncrawler.distributed.client.EvaluatorClientFactory;
-import br.ufmg.dcc.vod.ncrawler.distributed.client.EvaluatorClientImpl;
-import br.ufmg.dcc.vod.ncrawler.distributed.client.ServerID;
-import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutorFactory;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.EvaluatorClientFactory;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.EvaluatorClientImpl;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.ServerID;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.JobExecutorFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator.RandomizedSyncGraph;
 import br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator.TestEvaluator;
 import br.ufmg.dcc.vod.ncrawler.jobs.test_evaluator.TestSerializer;

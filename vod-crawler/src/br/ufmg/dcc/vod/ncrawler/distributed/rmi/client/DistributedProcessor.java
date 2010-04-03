@@ -1,4 +1,4 @@
-package br.ufmg.dcc.vod.ncrawler.distributed.client;
+package br.ufmg.dcc.vod.ncrawler.distributed.rmi.client;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,8 +13,8 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
-import br.ufmg.dcc.vod.ncrawler.distributed.server.EvaluatorFake;
-import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutor;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.EvaluatorFake;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.JobExecutor;
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.processor.AbstractProcessor;
 import br.ufmg.dcc.vod.ncrawler.queue.QueueProcessor;

@@ -1,8 +1,8 @@
-package br.ufmg.dcc.vod.ncrawler.distributed.client;
+package br.ufmg.dcc.vod.ncrawler.distributed.rmi.client;
 
 import java.rmi.RemoteException;
 
-import br.ufmg.dcc.vod.ncrawler.distributed.AbstractRMIFactory;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.AbstractRMIFactory;
 
 public class EvaluatorClientFactory<I, C> extends AbstractRMIFactory<EvaluatorClientImpl<I, C>> {
 

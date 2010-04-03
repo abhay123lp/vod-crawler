@@ -11,8 +11,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import br.ufmg.dcc.vod.ncrawler.distributed.client.ServerID;
-import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutor;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.ServerID;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.JobExecutor;
 
 public class CollectServerKiller {
 

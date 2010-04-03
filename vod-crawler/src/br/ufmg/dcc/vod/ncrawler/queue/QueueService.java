@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -120,7 +119,6 @@ public class QueueService {
 	 * @param h Handle identifying the queue
 	 * @param p QueueProcessor object which will process
 	 */
-	@SuppressWarnings("unchecked")
 	public <T> void startProcessor(QueueHandle h, QueueProcessor<T> p) {
 		if (!this.ids.containsKey(h)) {
 			throw new QueueServiceException("Unknown handle");
@@ -138,7 +136,6 @@ public class QueueService {
 	 * 
 	 * @throws InterruptedException 
 	 */
-	@SuppressWarnings("unchecked")
 	public <T> void sendObjectToQueue(QueueHandle h, T t) throws InterruptedException {
 		if (!this.ids.containsKey(h)) {
 			throw new QueueServiceException("Unknown handle");
@@ -164,10 +161,10 @@ public class QueueService {
 			synchronized (ids) {
 				someoneIsWorking = false;
 				
-				System.err.println("-- debug " + new Date());
-				for (MonitoredSyncQueue<?> m : ids.values()) {
-					System.err.println(m + " => " + m.size());
-				}
+				//System.err.println("-- debug " + new Date());
+				//for (MonitoredSyncQueue<?> m : ids.values()) {
+				//	System.err.println(m + " => " + m.size());
+				//}
 				
 				//Acquiring time stamps
 				int[] stamps = new int[ids.size()];
