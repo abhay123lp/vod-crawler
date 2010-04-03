@@ -11,6 +11,9 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.JobExecutor;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.JobExecutorFactory;
+
 public class JobExecutorFactoryTest {
 
 	@Test

@@ -1,4 +1,4 @@
-package br.ufmg.dcc.vod.ncrawler.distributed;
+package br.ufmg.dcc.vod.ncrawler.distributed.rmi;
 
 import java.rmi.AccessException;
 import java.rmi.AlreadyBoundException;

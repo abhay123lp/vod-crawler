@@ -1,14 +1,11 @@
-package br.ufmg.dcc.vod.ncrawler.distributed.client;
-
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
+package br.ufmg.dcc.vod.ncrawler.distributed.commune.client;
 
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.evaluator.Evaluator;
 import br.ufmg.dcc.vod.ncrawler.evaluator.UnableToCollectException;
 
-public class EvaluatorClientImpl<I, C> extends UnicastRemoteObject implements EvaluatorClient<I, C>  {
+public class EvaluatorClientImpl<I, C> implements EvaluatorClient<I, C>  {
 
 	private static final long serialVersionUID = 1L;
 
@@ -16,10 +13,6 @@ public class EvaluatorClientImpl<I, C> extends UnicastRemoteObject implements Ev
 	
 	// Volatile since it will not be serialized remotely
 	private volatile Evaluator<I, C> e;
-
-	public EvaluatorClientImpl(int port) throws RemoteException {
-		super(port);
-	}
 
 	//Remote method
 	@Override
@@ -34,8 +27,7 @@ public class EvaluatorClientImpl<I, C> extends UnicastRemoteObject implements Ev
 	}
 
 	@Override
-	public void error(I collectID, UnableToCollectException utce)
-			throws RemoteException {
+	public void error(I collectID, UnableToCollectException utce) {
 		LOG.info("Result with error received"+ collectID);
 		e.error(collectID, utce);
 	}

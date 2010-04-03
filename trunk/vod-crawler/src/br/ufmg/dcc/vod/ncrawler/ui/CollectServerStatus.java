@@ -9,7 +9,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
-import br.ufmg.dcc.vod.ncrawler.distributed.client.ServerID;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.ServerID;
 
 public class CollectServerStatus {
 	

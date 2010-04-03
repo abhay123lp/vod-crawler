@@ -11,6 +11,9 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.EvaluatorClient;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.EvaluatorClientFactory;
+
 public class EvaluatorClientFactoryTest {
 
 	@SuppressWarnings("unchecked")

@@ -37,7 +37,6 @@ public abstract class AbstractProcessor implements Processor {
 		this.myHandle = service.createPersistentMessageQueue("Workers", queueFile, serializer, queueSize);
 	}
 	
-	@SuppressWarnings("unchecked")
 	public void start() {
 		for (int i = 0; i < nThreads; i++) {
 			service.startProcessor(myHandle, newQueueProcessor(i));

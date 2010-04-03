@@ -13,8 +13,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutor;
-import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutorFactory;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.EvaluatorClientFactory;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.client.ServerID;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.JobExecutor;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.JobExecutorFactory;
 
 public class ServerIDTest {
 

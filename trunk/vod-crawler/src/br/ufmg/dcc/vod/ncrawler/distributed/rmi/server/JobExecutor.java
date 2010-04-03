@@ -1,4 +1,4 @@
-package br.ufmg.dcc.vod.ncrawler.distributed.server;
+package br.ufmg.dcc.vod.ncrawler.distributed.rmi.server;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

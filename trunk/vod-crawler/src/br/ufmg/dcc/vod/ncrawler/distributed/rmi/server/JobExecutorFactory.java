@@ -1,8 +1,8 @@
-package br.ufmg.dcc.vod.ncrawler.distributed.server;
+package br.ufmg.dcc.vod.ncrawler.distributed.rmi.server;
 
 import java.rmi.RemoteException;
 
-import br.ufmg.dcc.vod.ncrawler.distributed.AbstractRMIFactory;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.AbstractRMIFactory;
 
 public class JobExecutorFactory extends AbstractRMIFactory<JobExecutor> {
 

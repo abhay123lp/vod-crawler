@@ -7,6 +7,7 @@ import br.ufmg.dcc.vod.ncrawler.evaluator.EvaluatorFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.artistsongs_api.ArtistSongFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.song_cats.LastFMCatsEvalFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.lastfm.user_apihtml.LFMApiFactory;
+import br.ufmg.dcc.vod.ncrawler.jobs.urlsaver.URLDownFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.youtube.html.YTHtmlStatsFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.youtube.user_api.YTApiFactory;
 import br.ufmg.dcc.vod.ncrawler.jobs.youtube.video_api.YTVideoApiFactory;
@@ -23,6 +24,7 @@ public class CrawlerPool {
 		crawlers.put("YOUTUBE_RESPONSE", new YoutubeResponseFactory());
 		crawlers.put("LFM_CATS", new LastFMCatsEvalFactory());
 		crawlers.put("YTHTMLSTATS", new YTHtmlStatsFactory());
+		crawlers.put("URL", new URLDownFactory());
 	}
 	
 	public static EvaluatorFactory<?,?,?> get(String name) {

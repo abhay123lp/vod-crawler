@@ -1,11 +1,11 @@
-package br.ufmg.dcc.vod.ncrawler.distributed.client;
+package br.ufmg.dcc.vod.ncrawler.distributed.rmi.client;
 
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 
-import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutor;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.JobExecutor;
 
 public class ServerID {
 

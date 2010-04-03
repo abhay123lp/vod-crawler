@@ -1,22 +1,15 @@
-package br.ufmg.dcc.vod.ncrawler.distributed.server;
-
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
+package br.ufmg.dcc.vod.ncrawler.distributed.commune.server;
 
 import org.apache.log4j.Logger;
 
 import br.ufmg.dcc.vod.ncrawler.CrawlJob;
 import br.ufmg.dcc.vod.ncrawler.ui.EXIT_CODES;
 
-public class JobExecutorImpl extends UnicastRemoteObject implements JobExecutor {
+public class JobExecutorImpl implements JobExecutor {
 
 	private static final Logger LOG = Logger.getLogger(JobExecutorImpl.class);
 	
 	private static final long serialVersionUID = 1L;
-
-	protected JobExecutorImpl(int port) throws RemoteException {
-		super(port);
-	}
 
 	@Override
 	public void collect(CrawlJob c) {
@@ -26,8 +19,9 @@ public class JobExecutorImpl extends UnicastRemoteObject implements JobExecutor 
 	}
 
 	@Override
-	public void kill() throws RemoteException {
+	public void kill()  {
 		LOG.info("Exiting!");
 		System.exit(EXIT_CODES.OK);
 	}
+	
 }

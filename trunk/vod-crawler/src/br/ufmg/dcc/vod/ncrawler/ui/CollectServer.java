@@ -8,7 +8,7 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 
 import br.ufmg.dcc.vod.ncrawler.common.LoggerInitiator;
-import br.ufmg.dcc.vod.ncrawler.distributed.server.JobExecutorFactory;
+import br.ufmg.dcc.vod.ncrawler.distributed.rmi.server.JobExecutorFactory;
 
 public class CollectServer {
 
