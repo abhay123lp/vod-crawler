@@ -46,7 +46,7 @@ public class URLDownCrawlJob implements CrawlJob {
 			writer.close();
 			
 			html.getBuffer().trimToSize();
-			this.eval.evaluteAndSave(url, html.getBuffer());
+			this.eval.evaluteAndSave(url, html.getBuffer().toString().getBytes());
 		} catch (Exception e) {
 			this.eval.error(url, new UnableToCollectException(e.getMessage()));
 		} finally {
